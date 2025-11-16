@@ -1,0 +1,82 @@
+/// ----------------------------------------------------------------------
+/// Prisma Schema – Omnixys Invitation Service
+/// Author: Caleb Gyamfi
+/// License: GPL-3.0-or-later
+/// ----------------------------------------------------------------------
+
+generator client {
+  provider      = "prisma-client-js"
+  output   = "../.extras/generated/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+/// ----------------------------------------------------------------------
+/// Invitation: main aggregate root for the invitation domain
+/// ----------------------------------------------------------------------
+model Invitation {
+  id            String   @id @default(cuid()) @map("id")
+  name          String   @map("name")
+  startsAt      DateTime @map("starts_at")
+  endsAt        DateTime @map("ends_at")
+  allowReEntry  Boolean  @default(true) @map("allow_re_entry")
+  rotateSeconds Int      @default(300) @map("rotate_seconds")
+  maxSeats      Int      @default(300) @map("max_seats")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  seats     Seat[]
+  userRoles UserEventRole[]
+
+  @@map("invitation") // database table name
+}
+
+/// ----------------------------------------------------------------------
+/// Seat: physical or logical seating position assigned to guests
+/// ----------------------------------------------------------------------
+model Seat {
+  id      String  @id @default(cuid()) @map("id")
+  eventId String  @map("event_id")
+  section String? @map("section")
+  table   String? @map("table")
+  number  String? @map("number")
+  note    String? @map("note")
+  guestId String? @map("guest_id")
+
+  // Relation
+  invitation Invitation @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, section, table, number])
+  @@index([eventId])
+  @@map("seat")
+}
+
+/// ----------------------------------------------------------------------
+/// UserEventRole: local projection of user roles (users come from user-service)
+/// ----------------------------------------------------------------------
+model UserEventRole {
+  id      String   @id @default(cuid()) @map("id")
+  userId  String   @map("user_id") // external FK reference (user-service)
+  eventId String   @map("event_id")
+  role    UserRole @map("role")
+  invitation   Invitation    @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+  @@map("user_event_role")
+}
+
+/// ----------------------------------------------------------------------
+/// Enums
+/// ----------------------------------------------------------------------
+enum UserRole {
+  ADMIN
+  SECURITY
+  GUEST
+}
