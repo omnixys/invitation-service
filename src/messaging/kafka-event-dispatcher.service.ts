@@ -15,18 +15,12 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 import { LoggerPlusService } from '../logger/logger-plus.service.js';
 import { TraceContextProvider } from '../trace/trace-context.provider.js';
-import {
-    KAFKA_EVENT_METADATA,
-    KAFKA_HANDLER,
-} from './decorators/kafka-invitation.decorator.js';
-import {
-    type KafkaEventContext,
-    KafkaEventHandlerFn,
-} from './interface/kafka-invitation.interface.js';
+import { KAFKA_EVENT_METADATA, KAFKA_HANDLER } from './decorators/kafka-event.decorator.js';
+import { type KafkaEventContext, KafkaEventHandlerFn } from './interface/kafka-event.interface.js';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 
 interface RegisteredHandler {
   handler: object;
@@ -34,9 +28,7 @@ interface RegisteredHandler {
 }
 
 export function safeString(value: unknown, fallback = ''): string {
-  return typeof value === 'string' || typeof value === 'number'
-    ? String(value)
-    : fallback;
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : fallback;
 }
 
 /**
@@ -56,9 +48,7 @@ export class KafkaEventDispatcherService implements OnModuleInit {
     private readonly reflector: Reflector,
     private readonly loggerService: LoggerPlusService,
   ) {
-    this.logger = this.loggerService.getLogger(
-      KafkaEventDispatcherService.name,
-    );
+    this.logger = this.loggerService.getLogger(KafkaEventDispatcherService.name);
   }
 
   onModuleInit(): void {
@@ -70,35 +60,21 @@ export class KafkaEventDispatcherService implements OnModuleInit {
         continue;
       }
 
-      const handlerName = this.reflector.get<string>(
-        KAFKA_HANDLER,
-        instance.constructor,
-      );
+      const handlerName = this.reflector.get<string>(KAFKA_HANDLER, instance.constructor);
       if (!handlerName) {
         continue;
       }
 
-      this.logger.debug(
-        '📦 KafkaHandler erkannt: %s',
-        instance.constructor.name,
-      );
+      this.logger.debug('📦 KafkaHandler erkannt: %s', instance.constructor.name);
 
       // explicitly cast to a generic object prototype
-      const prototype = Object.getPrototypeOf(instance) as Record<
-        string,
-        unknown
-      >;
+      const prototype = Object.getPrototypeOf(instance) as Record<string, unknown>;
 
       const methodNames = this.metadataScanner.getAllMethodNames(prototype);
 
       for (const methodName of methodNames) {
-        const methodRef = prototype[methodName] as (
-          ...args: unknown[]
-        ) => unknown;
-        const metadata = this.reflector.get<{ topics: string[] }>(
-          KAFKA_EVENT_METADATA,
-          methodRef,
-        );
+        const methodRef = prototype[methodName] as (...args: unknown[]) => unknown;
+        const metadata = this.reflector.get<{ topics: string[] }>(KAFKA_EVENT_METADATA, methodRef);
 
         if (!metadata) {
           continue;
@@ -117,10 +93,7 @@ export class KafkaEventDispatcherService implements OnModuleInit {
     }
 
     const allTopics = Array.from(this.topicToHandler.keys());
-    this.logger.info(
-      '✅ Kafka Topics registriert: %s',
-      allTopics.join(', ') || '— none —',
-    );
+    this.logger.info('✅ Kafka Topics registriert: %s', allTopics.join(', ') || '— none —');
   }
 
   /**
@@ -142,19 +115,12 @@ export class KafkaEventDispatcherService implements OnModuleInit {
     const fn = (handler as Record<string, unknown>)[methodName];
 
     if (typeof fn !== 'function') {
-      this.logger.warn(
-        '⚠ Ungültiger Handler für Topic "%s" → %s',
-        topic,
-        methodName,
-      );
+      this.logger.warn('⚠ Ungültiger Handler für Topic "%s" → %s', topic, methodName);
       return;
     }
 
     // TraceContext aus Headern extrahieren
-    const headers = (context.headers ?? {}) as Record<
-      string,
-      string | undefined
-    >;
+    const headers = (context.headers ?? {}) as Record<string, string | undefined>;
     const traceId = headers['x-trace-id'] ?? 'unknown-trace';
     const spanId = headers['x-span-id'] ?? 'unknown-span';
 
@@ -170,11 +136,7 @@ export class KafkaEventDispatcherService implements OnModuleInit {
     const method = (handler as Record<string, KafkaEventHandlerFn>)[methodName];
 
     if (typeof method !== 'function') {
-      this.logger.warn(
-        '⚠ Ungültiger Handler für Topic "%s" → %s',
-        topic,
-        methodName,
-      );
+      this.logger.warn('⚠ Ungültiger Handler für Topic "%s" → %s', topic, methodName);
       return;
     }
 
@@ -194,11 +156,7 @@ export class KafkaEventDispatcherService implements OnModuleInit {
               : err
                 ? JSON.stringify(err)
                 : 'Unknown error or empty rejection';
-          this.logger.error(
-            '❌ Fehler bei der Verarbeitung von "%s" → %s',
-            topic,
-            message,
-          );
+          this.logger.error('❌ Fehler bei der Verarbeitung von "%s" → %s', topic, message);
         }
       },
     );

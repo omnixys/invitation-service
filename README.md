@@ -191,7 +191,7 @@
 </p>
 
 <ul>
-  <li>Centralized user identity and access control (AuthN & AuthZ)</li>
+  <li>Centralized invitation identity and access control (AuthN & AuthZ)</li>
   <li>Distributed token validation between microservices</li>
   <li>Federated invitation through standardized JWT exchange</li>
   <li>Real-time propagation of identity events via Kafka topics</li>
@@ -206,6 +206,7 @@
 </p>
 
 ---
+
 <p align="right">
   <a href="#top" style="text-decoration:none; color:#6A4BBC; font-weight:600;">
     ⬆️ Back to Top
@@ -219,7 +220,7 @@
 </p>
 
 <ul>
-  <li>🔑 <strong>Keycloak-based user management</strong> (OAuth 2.0 / OpenID Connect)</li>
+  <li>🔑 <strong>Keycloak-based invitation management</strong> (OAuth 2.0 / OpenID Connect)</li>
   <li>🧩 <strong>Apollo GraphQL Federation v4</strong> integration for distributed schemas</li>
   <li>⚙️ <strong>Kafka Invitation Dispatcher</strong> for identity-driven invitation propagation</li>
   <li>💾 <strong>Redis-backed caching &amp; token store</strong> for ultra-fast access</li>
@@ -320,8 +321,8 @@ invitation/
 │   ├── e2e/                                         # End-to-End test layer
 │   │   ├── invitation/
 │   │   │   ├── invitation.login.e2e-spec.ts     # Login / Refresh / Logout
-│   │   │   ├── invitation.signup.e2e-spec.ts    # User & Admin registration (SignUp flow)
-│   │   │   ├── invitation.user.e2e-spec.ts      # Me / Update profile / Change password / Send mail
+│   │   │   ├── invitation.signup.e2e-spec.ts    # Invitation & Admin registration (SignUp flow)
+│   │   │   ├── invitation.invitation.e2e-spec.ts      # Me / Update profile / Change password / Send mail
 │   │   │   └── invitation.admin.e2e-spec.ts     # Admin operations (roles, update, delete)
 │   │   ├── graphql-client.ts                        # Request helper (cookies, retries)
 │   │   ├── setup-e2e.ts                             # Bootstraps Nest test app with real Keycloak
@@ -464,8 +465,8 @@ to maintain consistency across all microservices.
   <tbody>
     <tr><td><code>OMNIXYS_ADMIN_USERNAME</code></td><td>Administrator username</td><td><code>admin</code></td></tr>
     <tr><td><code>OMNIXYS_ADMIN_PASSWORD</code></td><td>Administrator password</td><td><code>change-me</code></td></tr>
-    <tr><td><code>OMNIXYS_USER_USERNAME</code></td><td>Standard user username</td><td><code>user</code></td></tr>
-    <tr><td><code>OMNIXYS_USER_PASSWORD</code></td><td>Standard user password</td><td><code>change-me</code></td></tr>
+    <tr><td><code>OMNIXYS_USER_USERNAME</code></td><td>Standard invitation username</td><td><code>invitation</code></td></tr>
+    <tr><td><code>OMNIXYS_USER_PASSWORD</code></td><td>Standard invitation password</td><td><code>change-me</code></td></tr>
     <tr><td><code>OMNIXYS_EMAIL_DOMAIN</code></td><td>Default email domain for test users</td><td><code>omnixys.com</code></td></tr>
   </tbody>
 </table>
@@ -662,7 +663,7 @@ docker buildx bake -f docker-bake.hcl --push
 <pre style="background-color:#F8F7FF; color:#1E1B4B; border-radius:8px; padding:10px; font-size:13px; border:1px solid #E0DEF0;"><code>/opt/bitnami/keycloak/bin/kcadm.sh config credentials \
   --server http://localhost:18080/auth \
   --realm master \
-  --user admin \
+  --invitation admin \
   --password admin \
   --config /tmp/kcadm.config</code></pre>
 
@@ -715,9 +716,9 @@ Password: admin</code></pre>
   these are the roles that the Invitation Service uses for access control.
 </p>
 
-<h5 style="color:#6A4BBC; margin-bottom:4px;">4️⃣ Create an Admin User</h5>
+<h5 style="color:#6A4BBC; margin-bottom:4px;">4️⃣ Create an Admin Invitation</h5>
 <p style="font-size:14px; color:#312E81;">
-  Go to <strong>Users</strong> → <strong>Add User</strong> and fill in the following fields:
+  Go to <strong>Users</strong> → <strong>Add Invitation</strong> and fill in the following fields:
 </p>
 
 <ul style="color:#312E81; font-size:14px;">
@@ -726,7 +727,7 @@ Password: admin</code></pre>
   <li><strong>First Name / Last Name:</strong> any descriptive values</li>
 </ul>
 
-<h5 style="color:#6A4BBC; margin-bottom:4px;">5️⃣ Set User Credentials</h5>
+<h5 style="color:#6A4BBC; margin-bottom:4px;">5️⃣ Set Invitation Credentials</h5>
 <p style="font-size:14px; color:#312E81;">
   Under the <strong>Credentials</strong> tab:
 </p>
@@ -737,7 +738,7 @@ Password: admin</code></pre>
   <li>Click <strong>Set Password</strong></li>
 </ul>
 
-<h5 style="color:#6A4BBC; margin-bottom:4px;">6️⃣ Assign Roles to the Admin User</h5>
+<h5 style="color:#6A4BBC; margin-bottom:4px;">6️⃣ Assign Roles to the Admin Invitation</h5>
 <p style="font-size:14px; color:#312E81;">
   Open the <strong>Role Mappings</strong> tab:
 </p>
@@ -749,7 +750,7 @@ Password: admin</code></pre>
 
 <h5 style="color:#6A4BBC; margin-bottom:4px;">7️⃣ Save & Verify</h5>
 <p style="font-size:14px; color:#312E81;">
-  Ensure your user now appears with both roles assigned.<br/>
+  Ensure your invitation now appears with both roles assigned.<br/>
   This admin account will be used by the <strong>Omnixys Invitation Service</strong> during initialization and token management.
 </p>
 
@@ -766,6 +767,7 @@ Password: admin</code></pre>
 </p>
 
 ---
+
 <p align="right">
   <a href="#top" style="text-decoration:none; color:#6A4BBC; font-weight:600;">
     ⬆️ Back to Top
@@ -961,7 +963,6 @@ mutation Login {
   <em>Resolve issues quickly and consistently — every fix keeps the Omnixys ecosystem reliable and secure.</em>
 </p>
 
-
 ---
 
 <p align="right">
@@ -1061,7 +1062,6 @@ pnpm run test
   <em>Every contribution strengthens the Omnixys ecosystem — thank you for helping us build modular innovation together.</em>
 </p>
 
-
 ---
 
 <p align="right">
@@ -1083,7 +1083,7 @@ pnpm run test
 
 ```bash
 git checkout -b feature/my-feature
-````
+```
 
 <ol start="3">
   <li><strong>Lint and commit</strong> your changes following Omnixys commit conventions:</li>
@@ -1124,7 +1124,6 @@ pnpm run lint && git commit -m "feat: add feature"
   📧 <a href="mailto:contact@omnixys.tech" style="color:#6A4BBC; text-decoration:none;">contact@omnixys.tech</a>
 </p>
 
-
 ---
 
 <p align="right">
@@ -1137,7 +1136,6 @@ pnpm run lint && git commit -m "feat: add feature"
 <p align="center" style="font-size:14px; color:#312E81;">
   <em>Omnixys – Das Fundament modularer Innovation.</em>
 </p>
-
 
 <h3 id="übersicht" align="center" style="color:#6A4BBC; font-weight:600;">🔎 Übersicht</h3>
 
@@ -1202,7 +1200,6 @@ pnpm run lint && git commit -m "feat: add feature"
 <p align="center" style="font-size:14px; color:#312E81;">
   <em>Entwickelt für Leistung, Sicherheit und Nachvollziehbarkeit – der Omnixys-Standard für Authentifizierung.</em>
 </p>
-
 
 ---
 
@@ -1328,7 +1325,7 @@ cp .env.example .env
 
 # 3️⃣ Abhängigkeiten installieren
 pnpm install
-````
+```
 
 <h4 align="center" style="color:#6A4BBC; font-weight:600;">🧱 Docker Build (Buildx Bake)</h4>
 
@@ -1369,7 +1366,7 @@ docker buildx bake -f docker-bake.hcl --push
 <pre style="background-color:#F8F7FF; color:#1E1B4B; border-radius:8px; padding:10px; font-size:13px; border:1px solid #E0DEF0;"><code>/opt/bitnami/keycloak/bin/kcadm.sh config credentials \
   --server http://localhost:18080/auth \
   --realm master \
-  --user admin \
+  --invitation admin \
   --password admin \
   --config /tmp/kcadm.config</code></pre>
 
@@ -1423,7 +1420,7 @@ Passwort: admin</code></pre>
 
 <h5 style="color:#6A4BBC; margin-bottom:4px;">4️⃣ Administrator-Benutzer anlegen</h5>
 <p style="font-size:14px; color:#312E81;">
-  In der Seitenleiste <strong>Users</strong> öffnen → <strong>Add User</strong> auswählen und ausfüllen:
+  In der Seitenleiste <strong>Users</strong> öffnen → <strong>Add Invitation</strong> auswählen und ausfüllen:
 </p>
 
 <ul style="color:#312E81; font-size:14px;">
@@ -1472,6 +1469,7 @@ Passwort: admin</code></pre>
 </p>
 
 ---
+
 <p align="right">
   <a href="#top" style="text-decoration:none; color:#6A4BBC; font-weight:600;">
     ⬆️ Nach oben
@@ -1609,7 +1607,7 @@ mutation Login {
     expiresIn
   }
 }
-````
+```
 
 <p style="font-size:14px;">
   💡 <strong>Hinweis:</strong> Ersetze <code>username</code> und <code>password</code> durch deine Testdaten aus der 
@@ -1624,7 +1622,6 @@ mutation Login {
 </p>
 
 ---
-
 
 <p align="right">
   <a href="#top" style="text-decoration:none; color:#6A4BBC; font-weight:600;">
@@ -1671,7 +1668,6 @@ mutation Login {
   <em>Schnelle und konsistente Fehlerbehebung – für einen stabilen und wartbaren Omnixys-Workflow.</em>
 </p>
 
-
 ---
 
 <p align="right">
@@ -1696,7 +1692,7 @@ pnpm run format
 
 # 🧪 Tests ausführen (Jest)
 pnpm run test
-````
+```
 
 <p style="font-size:14px;">
   💡 <strong>Tipp:</strong> Führe vor jedem Commit <code>pnpm run format && pnpm run lint</code> aus, 
@@ -1801,7 +1797,6 @@ pnpm run test
   <em>Jeder Beitrag stärkt das Omnixys-Ökosystem – danke, dass du Modular Innovation mitgestaltest.</em>
 </p>
 
-
 ---
 
 <p align="right">
@@ -1823,7 +1818,7 @@ pnpm run test
 
 ```bash
 git checkout -b feature/mein-feature
-````
+```
 
 <ol start="3">
   <li><strong>Änderungen prüfen und committen</strong>:</li>

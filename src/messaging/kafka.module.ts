@@ -29,7 +29,7 @@ import {
   KAFKA_PRODUCER,
 } from './kafka-bootstrap.provider.js';
 import { KafkaConsumerService } from './kafka-consumer.service.js';
-import { KafkaEventDispatcherService } from './kafka-invitation-dispatcher.service.js';
+import { KafkaEventDispatcherService } from './kafka-event-dispatcher.service.js';
 import { KafkaHeaderBuilder } from './kafka-header-builder.js';
 import { KafkaProducerService } from './kafka-producer.service.js';
 import { Global, Module, OnApplicationShutdown } from '@nestjs/common';
@@ -71,13 +71,8 @@ export class KafkaModule implements OnApplicationShutdown {
    * Schließt Producer & Consumer sauber.
    */
   async onApplicationShutdown(signal?: string): Promise<void> {
-    this.logger.log(
-      `[KafkaModule] 🧹 Application shutdown triggered (${signal ?? 'manual'})`,
-    );
-    await Promise.allSettled([
-      this.producer.disconnect(),
-      this.consumer.disconnect(),
-    ]);
+    this.logger.log(`[KafkaModule] 🧹 Application shutdown triggered (${signal ?? 'manual'})`);
+    await Promise.allSettled([this.producer.disconnect(), this.consumer.disconnect()]);
     this.logger.log(`[KafkaModule] ✅ Kafka services disconnected`);
   }
 }

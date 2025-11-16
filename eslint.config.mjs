@@ -40,6 +40,9 @@ export default tseslint.config(
       'node_modules/**',
       'coverage/**',
       '*.d.ts',
+      '.extras/scripts/commitlint-formatter.js',
+      '.extras/docker',
+      'commitlint.config.mjs',
     ],
   },
 
@@ -60,7 +63,7 @@ export default tseslint.config(
         project: [
           './tsconfig.json',
           './__tests__/tsconfig.test.json',
-          './release.config.js'
+          './release.config.js',
         ],
 
         // projectService: true,

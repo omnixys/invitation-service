@@ -6,7 +6,6 @@
 
 generator client {
   provider      = "prisma-client-js"
-  output   = "../.extras/generated/prisma"
   binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
 }
 
@@ -20,63 +19,57 @@ datasource db {
 /// Invitation: main aggregate root for the invitation domain
 /// ----------------------------------------------------------------------
 model Invitation {
-  id            String   @id @default(cuid()) @map("id")
-  name          String   @map("name")
-  startsAt      DateTime @map("starts_at")
-  endsAt        DateTime @map("ends_at")
-  allowReEntry  Boolean  @default(true) @map("allow_re_entry")
-  rotateSeconds Int      @default(300) @map("rotate_seconds")
-  maxSeats      Int      @default(300) @map("max_seats")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id                     String            @id @default(cuid()) @map("id")
 
-  // Relations
-  seats     Seat[]
-  userRoles UserEventRole[]
+  firstName              String?           @map("first_name")
+  lastName               String?           @map("last_name")
 
-  @@map("invitation") // database table name
-}
+  eventId                String            @map("event_id")
+  guestProfileId         String?           @map("guest_profile_id")
 
-/// ----------------------------------------------------------------------
-/// Seat: physical or logical seating position assigned to guests
-/// ----------------------------------------------------------------------
-model Seat {
-  id      String  @id @default(cuid()) @map("id")
-  eventId String  @map("event_id")
-  section String? @map("section")
-  table   String? @map("table")
-  number  String? @map("number")
-  note    String? @map("note")
-  guestId String? @map("guest_id")
+  status                 InvitationStatus  @default(PENDING) @map("status")
 
-  // Relation
-  invitation Invitation @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt              DateTime          @default(now()) @map("created_at")
+  updatedAt              DateTime          @updatedAt       @map("updated_at")
 
-  @@unique([eventId, section, table, number])
-  @@index([eventId])
-  @@map("seat")
-}
+  pendingContactId       String?           @unique @map("pending_contact_id")
 
-/// ----------------------------------------------------------------------
-/// UserEventRole: local projection of user roles (users come from user-service)
-/// ----------------------------------------------------------------------
-model UserEventRole {
-  id      String   @id @default(cuid()) @map("id")
-  userId  String   @map("user_id") // external FK reference (user-service)
-  eventId String   @map("event_id")
-  role    UserRole @map("role")
-  invitation   Invitation    @relation(fields: [eventId], references: [id])
+  rsvpChoice             RsvpChoice?       @map("rsvp_choice")
+  rsvpAt                 DateTime?         @map("rsvp_at")
 
-  @@unique([userId, eventId])
-  @@index([eventId])
-  @@map("user_event_role")
+  approved               Boolean           @default(false) @map("approved")
+  approvedAt             DateTime?         @map("approved_at")
+  approvedByUserId       String?           @map("approved_by_user_id")
+
+  maxInvitees            Int               @default(0) @map("max_invitees")
+
+  invitedByInvitationId  String?           @map("invited_by_invitation_id")
+  invitedByUserId        String?           @map("invited_by_user_id")
+
+  plusOnes               String[]          @default([]) @map("plus_ones")
+
+  @@index([eventId, status])
+  @@index([eventId, rsvpChoice])
+  @@index([invitedByInvitationId])
+  @@index([approved, approvedAt])
+
+  @@map("invitation")
 }
 
 /// ----------------------------------------------------------------------
 /// Enums
 /// ----------------------------------------------------------------------
-enum UserRole {
-  ADMIN
-  SECURITY
-  GUEST
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELED
+  REJECTED
+  APPROVED
+}
+
+enum RsvpChoice {
+  YES
+  NO
+  MAYBE
 }
