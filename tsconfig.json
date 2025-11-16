@@ -14,7 +14,7 @@
  *
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
- 
+
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Omnixys Invitation Service",
@@ -60,6 +60,8 @@
 
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "coverage", "__tests__/"],
+  "types": ["node", "fastify", "@types/node"],
+  "typeRoots": ["./src/types", "./node_modules/@types"],
 
   /* ──────────────── 🧩 ts-node (nur DEV) ──────────────── */
   "ts-node": {

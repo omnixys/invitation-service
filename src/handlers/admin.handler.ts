@@ -20,16 +20,16 @@ import { LoggerPlusService } from '../logger/logger-plus.service.js';
 import {
   KafkaEvent,
   KafkaHandler,
-} from '../messaging/decorators/kafka-invitation.decorator.js';
+} from '../messaging/decorators/kafka-event.decorator.js';
 import {
   type KafkaEventContext,
   KafkaEventHandler,
-} from '../messaging/interface/kafka-invitation.interface.js';
+} from '../messaging/interface/kafka-event.interface.js';
 import { KafkaTopics } from '../messaging/kafka-topic.properties.js';
 import { Injectable } from '@nestjs/common';
 
 /**
- * Kafka invitation handler responsible for administrative commands such as
+ * Kafka event handler responsible for administrative commands such as
  * shutdown and restart. It listens for specific admin-related topics
  * and delegates the actual process control logic to the {@link AdminService}.
  *

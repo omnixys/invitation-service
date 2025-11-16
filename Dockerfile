@@ -38,14 +38,6 @@ USER node
 FROM base AS dist
 COPY --chown=node:node package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
-# Generate Prisma client here (these node_modules go to dist + final)
-COPY prisma ./prisma
-RUN NODE_TLS_REJECT_UNAUTHORIZED=0 \
-    PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 \
-    pnpm run prisma:gen
-
-# Guard: fail if client missing
-RUN node -e "require('@prisma/client'); console.log('Prisma client OK')"
 COPY --chown=node:node . .
 RUN pnpm run build
 
@@ -58,14 +50,10 @@ FROM base AS dependencies
 COPY --chown=node:node package.json pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
-# Copy Prisma schema before generating client
-COPY --chown=node:node prisma ./prisma
-RUN pnpm prisma:gen
-
 # ---------------------------------------------------------------------------------------
 # Stage 3: Final runtime image
 # - Copies only compiled code and production node_modules.
-# - Runs the app as a non-root user for security.
+# - Runs the app as a non-root invitation for security.
 # ---------------------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-bookworm-slim AS final
 
@@ -109,14 +97,11 @@ RUN apt-get update && \
 # ----- Enable pnpm (runtime) -----
 RUN corepack enable pnpm
 
-# ----- Switch to non-root user -----
+# ----- Switch to non-root invitation -----
 USER node
 
 # ----- Copy built artifacts and dependencies -----
 COPY --from=dependencies --chown=node:node /home/node/node_modules ./node_modules
-COPY --from=dependencies --chown=node:node /home/node/node_modules/@prisma ./node_modules/@prisma
-
-# Copy compiled application
 COPY --from=dist --chown=node:node /home/node/dist ./dist
 COPY --chown=node:node package.json ./
 

@@ -25,9 +25,9 @@ variable "APP_NAME" {
 }
 
 # Automatically use today's date (YYYY-MM-DD) as version tag
-# VERSION=$(node -p "require('./package.json').version")
+VERSION=$(node -p "require('./package.json').version")
 variable "APP_VERSION" {
-  default = "1.0.0"
+  default = VERSION
 }
 
 variable "NODE_VERSION" {
