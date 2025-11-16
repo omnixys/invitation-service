@@ -11,9 +11,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU General Public License for more details.
 name: ✅ Task
-description: Create or track a technical task within the User Service project
-title: '[User Task] '
-labels: ['task', 'user']
+description: Create or track a technical task within the Invitation Service project
+title: '[Invitation Task] '
+labels: ['task', 'invitation']
 
 body:
   - type: input
