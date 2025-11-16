@@ -15,20 +15,20 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import {
-    context,
-    SpanKind,
-    SpanStatusCode,
-    trace,
-    type SpanContext,
-    type Tracer,
-} from '@opentelemetry/api';
-import { format } from 'util';
 import { env } from '../config/env.js';
 import { KafkaTopics } from '../messaging/kafka-topic.properties.js';
 import type { TraceContext } from '../trace/trace-context.util.js';
 import { getLogger } from './get-logger.js';
 import { getGlobalKafkaProducer } from './logger-plus.service.js';
+import {
+  context,
+  SpanKind,
+  SpanStatusCode,
+  trace,
+  type SpanContext,
+  type Tracer,
+} from '@opentelemetry/api';
+import { format } from 'util';
 
 export const LogLevel = {
   TRACE: 'TRACE',

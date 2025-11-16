@@ -32,11 +32,7 @@ export class HealthController {
   readonly #http: HttpHealthIndicator;
   readonly #kafka: KafkaIndicator;
 
-  constructor(
-    health: HealthCheckService,
-    http: HttpHealthIndicator,
-    kafka: KafkaIndicator,
-  ) {
+  constructor(health: HealthCheckService, http: HttpHealthIndicator, kafka: KafkaIndicator) {
     this.#health = health;
     this.#http = http;
     this.#kafka = kafka;
@@ -45,9 +41,7 @@ export class HealthController {
   @Get('liveness')
   @HealthCheck()
   liveness(): Promise<HealthCheckResult> {
-    return this.#health.check([
-      () => Promise.resolve({ app: { status: 'up' } }),
-    ]);
+    return this.#health.check([() => Promise.resolve({ app: { status: 'up' } })]);
   }
 
   @Get('readiness')

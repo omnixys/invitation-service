@@ -15,8 +15,8 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import { randomUUID } from 'crypto';
 import type { TraceContext } from '../trace/trace-context.util.js';
+import { randomUUID } from 'crypto';
 
 export const KAFKA_HEADER_KEYS = {
   TRACE_ID: 'x-trace-id',
