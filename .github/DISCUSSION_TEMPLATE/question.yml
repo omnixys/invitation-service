@@ -35,7 +35,7 @@ body:
         Examples:
         - How do I configure Keycloak for multi-tenant login?
         - Why does JWT refresh fail when Redis cache is enabled?
-        - How can I debug Kafka event propagation between services?
+        - How can I debug Kafka invitation propagation between services?
     validations:
       required: true
 

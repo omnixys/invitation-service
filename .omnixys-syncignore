@@ -1,0 +1,14 @@
+# Omnixys Template Sync Ignore
+# Ignored during rsync
+
+# DB-specific scripts
+.extras/scripts/sql/
+# Local Docker integrations
+.extras/docker/camunda/
+.extras/docker/observability/
+.extras/docker/redis/
+.extras/docker/kafka/
+# Build artifacts
+node_modules/
+dist/
+.env
