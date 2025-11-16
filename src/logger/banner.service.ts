@@ -56,47 +56,30 @@ export class BannerService implements OnApplicationBootstrap {
       kafkaUri,
     } = nodeConfig;
 
-    const { KEYCLOAK_HEALTH_URL, TEMPO_HEALTH_URL, PROMETHEUS_HEALTH_URL } =
-      env;
+    const { KEYCLOAK_HEALTH_URL, TEMPO_HEALTH_URL, PROMETHEUS_HEALTH_URL } = env;
 
     // Banner generieren und ausgeben
     this.#generateBanner(serviceName);
 
     // Umgebungsinformationen mit Farben ausgeben
     this.#logger.info(chalk.green('=== Anwendungsinformationen ==='));
-    this.#logger.info(
-      chalk.cyan('Anwendungsname: ') + chalk.yellow(serviceName),
-    );
-    this.#logger.info(
-      chalk.cyan('Node.js-Version: ') + chalk.yellow(process.version),
-    );
+    this.#logger.info(chalk.cyan('Anwendungsname: ') + chalk.yellow(serviceName));
+    this.#logger.info(chalk.cyan('Node.js-Version: ') + chalk.yellow(process.version));
     this.#logger.info(chalk.cyan('Umgebung: ') + chalk.yellow(nodeEnv));
     this.#logger.info(chalk.cyan('Host: ') + chalk.yellow(host));
     this.#logger.info(chalk.cyan('Port: ') + chalk.yellow(port.toString()));
-    this.#logger.info(
-      chalk.cyan('Betriebssystem: ') + chalk.yellow(`${type()} (${release()})`),
-    );
-    this.#logger.info(
-      chalk.cyan('Benutzer: ') + chalk.yellow(userInfo().username),
-    );
+    this.#logger.info(chalk.cyan('Betriebssystem: ') + chalk.yellow(`${type()} (${release()})`));
+    this.#logger.info(chalk.cyan('Benutzer: ') + chalk.yellow(userInfo().username));
     this.#logger.info(chalk.cyan('HTTPS: ') + chalk.yellow(protocoll));
     this.#logger.info(chalk.cyan('Keys path: ') + chalk.yellow(keysPath));
     this.#logger.info(chalk.green('===============LOGGER============'));
     if (logger.logDefault) {
       this.#logger.info(chalk.cyan('Default Logger!'));
     } else {
-      this.#logger.info(
-        chalk.cyan('Log Directory ') + chalk.yellow(logger.logDir),
-      );
-      this.#logger.info(
-        chalk.cyan('Log Filename: ') + chalk.yellow(logger.logFileName),
-      );
-      this.#logger.info(
-        chalk.cyan('Pretty Logging: ') + chalk.yellow(logger.logPretty),
-      );
-      this.#logger.info(
-        chalk.cyan('Custom Log Level: ') + chalk.yellow(logger.logLevel),
-      );
+      this.#logger.info(chalk.cyan('Log Directory ') + chalk.yellow(logger.logDir));
+      this.#logger.info(chalk.cyan('Log Filename: ') + chalk.yellow(logger.logFileName));
+      this.#logger.info(chalk.cyan('Pretty Logging: ') + chalk.yellow(logger.logPretty));
+      this.#logger.info(chalk.cyan('Custom Log Level: ') + chalk.yellow(logger.logLevel));
     }
     this.#logger.info(chalk.green('==============KEYCLOAK==========='));
     this.#logger.info(chalk.cyan('URI: ') + chalk.yellow(keycloak.url));
@@ -104,20 +87,11 @@ export class BannerService implements OnApplicationBootstrap {
     this.#logger.info(chalk.cyan('client: ') + chalk.yellow(keycloak.clientId));
     this.#logger.info(chalk.cyan('Keys path: ') + chalk.yellow(keysPath));
     this.#logger.info(chalk.green('==============HEALTH==========='));
-    this.#logger.info(
-      chalk.cyan('Kycloak Health URI: ') + chalk.yellow(KEYCLOAK_HEALTH_URL),
-    );
-    this.#logger.info(
-      chalk.cyan('Tempo Health URI: ') + chalk.yellow(TEMPO_HEALTH_URL),
-    );
-    this.#logger.info(
-      chalk.cyan('Prometheus Health URI: ') +
-        chalk.yellow(PROMETHEUS_HEALTH_URL),
-    );
+    this.#logger.info(chalk.cyan('Kycloak Health URI: ') + chalk.yellow(KEYCLOAK_HEALTH_URL));
+    this.#logger.info(chalk.cyan('Tempo Health URI: ') + chalk.yellow(TEMPO_HEALTH_URL));
+    this.#logger.info(chalk.cyan('Prometheus Health URI: ') + chalk.yellow(PROMETHEUS_HEALTH_URL));
     this.#logger.info(chalk.green('==============KAFKA==========='));
-    this.#logger.info(
-      chalk.cyan('Kafka Broker URI: ') + chalk.yellow(kafkaUri),
-    );
+    this.#logger.info(chalk.cyan('Kafka Broker URI: ') + chalk.yellow(kafkaUri));
     this.#logger.info(chalk.green('==============OBSERVABILITY==========='));
     this.#logger.info(chalk.cyan('Tempo URI: ') + chalk.yellow(tempo));
     this.#logger.info(chalk.green('===============================')); // Endmarkierung für die Anwendungsinformationen

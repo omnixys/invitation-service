@@ -15,14 +15,7 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
       signOptions: { algorithm: 'RS256' },
     }),
   ],
-  providers: [
-    JwtStrategy,
-    HeaderAuthGuard,
-    CookieAuthGuard,
-    RoleGuard,
-    Reflector,
-    JwtService,
-  ],
+  providers: [JwtStrategy, HeaderAuthGuard, CookieAuthGuard, RoleGuard, Reflector, JwtService],
   exports: [HeaderAuthGuard, CookieAuthGuard, RoleGuard, JwtService],
 })
 export class AuthModule {}
