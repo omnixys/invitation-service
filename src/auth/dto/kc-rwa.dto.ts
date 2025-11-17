@@ -13,7 +13,12 @@ export interface KeycloakRawOutput {
   realm_access: {
     roles: string[];
   };
-  resource_access: Record<string, { roles: string[] }>;
+  resource_access: Record<
+    string,
+    {
+      roles: string[];
+    }
+  >;
   scope: string;
   email_verified: boolean;
   name: string;

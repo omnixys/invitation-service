@@ -16,10 +16,14 @@ export class Invitation {
   id!: string;
 
   // optional strings
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+  })
   firstName?: string | null;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+  })
   lastName?: string | null;
 
   // REQUIRED: eventId is NOT nullable in Prisma
@@ -27,7 +31,9 @@ export class Invitation {
   eventId!: string;
 
   // OPTIONAL
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, {
+    nullable: true,
+  })
   guestProfileId?: string | null;
 
   // REQUIRED ENUM
@@ -46,29 +52,41 @@ export class Invitation {
   })
   pendingContactId?: string | null;
 
-  @Field(() => RsvpChoice, { nullable: true })
+  @Field(() => RsvpChoice, {
+    nullable: true,
+  })
   rsvpChoice?: RsvpChoice | null;
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
+  })
   rsvpAt?: Date | null;
 
   // approved = Boolean, default false → never null in Prisma
   @Field(() => Boolean)
   approved!: boolean;
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
+  })
   approvedAt?: Date | null;
 
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, {
+    nullable: true,
+  })
   approvedByUserId?: string | null;
 
   @Field(() => Int)
   maxInvitees!: number;
 
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, {
+    nullable: true,
+  })
   invitedByInvitationId?: string | null;
 
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, {
+    nullable: true,
+  })
   invitedByUserId?: string | null;
 
   // Array fields NEVER nullable in Prisma (defaults to [])

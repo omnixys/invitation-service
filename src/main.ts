@@ -134,10 +134,6 @@ async function bootstrap(): Promise<void> {
     timeWindow: '1 minute',
   });
 
-  await app.register(cookie, {
-    secret: process.env.COOKIE_SECRET ?? 'omnixys-default-secret',
-  });
-
   // ======================================================
   // ⚙️ CONFIGURATION
   // ======================================================
@@ -149,6 +145,11 @@ async function bootstrap(): Promise<void> {
    * Liest Werte aus `.env` oder Umgebungsvariablen.
    */
   const config = app.get(ConfigService);
+
+  await app.register(cookie, {
+    // secret: config.get('COOKIE_SECRET') ?? 'omnixys-default-secret',
+    secret: process.env.COOKIE_SECRET ?? 'omnixys-default-secret',
+  });
 
   /** Port-Definition (Standard: 4000) */
   const port = Number(config.get('PORT') ?? 4000);

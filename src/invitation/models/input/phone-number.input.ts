@@ -33,7 +33,9 @@ export class PhoneNumberInput {
     description: 'Phone number value in international format. Regex validated.',
   })
   @IsString()
-  @Matches(PHONE_RE, { message: 'invalid phone number format' })
+  @Matches(PHONE_RE, {
+    message: 'invalid phone number format',
+  })
   value!: string;
 
   @Field(() => String, {

@@ -96,7 +96,9 @@ export class LoggerPlus {
       }
     }
 
-    const links: Array<{ context: SpanContext }> = [];
+    const links: Array<{
+      context: SpanContext;
+    }> = [];
     if (manualCtx?.traceId && manualCtx.spanId) {
       links.push({
         context: {
@@ -110,7 +112,10 @@ export class LoggerPlus {
 
     void this.tracer.startActiveSpan(
       `logger.${level.toLowerCase()}`,
-      { kind: SpanKind.INTERNAL, links },
+      {
+        kind: SpanKind.INTERNAL,
+        links,
+      },
       async (span) => {
         try {
           const producer = getGlobalKafkaProducer();
@@ -133,7 +138,9 @@ export class LoggerPlus {
               payload: logPayload,
             });
           }
-          span.setStatus({ code: SpanStatusCode.OK });
+          span.setStatus({
+            code: SpanStatusCode.OK,
+          });
         } catch (err) {
           span.recordException(err as Error);
           span.setStatus({

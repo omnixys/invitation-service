@@ -76,16 +76,11 @@ export const env = {
   TEMPO_HEALTH_URL: process.env.TEMPO_HEALTH_URL ?? '',
   PROMETHEUS_HEALTH_URL: process.env.PROMETHEUS_HEALTH_URL ?? '',
 
-  /** GraphQL / PubSub */
-  GQL_PUBSUB_INMEMORY: process.env.GQL_PUBSUB_INMEMORY === 'true',
-
-  /** Redis configuration */
+  COOKIE_SECRET: process.env.COOKIE_SECRET ?? 'omnixys-default-secret',
   REDIS_PC_JWE_KEY: process.env.REDIS_PC_JWE_KEY ?? '',
-  REDIS_PC_TTL_SEC: Number(process.env.REDIS_PC_TTL_SEC ?? 60 * 60 * 24 * 30),
-  REDIS_URL: process.env.REDIS_URL ?? undefined,
-  REDIS_PORT: process.env.REDIS_PORT ?? '6379',
-  REDIS_HOST: process.env.REDIS_HOST ?? 'localhost',
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? undefined,
+  PC_JWE_KEY: process.env.PC_JWE_KEY ?? '',
+  PC_TTL_SEC: Number(process.env.PC_TTL_SEC ?? 60 * 60 * 24 * 30),
+  VALKEY_URL: process.env.VALKEY_URL ?? 'valkey://localhost:6380',
 } as const;
 
 // /**

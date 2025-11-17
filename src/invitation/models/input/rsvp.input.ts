@@ -30,7 +30,12 @@ export class AcceptRSVPInput {
     nullable: true,
   })
   @IsOptional()
-  @IsEmail({}, { message: 'invalid email format' })
+  @IsEmail(
+    {},
+    {
+      message: 'invalid email format',
+    },
+  )
   email?: string | null;
 
   @Field(() => [PhoneNumberInput], {

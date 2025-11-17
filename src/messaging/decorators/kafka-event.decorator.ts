@@ -62,11 +62,9 @@ export function KafkaHandler(handlerName: string): ClassDecorator {
  */
 export function KafkaEvent(...topics: string[]): MethodDecorator {
   return (target, propertyKey, descriptor) => {
-    SetMetadata(KAFKA_EVENT_METADATA, { topics })(
-      target,
-      propertyKey,
-      descriptor,
-    );
+    SetMetadata(KAFKA_EVENT_METADATA, {
+      topics,
+    })(target, propertyKey, descriptor);
   };
 }
 

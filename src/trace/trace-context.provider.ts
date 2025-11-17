@@ -13,7 +13,9 @@ import { AsyncLocalStorage } from 'node:async_hooks';
  * Globale TraceContext-Verwaltung über AsyncLocalStorage.
  * Thread-sicher für gleichzeitige Requests oder Kafka-Events.
  */
-@Injectable({ scope: Scope.DEFAULT })
+@Injectable({
+  scope: Scope.DEFAULT,
+})
 export class TraceContextProvider {
   private static readonly storage = new AsyncLocalStorage<TraceContext>();
 
@@ -56,7 +58,9 @@ export class TraceContextProvider {
  * Request-scoped Variante, falls du pro HTTP-Request
  * einen eigenen TraceContext injizieren möchtest.
  */
-@Injectable({ scope: Scope.REQUEST })
+@Injectable({
+  scope: Scope.REQUEST,
+})
 export class TraceContextProviderHTTP {
   private readonly local = new AsyncLocalStorage<TraceContext>();
 

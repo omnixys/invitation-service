@@ -6,4 +6,6 @@ export enum PhoneKind {
   WHATSAPP = 'WHATSAPP',
   OTHER = 'OTHER',
 }
-registerEnumType(PhoneKind, { name: 'PhoneKind' });
+registerEnumType(PhoneKind, {
+  name: 'PhoneKind',
+});

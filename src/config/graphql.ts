@@ -55,10 +55,16 @@ export const graphQlModuleOptions: ApolloDriverConfig = {
 export const graphQlModuleOptions2: ApolloFederationDriverConfig = {
   autoSchemaFile:
     SCHEMA_TARGET === 'tmp'
-      ? { path: '/tmp/schema.gql', federation: 2 }
+      ? {
+          path: '/tmp/schema.gql',
+          federation: 2,
+        }
       : SCHEMA_TARGET === 'false'
         ? false
-        : { path: 'dist/schema.gql', federation: 2 },
+        : {
+            path: 'dist/schema.gql',
+            federation: 2,
+          },
   driver: ApolloFederationDriver,
   playground: false,
 };

@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+
 // TODO resolve eslint
 
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
+import { env } from '../../config/env.js';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import jwksRsa from 'jwks-rsa';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+const { KC_URL, KC_REALM } = env;
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -18,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 
       // Keycloak issuer validation
-      issuer: `${process.env.KC_URL}/realms/${process.env.KC_REALM}`,
+      issuer: `${KC_URL}/realms/${KC_REALM}`,
 
       // JWKS provider (AUTO ROTATION, AUTO CACHING)
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
@@ -26,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cacheMaxEntries: 5,
         rateLimit: true,
         jwksRequestsPerMinute: 10,
-        jwksUri: `${process.env.KC_URL}/realms/${process.env.KC_REALM}/protocol/openid-connect/certs`,
+        jwksUri: `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/certs`,
       }),
     });
   }
