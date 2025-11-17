@@ -25,7 +25,9 @@ export interface CurrentUserData {
   preferred_username: string;
   given_name: string;
   family_name: string;
-  realm_access: { roles: string[] };
+  realm_access: {
+    roles: string[];
+  };
 }
 
 export const CurrentUser = createParamDecorator(

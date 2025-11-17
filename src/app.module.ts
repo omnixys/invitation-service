@@ -19,6 +19,7 @@ import { AdminModule } from './admin/admin.module.js';
 import { env } from './config/env.js';
 import { HandlerModule } from './handlers/handler.module.js';
 import { HealthModule } from './health/health.module.js';
+import { InvitationModule } from './invitation/invitation.module.js';
 import { LoggerModule } from './logger/logger.module.js';
 import { RequestLoggerMiddleware } from './logger/request-logger.middleware.js';
 import { KafkaModule } from './messaging/kafka.module.js';
@@ -35,6 +36,7 @@ const { SCHEMA_TARGET } = env;
     AdminModule,
     HandlerModule,
     HealthModule,
+    InvitationModule,
     LoggerModule,
     KafkaModule,
     ConfigModule.forRoot({ isGlobal: true }),

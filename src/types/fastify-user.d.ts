@@ -14,7 +14,9 @@ declare module 'fastify' {
       preferred_username: string;
       given_name: string;
       family_name: string;
-      realm_access: { roles: string[] };
+      realm_access: {
+        roles: string[];
+      };
 
       access_token: string;
       refresh_token: string;

@@ -46,7 +46,10 @@ const logLevel = isProd ? 'info' : LOG_LEVEL;
 const fileTarget = {
   level: logLevel,
   target: 'pino/file',
-  options: { destination: logFile, mkdir: true },
+  options: {
+    destination: logFile,
+    mkdir: true,
+  },
 };
 
 /** Pretty-Transport */
@@ -63,10 +66,21 @@ const prettyTarget = {
 
 /** Multi-Transport */
 const transports = pino.transport<Record<string, unknown>>(
-  pretty ? { targets: [fileTarget, prettyTarget] } : { targets: [fileTarget] },
+  pretty
+    ? {
+        targets: [fileTarget, prettyTarget],
+      }
+    : {
+        targets: [fileTarget],
+      },
 ) as unknown as DestinationStream;
 
 /** Haupt-Logger-Instanz */
 export const parentLogger: Logger = LOG_DEFAULT
   ? pino(pino.destination(logFile))
-  : pino({ level: logLevel }, transports);
+  : pino(
+      {
+        level: logLevel,
+      },
+      transports,
+    );

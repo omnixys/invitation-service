@@ -81,10 +81,18 @@ export async function startOtelSDK(): Promise<void> {
     metricReaders: [prometheusExporter],
 
     instrumentations: getNodeAutoInstrumentations({
-      '@opentelemetry/instrumentation-http': { enabled: true },
-      '@opentelemetry/instrumentation-nestjs-core': { enabled: true },
-      '@opentelemetry/instrumentation-express': { enabled: true },
-      '@opentelemetry/instrumentation-kafkajs': { enabled: true },
+      '@opentelemetry/instrumentation-http': {
+        enabled: true,
+      },
+      '@opentelemetry/instrumentation-nestjs-core': {
+        enabled: true,
+      },
+      '@opentelemetry/instrumentation-express': {
+        enabled: true,
+      },
+      '@opentelemetry/instrumentation-kafkajs': {
+        enabled: true,
+      },
     }),
   });
 

@@ -15,6 +15,8 @@ import type { Logger } from 'pino';
  * @param kind    Key unter dem der Kontext gespeichert wird (z. B. `class`, `service`)
  */
 export function getLogger(context: string, kind: string = 'class'): Logger {
-  const bindings: Record<string, string> = { [kind]: context };
+  const bindings: Record<string, string> = {
+    [kind]: context,
+  };
   return parentLogger.child(bindings);
 }

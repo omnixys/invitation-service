@@ -54,6 +54,8 @@ export async function registerHelmet(
     // Prevent MIME sniffing
     noSniff: true,
     // Frameguard (click-jacking)
-    frameguard: { action: 'sameorigin' },
+    frameguard: {
+      action: 'sameorigin',
+    },
   });
 }
