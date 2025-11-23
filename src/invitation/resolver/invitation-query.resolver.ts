@@ -1,5 +1,11 @@
+import {
+  CurrentUser,
+  CurrentUserData,
+} from '../../auth/decorators/current-user.decorator.js';
+import { CookieAuthGuard } from '../../auth/guards/cookie-auth.guard.js';
 import { Invitation } from '../models/entity/invitation.entity.js';
 import { InvitationReadService } from '../service/invitation-read.service.js';
+import { UseGuards } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 
 @Resolver(() => Invitation)
@@ -38,14 +44,12 @@ export class InvitationQueryResolver {
   }
 
   @Query(() => [Invitation], {
-    name: 'plusOnesByInvitationId',
+    name: 'myInvitations',
   })
-  getMyInvitationsByInvitationId(
-    @Args('id', {
-      type: () => ID,
-    })
-    invitationId: string,
+  @UseGuards(CookieAuthGuard)
+  getMyInvitations(
+    @CurrentUser() user: CurrentUserData,
   ): Promise<Invitation[]> {
-    return this.service.findAllByInvitedByInvitationId(invitationId);
+    return this.service.findByUser(user.id);
   }
 }

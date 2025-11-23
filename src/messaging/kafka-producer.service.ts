@@ -18,7 +18,7 @@ import { LoggerPlusService, setGlobalKafkaProducer } from '../logger/logger-plus
 import type { TraceContext } from '../trace/trace-context.util.js';
 import type { KafkaEnvelope } from './decorators/kafka-envelope.type.js';
 import { KafkaHeaderBuilder } from './kafka-header-builder.js';
-import { KafkaTopics } from './kafka-topic.properties.js';
+// import { KafkaTopics } from './kafka-topic.properties.js';
 // import { KafkaTopics } from './kafka-topic.properties.js';
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import type { Producer, ProducerRecord } from 'kafkajs';
@@ -79,24 +79,24 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
    * @param service - Ursprungs-Service
    * @param trace - Optionaler Tracing-Kontext
    */
-  async addSeatID(
-    payload: {
-      seatId: string;
-      guestProfileId: string;
-      eventId: string;
-    },
-    service: string,
-    trace?: TraceContext,
-  ): Promise<void> {
-    const envelope: KafkaEnvelope<typeof payload> = {
-      invitation: 'addSeatId',
-      service,
-      version: 'v1',
-      trace,
-      payload,
-    };
-    await this.send(KafkaTopics.ticket.addSeat, envelope, trace);
-  }
+  // async addSeatID(
+  //   payload: {
+  //     seatId: string;
+  //     guestProfileId: string;
+  //     eventId: string;
+  //   },
+  //   service: string,
+  //   trace?: TraceContext,
+  // ): Promise<void> {
+  //   const envelope: KafkaEnvelope<typeof payload> = {
+  //     invitation: 'addSeatId',
+  //     service,
+  //     version: 'v1',
+  //     trace,
+  //     payload,
+  //   };
+  //   await this.send(KafkaTopics.ticket.addSeat, envelope, trace);
+  // }
 
   async disconnect(): Promise<void> {
     if (this.producer) {

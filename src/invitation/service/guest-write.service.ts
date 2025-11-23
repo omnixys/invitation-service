@@ -31,7 +31,7 @@ export class GuestWriteService extends InvitationBaseService {
   }
 
   async reply(input: RSVPInput): Promise<Invitation> {
-    const { id, choice, replyInput } = input;
+    const { invitationId: id, choice, replyInput } = input;
     this.logger.debug(`reply: id=${id} choice=${choice}`);
 
     const invitation = await this.ensureExists(id);

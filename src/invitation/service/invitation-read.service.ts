@@ -56,4 +56,12 @@ export class InvitationReadService extends InvitationBaseService {
     });
     return list.map(mapInvitation);
   }
+
+  async findByUser(userId: string): Promise<Invitation[]> {
+    this.logger.debug('Finding invitations for userId=%s', userId);
+    const list = await this.prismaService.invitation.findMany({
+      where: { guestProfileId: userId },
+    });
+    return list.map(mapInvitation);
+  }
 }

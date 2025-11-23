@@ -55,7 +55,7 @@ export class RSVPInput {
     description:
       'ID of the invitation for which the guest is submitting an RSVP.',
   })
-  id!: string;
+  invitationId!: string;
 
   @Field(() => RsvpChoice, {
     description: 'The RSVP response: YES, NO, or MAYBE.',
