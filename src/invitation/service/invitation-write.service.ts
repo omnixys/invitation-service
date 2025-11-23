@@ -84,4 +84,25 @@ export class InvitationWriteService extends InvitationBaseService {
 
     return { inserted: result.length };
   }
+
+  async deleteMany(guestId: string): Promise<void> {
+    this.logger.debug(`deleteMany: guestId=${guestId}`);
+    await this.prismaService.invitation.deleteMany({
+      where: { guestProfileId: guestId },
+    });
+  }
+
+  async addGuestId({
+    guestId,
+    invitationId,
+  }: {
+    guestId: string;
+    invitationId: string;
+  }): Promise<void> {
+    this.logger.debug(`addGuestId: guestId=${guestId}`);
+    await this.prismaService.invitation.updateMany({
+      where: { id: invitationId },
+      data: { guestProfileId: guestId },
+    });
+  }
 }
