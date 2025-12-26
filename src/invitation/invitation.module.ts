@@ -1,6 +1,7 @@
 import { AuthModule } from '../auth/auth.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { ValkeyModule } from '../valkey/valkey.module.js';
+import { UploadController } from './controller/upload.controller.js';
 import { GuestMutationResolver } from './resolver/guest-mutation.resolver.js';
 import { AdminMutationResolver } from './resolver/invitation-admin-mutation.resolver.js';
 import { InvitationQueryResolver } from './resolver/invitation-query.resolver.js';
@@ -13,6 +14,7 @@ import { Module } from '@nestjs/common';
 
 @Module({
   imports: [PrismaModule, AuthModule, ValkeyModule],
+  controllers: [UploadController],
   providers: [
     InvitationQueryResolver,
     AdminMutationResolver,

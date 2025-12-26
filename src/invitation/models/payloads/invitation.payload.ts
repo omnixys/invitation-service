@@ -11,7 +11,7 @@ import {
 @ObjectType({
   description: 'GraphQL Invitation entity matching the Prisma model exactly.',
 })
-export class Invitation {
+export class InvitationPayload {
   @Field(() => ID)
   id!: string;
 
@@ -19,12 +19,12 @@ export class Invitation {
   @Field(() => String, {
     nullable: true,
   })
-  firstName?: string | null;
+  firstName?: string;
 
   @Field(() => String, {
     nullable: true,
   })
-  lastName?: string | null;
+  lastName?: string;
 
   // REQUIRED: eventId is NOT nullable in Prisma
   @Field(() => ID)
@@ -34,7 +34,7 @@ export class Invitation {
   @Field(() => ID, {
     nullable: true,
   })
-  guestProfileId?: string | null;
+  guestProfileId?: string;
 
   // REQUIRED ENUM
   @Field(() => InvitationStatus)
@@ -50,17 +50,23 @@ export class Invitation {
     nullable: true,
     description: 'Pointer to PII record inside Ephemeral Redis Store.',
   })
-  pendingContactId?: string | null;
+  pendingContactId?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Pointer to PII record inside Ephemeral Redis Store.',
+  })
+  phoneNumber?: string;
 
   @Field(() => RsvpChoice, {
     nullable: true,
   })
-  rsvpChoice?: RsvpChoice | null;
+  rsvpChoice?: RsvpChoice;
 
   @Field(() => GraphQLISODateTime, {
     nullable: true,
   })
-  rsvpAt?: Date | null;
+  rsvpAt?: Date | undefined;
 
   // approved = Boolean, default false → never null in Prisma
   @Field(() => Boolean)
@@ -69,12 +75,12 @@ export class Invitation {
   @Field(() => GraphQLISODateTime, {
     nullable: true,
   })
-  approvedAt?: Date | null;
+  approvedAt?: Date;
 
   @Field(() => ID, {
     nullable: true,
   })
-  approvedByUserId?: string | null;
+  approvedByUserId?: string;
 
   @Field(() => Int)
   maxInvitees!: number;
@@ -82,14 +88,10 @@ export class Invitation {
   @Field(() => ID, {
     nullable: true,
   })
-  invitedByInvitationId?: string | null;
+  invitedByInvitationId?: string;
 
   @Field(() => ID, {
     nullable: true,
   })
-  invitedByUserId?: string | null;
-
-  // Array fields NEVER nullable in Prisma (defaults to [])
-  @Field(() => [String])
-  plusOnes!: string[];
+  invitedByUserId?: string;
 }

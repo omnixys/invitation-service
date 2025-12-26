@@ -3,11 +3,10 @@
 import type { LoggerPlus } from '../../logger/logger-plus.js';
 import type { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
-import type { Invitation } from '../models/entity/invitation.entity.js';
-import { mapInvitation } from '../models/mappers/invitation.mapper.js';
 import { NotFoundException } from '@nestjs/common';
 import type { Tracer } from '@opentelemetry/api';
 import { trace } from '@opentelemetry/api';
+import type { Invitation } from '@prisma/client';
 
 /**
  * @file Gemeinsame Basisklasse für Inventory-Read/Write-Services:
@@ -42,6 +41,6 @@ export abstract class InvitationBaseService {
     if (!found) {
       throw new NotFoundException('Invitation not found');
     }
-    return mapInvitation(found);
+    return found;
   }
 }

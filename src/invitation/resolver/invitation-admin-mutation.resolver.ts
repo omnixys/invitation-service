@@ -5,14 +5,22 @@ import {
 } from '../../auth/decorators/current-user.decorator.js';
 import { CookieAuthGuard } from '../../auth/guards/cookie-auth.guard.js';
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
-import { Invitation } from '../models/entity/invitation.entity.js';
+import {
+  ApproveInvitationInput,
+  ApproveInvitationWithSeatInput,
+} from '../models/input/approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
+import {
+  ImportInvitationsInput,
+  ImportInvitationsResult,
+} from '../models/input/import-invitation.input.js';
+import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
 import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 
-@Resolver(() => Invitation)
+@Resolver(() => InvitationPayload)
 export class AdminMutationResolver {
   private readonly logger;
   constructor(
@@ -23,12 +31,12 @@ export class AdminMutationResolver {
   }
 
   @UseGuards(CookieAuthGuard)
-  @Mutation(() => Invitation)
+  @Mutation(() => InvitationPayload)
   async createInvitation(
     @Args('input')
     input: InvitationCreateInput,
     @CurrentUser() user: CurrentUserData,
-  ): Promise<Invitation> {
+  ): Promise<InvitationPayload> {
     if (!user?.id) {
       // Kein authentifizierter Nutzer im Kontext
       this.logger.debug('user= %o', user);
@@ -38,25 +46,37 @@ export class AdminMutationResolver {
     return this.adminService.create(input, user?.id);
   }
 
+  @Mutation(() => ImportInvitationsResult)
+  async importInvitations(
+    @Args('input', { type: () => ImportInvitationsInput })
+    input: ImportInvitationsInput,
+  ): Promise<ImportInvitationsResult> {
+    return this.adminService.importInvitations(
+      input.eventId,
+      input.uploadId,
+      input.uploadType,
+    );
+  }
+
   @UseGuards(CookieAuthGuard)
-  @Mutation(() => Invitation)
+  @Mutation(() => InvitationPayload)
   async approveInvitation(
-    @Args('id', {
-      type: () => ID,
+    @Args('input', {
+      type: () => ApproveInvitationInput,
     })
-    id: string,
-    @Args('approve', {
-      type: () => Boolean,
-    })
-    approve: boolean,
+    input: ApproveInvitationInput,
     @CurrentUser()
     user: CurrentUserData,
-  ): Promise<Invitation> {
+  ): Promise<InvitationPayload> {
     if (!user?.id) {
       // Kein authentifizierter Nutzer im Kontext
       throw new UnauthorizedException('Not authenticated');
     }
-    const result = await this.adminService.approve(id, approve, user?.id);
+    const result = await this.adminService.approve(
+      input.invitationId,
+      input.approved,
+      user?.id,
+    );
 
     if (!result) {
       throw new Error('Gast hat sich noch nicht entschieden!');
@@ -65,7 +85,32 @@ export class AdminMutationResolver {
   }
 
   @UseGuards(CookieAuthGuard)
-  @Mutation(() => Invitation)
+  @Mutation(() => InvitationPayload)
+  async approveInvitationAndCreateTicket(
+    @Args('input', {
+      type: () => ApproveInvitationWithSeatInput,
+    })
+    input: ApproveInvitationWithSeatInput,
+    @CurrentUser()
+    user: CurrentUserData,
+  ): Promise<InvitationPayload> {
+    if (!user?.id) {
+      // Kein authentifizierter Nutzer im Kontext
+      throw new UnauthorizedException('Not authenticated');
+    }
+    const result = await this.adminService.approveAndCreateTicket(
+      input,
+      user.id,
+    );
+
+    if (!result) {
+      throw new Error('Gast hat sich noch nicht entschieden!');
+    }
+    return result;
+  }
+
+  @UseGuards(CookieAuthGuard)
+  @Mutation(() => InvitationPayload)
   async rejectInvitation(
     @Args('id', {
       type: () => ID,
@@ -73,7 +118,7 @@ export class AdminMutationResolver {
     id: string,
     @CurrentUser()
     user: CurrentUserData,
-  ): Promise<Invitation> {
+  ): Promise<InvitationPayload> {
     if (!user?.id) {
       // Kein authentifizierter Nutzer im Kontext
       throw new UnauthorizedException('Not authenticated');

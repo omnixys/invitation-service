@@ -22,6 +22,7 @@ import compress from '@fastify/compress';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 // import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -149,6 +150,14 @@ async function bootstrap(): Promise<void> {
   await app.register(cookie, {
     // secret: config.get('COOKIE_SECRET') ?? 'omnixys-default-secret',
     secret: process.env.COOKIE_SECRET ?? 'omnixys-default-secret',
+  });
+
+  await app.register(multipart, {
+    attachFieldsToBody: false,
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+      files: 1,
+    },
   });
 
   /** Port-Definition (Standard: 4000) */

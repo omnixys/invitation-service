@@ -28,8 +28,14 @@ export const KafkaTopics = {
     deleteInvitations: `${SERVICE}.delete.user`,
     addGuestId: `${SERVICE}.addGuestId.user`,
   },
+  // ticket: {
+  //   createTicket: `${SERVICE}.create.ticket.`,
+  // },
   logstream: {
     log: `logstream.log.${SERVICE}`,
+  },
+  authentication: {
+    createGuest: `${SERVICE}.createGuest.authentication`,
   },
   admin: {
     restart: `${SERVICE}.restart.admin`,

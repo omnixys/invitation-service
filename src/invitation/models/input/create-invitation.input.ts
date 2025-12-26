@@ -1,3 +1,4 @@
+import { PhoneNumberInput } from './phone-number.input.js';
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
 
 @InputType({
@@ -33,4 +34,9 @@ export class InvitationCreateInput {
     description: 'Optional: last name of the invited guest.',
   })
   lastName?: string | null;
+
+  @Field(() => [PhoneNumberInput], {
+    nullable: true,
+  })
+  phoneNumbers?: PhoneNumberInput[];
 }

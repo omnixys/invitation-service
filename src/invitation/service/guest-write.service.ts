@@ -4,10 +4,12 @@
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RsvpDomain } from '../models/domain/rsvp.domain.js';
-import { Invitation } from '../models/entity/invitation.entity.js';
 import { InvitationStatus } from '../models/enums/invitation-status.enum.js';
+import { RsvpChoice } from '../models/enums/rsvp-choice.enum.js';
+import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
-import { mapInvitation } from '../models/mappers/invitation.mapper.js';
+import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
+import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { PendingContactService } from './pending-contact.service.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -30,7 +32,7 @@ export class GuestWriteService extends InvitationBaseService {
     super(logger, prisma);
   }
 
-  async reply(input: RSVPInput): Promise<Invitation> {
+  async reply(input: RSVPInput): Promise<InvitationPayload> {
     const { invitationId: id, choice, replyInput } = input;
     this.logger.debug(`reply: id=${id} choice=${choice}`);
 
@@ -38,7 +40,7 @@ export class GuestWriteService extends InvitationBaseService {
     const now = new Date();
 
     // FIX 3: Avoid undefined → force null fallback
-    const previous = invitation.rsvpChoice ?? null;
+    const previous = (invitation.rsvpChoice as RsvpChoice) ?? undefined;
 
     const decision = RsvpDomain.decide(previous, choice, !!replyInput);
 
@@ -70,10 +72,10 @@ export class GuestWriteService extends InvitationBaseService {
       },
     });
 
-    return mapInvitation(updated);
+    return InvitationMapper.toPayload(updated);
   }
 
-  async createPlusOne(input: CreatePlusOneInput, userId?: string): Promise<Invitation> {
+  async createPlusOne(input: CreatePlusOneInput, userId?: string): Promise<InvitationPayload> {
     const { eventId, invitedByInvitationId, firstName, lastName } = input;
 
     if (!eventId) {
@@ -83,7 +85,7 @@ export class GuestWriteService extends InvitationBaseService {
       throw new BadRequestException('invitedByInvitationId required');
     }
 
-    return this.prismaService.$transaction(async (tx): Promise<Invitation> => {
+    return this.prismaService.$transaction(async (tx): Promise<InvitationPayload> => {
       const updateParent = await tx.invitation.updateMany({
         where: { id: invitedByInvitationId, eventId, maxInvitees: { gt: 0 } },
         data: { maxInvitees: { decrement: 1 } },
@@ -113,16 +115,16 @@ export class GuestWriteService extends InvitationBaseService {
         },
       });
 
-      await tx.invitation.update({
-        where: { id: invitedByInvitationId },
-        data: { plusOnes: { push: child.id } },
-      });
+      // await tx.invitation.update({
+      //   where: { id: invitedByInvitationId },
+      //   data: { plusOnes: { push: child.id } },
+      // });
 
-      return mapInvitation(child);
+      return InvitationMapper.toPayload(child);
     });
   }
 
-  async deletePlusOne(id: string): Promise<Invitation> {
+  async deletePlusOne(id: string): Promise<InvitationPayload> {
     return this.prismaService.$transaction(async (tx) => {
       const child = await tx.invitation.findUnique({
         where: { id },
@@ -161,15 +163,15 @@ export class GuestWriteService extends InvitationBaseService {
         where: { id: parent.id },
         data: {
           maxInvitees: { increment: 1 },
-          plusOnes: { set: parent.plusOnes.filter((x) => x !== id) },
+          // plusOnes: { set: parent.plusOnes.filter((x) => x !== id) },
         },
       });
 
-      return mapInvitation(deleted);
+      return InvitationMapper.toPayload(deleted);
     });
   }
 
-  async deleteAllPlusOnes(parentId: string): Promise<Invitation[]> {
+  async deleteAllPlusOnes(parentId: string): Promise<InvitationPayload[]> {
     return this.prismaService.$transaction(async (tx) => {
       const parent = await tx.invitation.findUnique({
         where: { id: parentId },
@@ -192,18 +194,54 @@ export class GuestWriteService extends InvitationBaseService {
           await this.pending.delete(c.pendingContactId).catch(() => void 0);
         }
         const deleted = await tx.invitation.delete({ where: { id: c.id } });
-        fullChildren.push(mapInvitation(deleted));
+        fullChildren.push(InvitationMapper.toPayload(deleted));
       }
 
       await tx.invitation.update({
         where: { id: parentId },
         data: {
           maxInvitees: { increment: children.length },
-          plusOnes: { set: [] },
+          // plusOnes: { set: [] },
         },
       });
       return fullChildren;
     });
+  }
+
+  async createFromPublicRsvp(input: PublicRsvpInput) {
+    // 1) Haupt-Einladung (Invitee) anlegen
+    const invitee = await this.prismaService.invitation.create({
+      data: {
+        eventId: input.eventId,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phoneNumber: input.phoneNumber ?? null,
+        status: 'ACCEPTED',
+        rsvpChoice: 'YES',
+        rsvpAt: new Date(),
+        maxInvitees: input.plusOnes?.length ?? 0,
+      },
+    });
+
+    // 2) Plus-Ones als eigene Invitations anlegen (Self-Relation)
+    if (input.plusOnes && input.plusOnes.length > 0) {
+      await this.prismaService.invitation.createMany({
+        data: input.plusOnes
+          .filter((p) => p.firstName && p.lastName)
+          .map((p) => ({
+            eventId: input.eventId,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            status: 'ACCEPTED',
+            rsvpChoice: 'YES',
+            rsvpAt: new Date(),
+            invitedByInvitationId: invitee.id,
+          })),
+      });
+    }
+
+
+    return InvitationMapper.toPayload(invitee);
   }
 
   private ensureIsPlusOne(child: any): void {

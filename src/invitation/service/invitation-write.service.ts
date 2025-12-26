@@ -1,9 +1,9 @@
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { Invitation } from '../models/entity/invitation.entity.js';
 import { InvitationStatus } from '../models/enums/invitation-status.enum.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
-import { mapInvitation } from '../models/mappers/invitation.mapper.js';
+import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
+import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
 
@@ -24,7 +24,10 @@ export class InvitationWriteService extends InvitationBaseService {
    * Assigns a guestProfileId to an invitation.
    * (PubSub removed — event publishing handled later in Gateway)
    */
-  async addGuestProfileToInvitation(invitationId: string, userId: string): Promise<Invitation> {
+  async addGuestProfileToInvitation(
+    invitationId: string,
+    userId: string,
+  ): Promise<InvitationPayload> {
     this.logger.debug(`addGuestProfileToInvitation: invitation=${invitationId}, user=${userId}`);
 
     await this.ensureExists(invitationId);
@@ -37,7 +40,7 @@ export class InvitationWriteService extends InvitationBaseService {
     // ❌ Redis PubSub removed
     //   Wenn du später WebSockets willst → Federation Gateway macht das!
 
-    return mapInvitation(updated);
+    return InvitationMapper.toPayload(updated);
   }
 
   /**
@@ -46,7 +49,7 @@ export class InvitationWriteService extends InvitationBaseService {
   async setGuestProfileId(
     invitationId: string,
     guestProfileId: string | null,
-  ): Promise<Invitation> {
+  ): Promise<InvitationPayload> {
     this.logger.debug(`setGuestProfileId: invitation=${invitationId}, value=${guestProfileId}`);
 
     await this.ensureExists(invitationId);
@@ -56,7 +59,7 @@ export class InvitationWriteService extends InvitationBaseService {
       data: { guestProfileId },
     });
 
-    return mapInvitation(updated);
+    return InvitationMapper.toPayload(updated);
   }
 
   /**

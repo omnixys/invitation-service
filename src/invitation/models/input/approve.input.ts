@@ -8,7 +8,7 @@ export class ApproveInvitationInput {
   @Field(() => ID, {
     description: 'ID of the invitation to approve/unapprove (cuid).',
   })
-  id!: string;
+  invitationId!: string;
 
   @Field(() => Boolean, {
     nullable: false,
@@ -16,4 +16,14 @@ export class ApproveInvitationInput {
       'Admin approval flag (true = approved, false = unapproved). Requires admin permissions.',
   })
   approved!: boolean;
+}
+
+@InputType({
+  description: 'Extended approval input including seat assignment.',
+})
+export class ApproveInvitationWithSeatInput extends ApproveInvitationInput {
+  @Field(() => ID, {
+    description: 'Seat to assign when approving the invitation.',
+  })
+  seatId!: string;
 }

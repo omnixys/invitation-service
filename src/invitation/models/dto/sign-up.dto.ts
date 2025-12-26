@@ -14,16 +14,17 @@
  *
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
 
-@Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  async onModuleInit(): Promise<void> {
-    await this.$connect();
-  }
-  async onModuleDestroy(): Promise<void> {
-    await this.$disconnect();
-  }
+import type { PhoneNumberInput } from '../input/phone-number.input.js';
+
+export interface GuestSignUpDTO {
+  invitationId: string;
+  seatId?: string;
+  eventId: string;
+  firstName: string;
+  lastName: string;
+  pendingContactId?: string | null;
+  email?: string;
+  phoneNumbers?: PhoneNumberInput[];
+  actorId?: string;
 }

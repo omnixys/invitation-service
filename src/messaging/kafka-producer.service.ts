@@ -14,12 +14,12 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
+import { GuestSignUpDTO } from '../invitation/models/dto/sign-up.dto.js';
 import { LoggerPlusService, setGlobalKafkaProducer } from '../logger/logger-plus.service.js';
 import type { TraceContext } from '../trace/trace-context.util.js';
 import type { KafkaEnvelope } from './decorators/kafka-envelope.type.js';
 import { KafkaHeaderBuilder } from './kafka-header-builder.js';
-// import { KafkaTopics } from './kafka-topic.properties.js';
-// import { KafkaTopics } from './kafka-topic.properties.js';
+import { KafkaTopics } from './kafka-topic.properties.js';
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import type { Producer, ProducerRecord } from 'kafkajs';
 
@@ -79,23 +79,31 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
    * @param service - Ursprungs-Service
    * @param trace - Optionaler Tracing-Kontext
    */
-  // async addSeatID(
-  //   payload: {
-  //     seatId: string;
-  //     guestProfileId: string;
-  //     eventId: string;
-  //   },
+  async createGuest(payload: GuestSignUpDTO, service: string, trace?: TraceContext): Promise<void> {
+    const envelope: KafkaEnvelope<typeof payload> = {
+      invitation: 'createGuest',
+      service,
+      version: 'v1',
+      trace,
+      payload,
+    };
+    this.logger.debug('kafka message: %o', payload);
+    await this.send(KafkaTopics.authentication.createGuest, envelope, trace);
+  }
+
+  // async createTicket(
+  //   payload: CreateTicketDTO,
   //   service: string,
   //   trace?: TraceContext,
   // ): Promise<void> {
   //   const envelope: KafkaEnvelope<typeof payload> = {
-  //     invitation: 'addSeatId',
+  //     invitation: 'createTicket',
   //     service,
   //     version: 'v1',
   //     trace,
   //     payload,
   //   };
-  //   await this.send(KafkaTopics.ticket.addSeat, envelope, trace);
+  //   await this.send(KafkaTopics.ticket.createTicket, envelope, trace);
   // }
 
   async disconnect(): Promise<void> {

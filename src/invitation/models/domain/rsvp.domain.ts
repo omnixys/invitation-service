@@ -15,7 +15,7 @@ export class RsvpDomain {
    * Computes the new RSVP state and whether user must submit contact data.
    */
   static decide(
-    previousChoice: RsvpChoice | null | undefined,
+    previousChoice: RsvpChoice | undefined,
     newChoice: RsvpChoice,
     hasReplyInput: boolean,
   ): RSVPDecision {

@@ -3,23 +3,30 @@ import {
   CurrentUserData,
 } from '../../auth/decorators/current-user.decorator.js';
 import { CookieAuthGuard } from '../../auth/guards/cookie-auth.guard.js';
-import { Invitation } from '../models/entity/invitation.entity.js';
+import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationReadService } from '../service/invitation-read.service.js';
 import { UseGuards } from '@nestjs/common';
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  ID,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 
-@Resolver(() => Invitation)
+@Resolver(() => InvitationPayload)
 export class InvitationQueryResolver {
   constructor(private readonly service: InvitationReadService) {}
 
-  @Query(() => [Invitation], {
+  @Query(() => [InvitationPayload], {
     name: 'invitations',
   })
-  get(): Promise<Invitation[]> {
+  get(): Promise<InvitationPayload[]> {
     return this.service.findAll();
   }
 
-  @Query(() => [Invitation], {
+  @Query(() => [InvitationPayload], {
     name: 'eventInvitation',
   })
   getByEventId(
@@ -27,11 +34,11 @@ export class InvitationQueryResolver {
       type: () => ID,
     })
     eventId: string,
-  ): Promise<Invitation[]> {
+  ): Promise<InvitationPayload[]> {
     return this.service.findByEventId(eventId);
   }
 
-  @Query(() => Invitation, {
+  @Query(() => InvitationPayload, {
     name: 'invitation',
   })
   getById(
@@ -39,17 +46,36 @@ export class InvitationQueryResolver {
       type: () => ID,
     })
     id: string,
-  ): Promise<Invitation> {
+  ): Promise<InvitationPayload> {
     return this.service.findOne(id);
   }
 
-  @Query(() => [Invitation], {
+  @Query(() => [InvitationPayload], {
     name: 'myInvitations',
   })
   @UseGuards(CookieAuthGuard)
   getMyInvitations(
     @CurrentUser() user: CurrentUserData,
-  ): Promise<Invitation[]> {
+  ): Promise<InvitationPayload[]> {
     return this.service.findByUser(user.id);
+  }
+
+  @Query(() => [InvitationPayload], {
+    name: 'getPlusOnesByInvitation',
+  })
+  getPlusOnesByInvitation(
+    @Args('invitationId', {
+      type: () => ID,
+    })
+    invitationId: string,
+  ): Promise<InvitationPayload[]> {
+    return this.service.findPlusOnesByInvitation(invitationId);
+  }
+
+  @ResolveField(() => [InvitationPayload])
+  async plusOnes(
+    @Parent() parent: InvitationPayload,
+  ): Promise<InvitationPayload[]> {
+    return this.service.findPlusOnesByInvitation(parent.id);
   }
 }

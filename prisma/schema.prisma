@@ -19,40 +19,41 @@ datasource db {
 /// Invitation: main aggregate root for the invitation domain
 /// ----------------------------------------------------------------------
 model Invitation {
-  id                     String            @id @default(cuid()) @map("id")
+  id String @id @default(cuid()) @map("id")
 
-  firstName              String?           @map("first_name")
-  lastName               String?           @map("last_name")
+  firstName String? @map("first_name")
+  lastName  String? @map("last_name")
 
-  eventId                String            @map("event_id")
-  guestProfileId         String?           @map("guest_profile_id")
+  eventId        String  @map("event_id")
+  guestProfileId String? @map("guest_profile_id")
+  phoneNumber    String? @map("phone_number")
 
-  status                 InvitationStatus  @default(PENDING) @map("status")
+  status InvitationStatus @default(PENDING) @map("status")
 
-  createdAt              DateTime          @default(now()) @map("created_at")
-  updatedAt              DateTime          @updatedAt       @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  pendingContactId       String?           @unique @map("pending_contact_id")
+  pendingContactId String? @unique @map("pending_contact_id")
 
-  rsvpChoice             RsvpChoice?       @map("rsvp_choice")
-  rsvpAt                 DateTime?         @map("rsvp_at")
+  rsvpChoice RsvpChoice? @map("rsvp_choice")
+  rsvpAt     DateTime?   @map("rsvp_at")
 
-  approved               Boolean           @default(false) @map("approved")
-  approvedAt             DateTime?         @map("approved_at")
-  approvedByUserId       String?           @map("approved_by_user_id")
+  approved         Boolean   @default(false) @map("approved")
+  approvedAt       DateTime? @map("approved_at")
+  approvedByUserId String?   @map("approved_by_user_id")
 
-  maxInvitees            Int               @default(0) @map("max_invitees")
+  maxInvitees Int @default(0) @map("max_invitees")
 
-  invitedByInvitationId  String?           @map("invited_by_invitation_id")
-  invitedByUserId        String?           @map("invited_by_user_id")
+  invitedByInvitationId String?     @map("invited_by_invitation_id")
+  invitedByInvitation   Invitation? @relation("invitation_by_invitation", fields: [invitedByInvitationId], references: [id])
+  invitedByUserId       String?     @map("invited_by_user_id")
 
-  plusOnes               String[]          @default([]) @map("plus_ones")
+  plusOnes Invitation[] @relation("invitation_by_invitation")
 
   @@index([eventId, status])
   @@index([eventId, rsvpChoice])
   @@index([invitedByInvitationId])
   @@index([approved, approvedAt])
-
   @@map("invitation")
 }
 
