@@ -5,14 +5,13 @@
 /// ----------------------------------------------------------------------
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client"
+  output   = "../src/prisma/generated"
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "postgresql"
+  schemas  = ["invitation"]
 }
 
 /// ----------------------------------------------------------------------
@@ -55,6 +54,7 @@ model Invitation {
   @@index([invitedByInvitationId])
   @@index([approved, approvedAt])
   @@map("invitation")
+  @@schema("invitation")
 }
 
 /// ----------------------------------------------------------------------
@@ -67,10 +67,14 @@ enum InvitationStatus {
   CANCELED
   REJECTED
   APPROVED
+
+  @@schema("invitation")
 }
 
 enum RsvpChoice {
   YES
   NO
   MAYBE
+
+  @@schema("invitation")
 }

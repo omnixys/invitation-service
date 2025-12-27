@@ -43,6 +43,8 @@ export default tseslint.config(
       '.extras/scripts/commitlint-formatter.js',
       '.extras/docker',
       'commitlint.config.mjs',
+      './prisma.config.ts',
+      './prisma/seed.ts',
     ],
   },
 
