@@ -4,15 +4,16 @@
  * Creates demo invitations with different RSVP states and plus-ones
  */
 
-import { InvitationStatus, RsvpChoice } from "@prisma/client";
-  import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+    import { InvitationStatus, PrismaClient, RsvpChoice } from '../src/prisma/generated/client.js';
+    import { PrismaPg } from '@prisma/adapter-pg';
+    import 'dotenv/config';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const EVENT_ID = 'cmjkm0jnu000mewij0eq9tse0';
-  const GUEST_ID = '3a709c62-9148-4029-8180-943fcb1ded39';
+  const EVENT_ID = 'cmjzoow54000nhmijxkg2fb7h';
+  const GUEST_ID = 'ae489d9b-96ce-4942-bcb1-c2e2a0c92e83';
 
   /* ------------------------------------------------------------------
    * 1) Accepted Invitation
