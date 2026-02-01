@@ -12,7 +12,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const EVENT_ID = 'cmjzoow54000nhmijxkg2fb7h';
+  const EVENT_ID = 'cmk93ux98000nq00663i31s8h';
   const GUEST_ID = 'ae489d9b-96ce-4942-bcb1-c2e2a0c92e83';
 
   /* ------------------------------------------------------------------
@@ -21,29 +21,28 @@ async function main() {
   const accepted = await prisma.invitation.create({
     data: {
       eventId: EVENT_ID,
-      firstName: "Guest",
-      lastName: "Omnixys",
-      phoneNumber: "15111951223",
+      firstName: 'Guest',
+      lastName: 'Omnixys',
+      phoneNumber: '15111951223',
       guestProfileId: GUEST_ID,
-      status: InvitationStatus.ACCEPTED,
+      status: InvitationStatus.APPROVED,
       rsvpChoice: RsvpChoice.YES,
       rsvpAt: new Date(),
-      approved: false,
+      approved: true,
       approvedAt: new Date(),
       maxInvitees: 0,
     },
   });
 
-  
   /* ------------------------------------------------------------------
    * 2) Declined Invitation
    * ------------------------------------------------------------------ */
   const declined = await prisma.invitation.create({
     data: {
       eventId: EVENT_ID,
-      firstName: "Mark",
-      lastName: "Schneider",
-      phoneNumber: "1522222222",
+      firstName: 'Mark',
+      lastName: 'Schneider',
+      phoneNumber: '1522222222',
       status: InvitationStatus.DECLINED,
       rsvpChoice: RsvpChoice.NO,
       rsvpAt: new Date(),
@@ -57,9 +56,9 @@ async function main() {
   const pending = await prisma.invitation.create({
     data: {
       eventId: EVENT_ID,
-      firstName: "Julia",
-      lastName: "Becker",
-      phoneNumber: "1533333333",
+      firstName: 'Julia',
+      lastName: 'Becker',
+      phoneNumber: '1533333333',
       status: InvitationStatus.PENDING,
       maxInvitees: 0,
     },
@@ -71,9 +70,9 @@ async function main() {
   const mainWithPlusOnes = await prisma.invitation.create({
     data: {
       eventId: EVENT_ID,
-      firstName: "Daniel",
-      lastName: "Klein",
-      phoneNumber: "1544444444",
+      firstName: 'Daniel',
+      lastName: 'Klein',
+      phoneNumber: '1544444444',
       status: InvitationStatus.ACCEPTED,
       rsvpChoice: RsvpChoice.YES,
       rsvpAt: new Date(),
@@ -90,29 +89,43 @@ async function main() {
     data: [
       {
         eventId: EVENT_ID,
-        firstName: "Laura",
-        lastName: "Klein",
+        firstName: 'Laura',
+        lastName: 'Klein',
         status: InvitationStatus.ACCEPTED,
         invitedByInvitationId: mainWithPlusOnes.id,
       },
       {
         eventId: EVENT_ID,
-        firstName: "Tom",
-        lastName: "Klein",
+        firstName: 'Tom',
+        lastName: 'Klein',
         status: InvitationStatus.ACCEPTED,
         invitedByInvitationId: mainWithPlusOnes.id,
       },
       {
         eventId: EVENT_ID,
-        firstName: "Sophie",
-        lastName: "Klein",
+        firstName: 'Sophie',
+        lastName: 'Klein',
         status: InvitationStatus.ACCEPTED,
         invitedByInvitationId: mainWithPlusOnes.id,
       },
     ],
   });
 
-  console.log("✅ Invitation seed completed successfully");
+  /* ------------------------------------------------------------------
+   * Console Output (IDs)
+   * ------------------------------------------------------------------ */
+  console.log('\n📌 Seeded Invitation IDs');
+  console.log('─────────────────────────────────────────────');
+  console.log('Accepted (guest)         :', accepted.id);
+  console.log('Declined  (mark)         :', declined.id);
+  console.log('Pending    (Julia)       :', pending.id);
+  console.log('Main + PlusOnes (daniel) :', mainWithPlusOnes.id);
+  // console.log('Plus-Ones Count :', plusOnes.count);
+  console.log('Event ID                 :', EVENT_ID);
+  console.log('GuestProfile ID          :', GUEST_ID);
+    console.log('─────────────────────────────────────────────');
+
+  console.log('✅ Invitation seed completed successfully');
 }
 
 main()
