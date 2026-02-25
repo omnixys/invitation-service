@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -239,7 +240,6 @@ export class GuestWriteService extends InvitationBaseService {
           })),
       });
     }
-
 
     return InvitationMapper.toPayload(invitee);
   }

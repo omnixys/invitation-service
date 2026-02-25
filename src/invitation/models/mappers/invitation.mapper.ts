@@ -1,4 +1,4 @@
-import { Invitation } from '../../../prisma/generated/client.js';
+import type { Invitation } from '../../../prisma/generated/client.js';
 import { n2u } from '../../../utils/null-to-undefined.js';
 import type { InvitationStatus } from '../enums/invitation-status.enum.js';
 import type { RsvpChoice } from '../enums/rsvp-choice.enum.js';

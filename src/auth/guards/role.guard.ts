@@ -40,7 +40,7 @@ export class RoleGuard implements CanActivate {
     const roles = invitation.roles ?? [];
     const allowed = requiredRoles.some((r) => roles.includes(r));
 
-    console.log({
+    console.debug({
       invitation,
       roles,
       requiredRoles,

@@ -2,7 +2,7 @@
 
 import type { LoggerPlus } from '../../logger/logger-plus.js';
 import type { LoggerPlusService } from '../../logger/logger-plus.service.js';
-import { Invitation } from '../../prisma/generated/client.js';
+import type { Invitation } from '../../prisma/generated/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import { NotFoundException } from '@nestjs/common';
 import type { Tracer } from '@opentelemetry/api';

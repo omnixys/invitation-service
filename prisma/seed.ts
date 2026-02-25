@@ -12,7 +12,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const EVENT_ID = 'cmk93ux98000nq00663i31s8h';
+  const EVENT_ID = 'cmlz996ya000nrbij16p2jnxk';
   const GUEST_ID = 'ae489d9b-96ce-4942-bcb1-c2e2a0c92e83';
 
   /* ------------------------------------------------------------------

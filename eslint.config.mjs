@@ -45,6 +45,7 @@ export default tseslint.config(
       'commitlint.config.mjs',
       './prisma.config.ts',
       './prisma/seed.ts',
+      'release.config.js',
     ],
   },
 
