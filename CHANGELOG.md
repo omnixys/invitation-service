@@ -3,6 +3,10 @@
 All notable changes in this project will be documented in this file.
 
 
+## <small>1.0.1 (2026-02-25)</small>
+
+* fix(ci): update CI ([c5cbaa4669316794caae745b1ab09b7ef64eb7e3](https://github.com/omnixys/omnixys-invitation-service/commit/c5cbaa4669316794caae745b1ab09b7ef64eb7e3))
+
 ## 1.0.0 (2026-02-25)
 
 * feat(invitation-service): implement GraphQL schema, DTOs, inputs and payloads ([862c751561fe1a178bc173ad31c66e9ec77f6cc2](https://github.com/omnixys/omnixys-invitation-service/commit/862c751561fe1a178bc173ad31c66e9ec77f6cc2))
