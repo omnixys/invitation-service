@@ -3,6 +3,10 @@
 All notable changes in this project will be documented in this file.
 
 
+## <small>1.0.3 (2026-02-26)</small>
+
+* fix(release-ci): fix Release CI Job ([59c820e6e0649f778d89be012ffaf86d041a47c1](https://github.com/omnixys/omnixys-invitation-service/commit/59c820e6e0649f778d89be012ffaf86d041a47c1))
+
 ## <small>1.0.2 (2026-02-25)</small>
 
 * fix(ci): change serets.SERVICE to vars.SERVICE ([9a3fdbc5ea29b2aeece78662a5ebbdc128bc1061](https://github.com/omnixys/omnixys-invitation-service/commit/9a3fdbc5ea29b2aeece78662a5ebbdc128bc1061))
