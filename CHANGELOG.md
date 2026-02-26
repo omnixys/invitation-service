@@ -3,6 +3,10 @@
 All notable changes in this project will be documented in this file.
 
 
+## <small>1.0.4 (2026-02-26)</small>
+
+* fix(release-ci): add @semantic-release/npm ([306e19994b728c0546abdec709812b6d6610b28a](https://github.com/omnixys/omnixys-invitation-service/commit/306e19994b728c0546abdec709812b6d6610b28a))
+
 ## <small>1.0.3 (2026-02-26)</small>
 
 * fix(release-ci): fix Release CI Job ([59c820e6e0649f778d89be012ffaf86d041a47c1](https://github.com/omnixys/omnixys-invitation-service/commit/59c820e6e0649f778d89be012ffaf86d041a47c1))
