@@ -1,5 +1,5 @@
 {
-  "name": "omnixys-invitation-service",
+  "name": "invitation-service",
   "version": "1.0.4",
   "description": "Omnixys Invitation Service",
   "author": {
@@ -9,10 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/omnixys/omnixys-invitation-service.git"
+    "url": "https://github.com/omnixys/invitation-service.git"
   },
   "bugs": {
-    "url": "https://github.com/omnixys/omnixys-invitation-service/issues"
+    "url": "https://github.com/omnixys/invitation-service/issues"
   },
   "homepage": "https://omnixys.com",
   "license": "GPL-3.0-or-later",
@@ -87,11 +87,6 @@
     "@opentelemetry/sdk-node": "^0.208.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@semantic-release/release-notes-generator": "^14.1.0",
     "@valkey/client": "^1.0.0",
     "cfonts": "^3.3.1",
     "chalk": "^5.6.2",
@@ -114,12 +109,16 @@
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "latest",
     "@nestjs/cli": "^11.0.14",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.10",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
     "@semantic-release/npm": "^13.1.4",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.15.7",
     "@tsconfig/node23": "^23.0.4",
@@ -135,7 +134,7 @@
     "globals": "^16.5.0",
     "husky": "^9.1.7",
     "jest": "^29.7.0",
-    "lint-staged": "^16.2.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.7.4",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-sort-imports": "^1.8.9",
