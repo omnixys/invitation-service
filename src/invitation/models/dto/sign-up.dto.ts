@@ -15,7 +15,7 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import type { PhoneNumberInput } from '../input/phone-number.input.js';
+import { PhoneNumberInput } from "@omnixys/graphql";
 
 export interface GuestSignUpDTO {
   invitationId: string;

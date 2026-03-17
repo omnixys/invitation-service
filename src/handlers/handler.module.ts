@@ -15,15 +15,13 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import { AdminModule } from '../admin/admin.module.js';
 import { InvitationModule } from '../invitation/invitation.module.js';
-import { AdminHandler } from './admin.handler.js';
 import { UserHandler } from './user.handler.js';
 import { Module } from '@nestjs/common';
 
 @Module({
-  imports: [AdminModule, InvitationModule],
-  providers: [AdminHandler, UserHandler],
-  exports: [AdminHandler, UserHandler],
+  imports: [InvitationModule],
+  providers: [UserHandler],
+  exports: [UserHandler],
 })
 export class HandlerModule {}

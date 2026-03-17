@@ -1,5 +1,3 @@
-import { InvitationStatus } from '../enums/invitation-status.enum.js';
-import { RsvpChoice } from '../enums/rsvp-choice.enum.js';
 import {
   Field,
   GraphQLISODateTime,
@@ -7,6 +5,7 @@ import {
   Int,
   ObjectType,
 } from '@nestjs/graphql';
+import { InvitationStatus, RsvpChoice } from '../../../prisma/generated/client.js';
 
 @ObjectType({
   description: 'GraphQL Invitation entity matching the Prisma model exactly.',
@@ -26,17 +25,20 @@ export class InvitationPayload {
   })
   lastName?: string;
 
-  // REQUIRED: eventId is NOT nullable in Prisma
   @Field(() => ID)
   eventId!: string;
 
-  // OPTIONAL
+
   @Field(() => ID, {
     nullable: true,
   })
   guestProfileId?: string;
 
-  // REQUIRED ENUM
+    @Field(() => String, {
+    nullable: true,
+  })
+  email?: string;
+
   @Field(() => InvitationStatus)
   status!: InvitationStatus;
 
@@ -52,12 +54,6 @@ export class InvitationPayload {
   })
   pendingContactId?: string;
 
-  @Field(() => String, {
-    nullable: true,
-    description: 'Pointer to PII record inside Ephemeral Redis Store.',
-  })
-  phoneNumber?: string;
-
   @Field(() => RsvpChoice, {
     nullable: true,
   })
@@ -66,11 +62,7 @@ export class InvitationPayload {
   @Field(() => GraphQLISODateTime, {
     nullable: true,
   })
-  rsvpAt?: Date | undefined;
-
-  // approved = Boolean, default false → never null in Prisma
-  @Field(() => Boolean)
-  approved!: boolean;
+  rsvpAt?: Date;
 
   @Field(() => GraphQLISODateTime, {
     nullable: true,

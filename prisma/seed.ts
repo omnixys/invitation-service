@@ -1,12 +1,16 @@
-
-  /**
+/**
  * Prisma Seed – Invitation Service
  * Creates demo invitations with different RSVP states and plus-ones
  */
 
-    import { InvitationStatus, PrismaClient, RsvpChoice } from '../src/prisma/generated/client.js';
-    import { PrismaPg } from '@prisma/adapter-pg';
-    import 'dotenv/config';
+import {
+  InvitationStatus,
+  PrismaClient,
+  RsvpChoice,
+  PhoneNumberType,
+} from '../src/prisma/generated/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+import 'dotenv/config';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -23,14 +27,28 @@ async function main() {
       eventId: EVENT_ID,
       firstName: 'Guest',
       lastName: 'Omnixys',
-      phoneNumber: '15111951223',
       guestProfileId: GUEST_ID,
+      email: 'guest@omnixys.com',
+
       status: InvitationStatus.APPROVED,
       rsvpChoice: RsvpChoice.YES,
       rsvpAt: new Date(),
-      approved: true,
+
       approvedAt: new Date(),
+      approvedByUserId: 'admin-user-id',
+
       maxInvitees: 0,
+
+      phoneNumbers: {
+        create: [
+          {
+            number: '15111951223',
+            countryCode: '+49',
+            type: PhoneNumberType.MOBILE,
+            isPrimary: true,
+          },
+        ],
+      },
     },
   });
 
@@ -42,11 +60,24 @@ async function main() {
       eventId: EVENT_ID,
       firstName: 'Mark',
       lastName: 'Schneider',
-      phoneNumber: '1522222222',
+      email: 'mark@test.de',
+
       status: InvitationStatus.DECLINED,
       rsvpChoice: RsvpChoice.NO,
       rsvpAt: new Date(),
+
       maxInvitees: 0,
+
+      phoneNumbers: {
+        create: [
+          {
+            number: '1522222222',
+            countryCode: '+49',
+            type: PhoneNumberType.MOBILE,
+            isPrimary: true,
+          },
+        ],
+      },
     },
   });
 
@@ -58,9 +89,20 @@ async function main() {
       eventId: EVENT_ID,
       firstName: 'Julia',
       lastName: 'Becker',
-      phoneNumber: '1533333333',
+
       status: InvitationStatus.PENDING,
       maxInvitees: 0,
+
+      phoneNumbers: {
+        create: [
+          {
+            number: '1533333333',
+            countryCode: '+49',
+            type: PhoneNumberType.WHATSAPP,
+            isPrimary: true,
+          },
+        ],
+      },
     },
   });
 
@@ -72,13 +114,26 @@ async function main() {
       eventId: EVENT_ID,
       firstName: 'Daniel',
       lastName: 'Klein',
-      phoneNumber: '1544444444',
+
       status: InvitationStatus.ACCEPTED,
       rsvpChoice: RsvpChoice.YES,
       rsvpAt: new Date(),
-      approved: false,
+
       approvedAt: new Date(),
+      approvedByUserId: 'admin-user-id',
+
       maxInvitees: 3,
+
+      phoneNumbers: {
+        create: [
+          {
+            number: '1544444444',
+            countryCode: '+49',
+            type: PhoneNumberType.MOBILE,
+            isPrimary: true,
+          },
+        ],
+      },
     },
   });
 
@@ -112,7 +167,7 @@ async function main() {
   });
 
   /* ------------------------------------------------------------------
-   * Console Output (IDs)
+   * Console Output
    * ------------------------------------------------------------------ */
   console.log('\n📌 Seeded Invitation IDs');
   console.log('─────────────────────────────────────────────');
@@ -120,17 +175,16 @@ async function main() {
   console.log('Declined  (mark)         :', declined.id);
   console.log('Pending    (Julia)       :', pending.id);
   console.log('Main + PlusOnes (daniel) :', mainWithPlusOnes.id);
-  // console.log('Plus-Ones Count :', plusOnes.count);
   console.log('Event ID                 :', EVENT_ID);
   console.log('GuestProfile ID          :', GUEST_ID);
-    console.log('─────────────────────────────────────────────');
+  console.log('─────────────────────────────────────────────');
 
   console.log('✅ Invitation seed completed successfully');
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Seed failed", e);
+    console.error('❌ Seed failed', e);
     process.exit(1);
   })
   .finally(async () => {

@@ -1,4 +1,5 @@
 import { InputType, Field, ID } from '@nestjs/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql';
 
 @InputType()
 export class PublicRsvpInput {
@@ -13,10 +14,10 @@ export class PublicRsvpInput {
   @Field(() => String)
   lastName!: string;
 
-  @Field(() => String, {
+  @Field(() => [PhoneNumberInput], {
     nullable: true,
   })
-  phoneNumber?: string;
+  phoneNumbers?: PhoneNumberInput[];
 
   @Field(() => String, {
     nullable: true,

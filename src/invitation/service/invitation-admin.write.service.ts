@@ -3,10 +3,9 @@
 
 import { KafkaProducerService } from '../../kafka/kafka-producer.service.js';
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
+import { InvitationStatus, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { withSpan } from '../../trace/utils/span.utils.js';
-import { InvitationStatus } from '../models/enums/invitation-status.enum.js';
-import { RsvpChoice } from '../models/enums/rsvp-choice.enum.js';
 import { ApproveInvitationWithSeatInput } from '../models/input/approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { ImportInvitationsResult } from '../models/input/import-invitation.input.js';
@@ -241,7 +240,6 @@ export class AdminWriteService extends InvitationBaseService {
       const updated = await this.prismaService.invitation.update({
         where: { id },
         data: {
-          approved: approve,
           approvedByUserId: actorId ?? null,
           approvedAt: new Date(),
           status: InvitationStatus.APPROVED,
@@ -301,7 +299,6 @@ export class AdminWriteService extends InvitationBaseService {
       const updated = await this.prismaService.invitation.update({
         where: { id: invitationId },
         data: {
-          approved,
           approvedByUserId: actorId,
           approvedAt: new Date(),
           status: InvitationStatus.APPROVED,
@@ -433,7 +430,6 @@ export class AdminWriteService extends InvitationBaseService {
       data: {
         pendingContactId: null,
         status: InvitationStatus.REJECTED,
-        approved: false,
         approvedByUserId: eventAdminId,
         approvedAt: new Date(),
       },

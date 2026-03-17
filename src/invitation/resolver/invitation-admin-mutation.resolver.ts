@@ -1,9 +1,5 @@
-// TODO Disaprove
-import {
-  CurrentUser,
-  CurrentUserData,
-} from '../../auth/decorators/current-user.decorator.js';
-import { CookieAuthGuard } from '../../auth/guards/cookie-auth.guard.js';
+
+import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/auth';
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import {
   ApproveInvitationInput,

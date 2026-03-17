@@ -1,4 +1,4 @@
-import { AuthModule } from '../auth/auth.module.js';
+import { AuthModule } from '@omnixys/auth';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { ValkeyModule } from '../valkey/valkey.module.js';
 import { UploadController } from './controller/upload.controller.js';

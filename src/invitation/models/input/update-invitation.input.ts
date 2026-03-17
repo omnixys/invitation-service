@@ -1,5 +1,5 @@
-import { RsvpChoice } from '../enums/rsvp-choice.enum.js';
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
+import { RsvpChoice } from '../../../prisma/generated/client.js';
 
 @InputType({
   description:

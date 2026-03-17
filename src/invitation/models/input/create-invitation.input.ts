@@ -1,5 +1,5 @@
-import { PhoneNumberInput } from './phone-number.input.js';
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql';
 
 @InputType({
   description:
@@ -24,16 +24,14 @@ export class InvitationCreateInput {
   invitedByInvitationId?: string | null;
 
   @Field(() => String, {
-    nullable: true,
     description: 'Optional: first name of the invited guest.',
   })
-  firstName?: string | null;
+  firstName!: string;
 
   @Field(() => String, {
-    nullable: true,
     description: 'Optional: last name of the invited guest.',
   })
-  lastName?: string | null;
+  lastName!: string;
 
   @Field(() => [PhoneNumberInput], {
     nullable: true,

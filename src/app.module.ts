@@ -15,7 +15,6 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import { AdminModule } from './admin/admin.module.js';
 import { env } from './config/env.js';
 import { HandlerModule } from './handlers/handler.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -26,14 +25,27 @@ import { RequestLoggerMiddleware } from './logger/request-logger.middleware.js';
 import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
+import { GraphQLModule, registerEnumType } from '@nestjs/graphql';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { InvitationStatus, RsvpChoice } from './prisma/generated/client.js';
 
 const { SCHEMA_TARGET } = env;
 
+registerEnumType(InvitationStatus, {
+  name: 'InvitationStatus',
+  description:
+    'Represents the lifecycle state of an invitation. PENDING = newly created, ACCEPTED = guest confirmed, DECLINED = guest declined, CANCELED = invitation was canceled by issuer, REJECTED = invitation was rejected by admin, APPROVED = invitation has been approved by admin.',
+});
+
+registerEnumType(RsvpChoice, {
+  name: 'RsvpChoice',
+  description:
+    'Represents the RSVP response of a guest. YES = attending, NO = not attending, MAYBE = undecided.',
+});
+
+
 @Module({
   imports: [
-    AdminModule,
     HandlerModule,
     HealthModule,
     InvitationModule,

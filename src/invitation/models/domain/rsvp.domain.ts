@@ -1,8 +1,7 @@
 // Handles pure RSVP decision logic (no DB, no infra)
 // This makes unit-testing simple and keeps application services clean.
 
-import { InvitationStatus } from '../enums/invitation-status.enum.js';
-import { RsvpChoice } from '../enums/rsvp-choice.enum.js';
+import { InvitationStatus, RsvpChoice } from "../../../prisma/generated/client.js";
 
 export interface RSVPDecision {
   newChoice: RsvpChoice;

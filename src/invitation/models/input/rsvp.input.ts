@@ -1,7 +1,8 @@
-import { RsvpChoice } from '../enums/rsvp-choice.enum.js';
-import { PhoneNumberInput } from './phone-number.input.js';
+
 import { Field, ID, InputType } from '@nestjs/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql';
 import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { RsvpChoice } from '../../../prisma/generated/client.js';
 
 @InputType({
   description:

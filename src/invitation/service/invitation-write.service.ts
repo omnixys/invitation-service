@@ -1,6 +1,6 @@
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
+import { InvitationStatus } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { InvitationStatus } from '../models/enums/invitation-status.enum.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
@@ -75,6 +75,8 @@ export class InvitationWriteService extends InvitationBaseService {
     const ops = records.map((r) =>
       this.prismaService.invitation.create({
         data: {
+          firstName: r.firstName,
+          lastName: r.lastName,
           eventId: r.eventId,
           status: InvitationStatus.PENDING,
           maxInvitees: r.maxInvitees ?? 0,

@@ -3,10 +3,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { LoggerPlusService } from '../../logger/logger-plus.service.js';
+import { InvitationStatus, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RsvpDomain } from '../models/domain/rsvp.domain.js';
-import { InvitationStatus } from '../models/enums/invitation-status.enum.js';
-import { RsvpChoice } from '../models/enums/rsvp-choice.enum.js';
 import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
@@ -19,8 +18,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 export interface CreatePlusOneInput {
   eventId: string;
   invitedByInvitationId: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
 }
 
 @Injectable()
@@ -216,7 +215,6 @@ export class GuestWriteService extends InvitationBaseService {
         eventId: input.eventId,
         firstName: input.firstName,
         lastName: input.lastName,
-        phoneNumber: input.phoneNumber ?? null,
         status: 'ACCEPTED',
         rsvpChoice: 'YES',
         rsvpAt: new Date(),

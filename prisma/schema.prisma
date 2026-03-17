@@ -14,18 +14,15 @@ datasource db {
   schemas  = ["invitation"]
 }
 
-/// ----------------------------------------------------------------------
-/// Invitation: main aggregate root for the invitation domain
-/// ----------------------------------------------------------------------
 model Invitation {
   id String @id @default(cuid()) @map("id")
 
-  firstName String? @map("first_name")
-  lastName  String? @map("last_name")
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
 
   eventId        String  @map("event_id")
   guestProfileId String? @map("guest_profile_id")
-  phoneNumber    String? @map("phone_number")
+  email          String? @map("email")
 
   status InvitationStatus @default(PENDING) @map("status")
 
@@ -37,7 +34,6 @@ model Invitation {
   rsvpChoice RsvpChoice? @map("rsvp_choice")
   rsvpAt     DateTime?   @map("rsvp_at")
 
-  approved         Boolean   @default(false) @map("approved")
   approvedAt       DateTime? @map("approved_at")
   approvedByUserId String?   @map("approved_by_user_id")
 
@@ -47,19 +43,50 @@ model Invitation {
   invitedByInvitation   Invitation? @relation("invitation_by_invitation", fields: [invitedByInvitationId], references: [id])
   invitedByUserId       String?     @map("invited_by_user_id")
 
-  plusOnes Invitation[] @relation("invitation_by_invitation")
+  plusOnes     Invitation[]  @relation("invitation_by_invitation")
+  phoneNumbers PhoneNumber[]
 
   @@index([eventId, status])
   @@index([eventId, rsvpChoice])
   @@index([invitedByInvitationId])
-  @@index([approved, approvedAt])
+  @@index([eventId])
   @@map("invitation")
   @@schema("invitation")
 }
 
-/// ----------------------------------------------------------------------
-/// Enums
-/// ----------------------------------------------------------------------
+model PhoneNumber {
+  id           String @id @default(cuid()) @map("id")
+  invitationId String @map("invitation_id")
+
+  number      String          @map("number")
+  type        PhoneNumberType @map("type")
+  label       String?         @map("label")
+  isPrimary   Boolean         @default(false) @map("is_primary")
+  countryCode String          @map("country_code")
+
+  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([countryCode, number])
+  @@index([invitationId])
+  @@index([invitationId, isPrimary])
+  @@map("phone_number")
+  @@schema("invitation")
+}
+
+enum PhoneNumberType {
+  WHATSAPP
+  MOBILE
+  PRIVATE
+  WORK
+  HOME
+  OTHER
+
+  @@schema("invitation")
+}
+
 enum InvitationStatus {
   PENDING
   ACCEPTED

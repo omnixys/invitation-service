@@ -1,8 +1,5 @@
-import {
-  CurrentUser,
-  CurrentUserData,
-} from '../../auth/decorators/current-user.decorator.js';
-import { CookieAuthGuard } from '../../auth/guards/cookie-auth.guard.js';
+
+import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/auth';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationReadService } from '../service/invitation-read.service.js';
 import { UseGuards } from '@nestjs/common';
