@@ -1,8 +1,7 @@
-
+import { RsvpChoice } from '../../../prisma/generated/client.js';
 import { Field, ID, InputType } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
 import { IsEmail, IsOptional, IsString } from 'class-validator';
-import { RsvpChoice } from '../../../prisma/generated/client.js';
 
 @InputType({
   description:
@@ -16,7 +15,7 @@ export class AcceptRSVPInput {
   })
   @IsOptional()
   @IsString()
-  firstName?: string | null;
+  firstName?: string;
 
   @Field(() => String, {
     description: 'Last name of the guest submitting the RSVP.',
@@ -24,7 +23,7 @@ export class AcceptRSVPInput {
   })
   @IsOptional()
   @IsString()
-  lastName?: string | null;
+  lastName?: string;
 
   @Field(() => String, {
     description: 'Email address of the guest. Optional.',
@@ -37,14 +36,14 @@ export class AcceptRSVPInput {
       message: 'invalid email format',
     },
   )
-  email?: string | null;
+  email?: string;
 
   @Field(() => [PhoneNumberInput], {
     description: 'Optional list of phone numbers for contact.',
     nullable: true,
   })
   @IsOptional()
-  phoneNumbers?: PhoneNumberInput[] | null;
+  phoneNumbers?: PhoneNumberInput[];
 }
 
 @InputType({
@@ -69,5 +68,5 @@ export class RSVPInput {
       'Additional contact info provided when the guest RSVPs YES. ' +
       'Ignored when choice !== YES.',
   })
-  replyInput?: AcceptRSVPInput | null;
+  replyInput?: AcceptRSVPInput;
 }

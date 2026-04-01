@@ -1,5 +1,3 @@
-
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/auth';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationReadService } from '../service/invitation-read.service.js';
 import { UseGuards } from '@nestjs/common';
@@ -11,6 +9,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
 
 @Resolver(() => InvitationPayload)
 export class InvitationQueryResolver {

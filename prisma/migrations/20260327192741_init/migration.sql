@@ -70,7 +70,7 @@ CREATE INDEX "phone_number_invitation_id_idx" ON "phone_number"("invitation_id")
 CREATE INDEX "phone_number_invitation_id_is_primary_idx" ON "phone_number"("invitation_id", "is_primary");
 
 -- AddForeignKey
-ALTER TABLE "invitation" ADD CONSTRAINT "invitation_invited_by_invitation_id_fkey" FOREIGN KEY ("invited_by_invitation_id") REFERENCES "invitation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "invitation" ADD CONSTRAINT "invitation_invited_by_invitation_id_fkey" FOREIGN KEY ("invited_by_invitation_id") REFERENCES "invitation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "phone_number" ADD CONSTRAINT "phone_number_invitation_id_fkey" FOREIGN KEY ("invitation_id") REFERENCES "invitation"("id") ON DELETE CASCADE ON UPDATE CASCADE;

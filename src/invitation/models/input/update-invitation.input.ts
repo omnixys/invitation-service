@@ -1,5 +1,5 @@
-import { Field, ID, InputType, Int } from '@nestjs/graphql';
 import { RsvpChoice } from '../../../prisma/generated/client.js';
+import { Field, ID, InputType, Int } from '@nestjs/graphql';
 
 @InputType({
   description:

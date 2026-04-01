@@ -1,12 +1,9 @@
 // TODO resolve eslint
 
-import type { LoggerPlus } from '../../logger/logger-plus.js';
-import type { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import type { Invitation } from '../../prisma/generated/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import { NotFoundException } from '@nestjs/common';
-import type { Tracer } from '@opentelemetry/api';
-import { trace } from '@opentelemetry/api';
+import { OmnixysLogger, ScopedLogger } from '@omnixys/logger';
 
 /**
  * @file Gemeinsame Basisklasse für Inventory-Read/Write-Services:
@@ -17,20 +14,18 @@ import { trace } from '@opentelemetry/api';
  */
 export abstract class InvitationBaseService {
   /** OpenTelemetry tracer instance. */
-  protected readonly tracer: Tracer;
 
   /** Logger service wrapper. */
-  protected readonly loggerPlusService: LoggerPlusService;
+  protected readonly loggerPlusService: OmnixysLogger;
 
   /** Local logger instance. */
-  protected readonly logger: LoggerPlus;
+  protected readonly logger: ScopedLogger;
 
   protected readonly prismaService: PrismaService;
 
-  protected constructor(loggerPlusService: LoggerPlusService, prismaService: PrismaService) {
-    this.tracer = trace.getTracer(this.constructor.name);
+  protected constructor(loggerPlusService: OmnixysLogger, prismaService: PrismaService) {
     this.loggerPlusService = loggerPlusService;
-    this.logger = loggerPlusService.getLogger(this.constructor.name);
+    this.logger = loggerPlusService.log(this.constructor.name);
     this.prismaService = prismaService;
   }
 

@@ -1,11 +1,18 @@
 import {
+  InvitationStatus,
+  RsvpChoice,
+} from '../../../prisma/generated/client.js';
+import {
   Field,
   GraphQLISODateTime,
   ID,
   Int,
   ObjectType,
 } from '@nestjs/graphql';
-import { InvitationStatus, RsvpChoice } from '../../../prisma/generated/client.js';
+import { registerEnum } from '@omnixys/graphql';
+
+registerEnum('InvitationStatus', InvitationStatus);
+registerEnum('RsvpChoice', RsvpChoice);
 
 @ObjectType({
   description: 'GraphQL Invitation entity matching the Prisma model exactly.',
@@ -28,13 +35,12 @@ export class InvitationPayload {
   @Field(() => ID)
   eventId!: string;
 
-
   @Field(() => ID, {
     nullable: true,
   })
   guestProfileId?: string;
 
-    @Field(() => String, {
+  @Field(() => String, {
     nullable: true,
   })
   email?: string;

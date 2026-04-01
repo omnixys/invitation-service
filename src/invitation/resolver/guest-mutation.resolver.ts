@@ -1,6 +1,4 @@
-
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/auth';
-import { LoggerPlusService } from '../../logger/logger-plus.service.js';
+import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
 import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
@@ -10,26 +8,28 @@ import {
 } from '../service/guest-write.service.js';
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
+import { OmnixysLogger } from '@omnixys/logger';
 
 @Resolver(() => InvitationPayload)
 export class GuestMutationResolver {
   private readonly logger;
   constructor(
-    private readonly loggerService: LoggerPlusService,
+    private readonly loggerService: OmnixysLogger,
     private readonly guestService: GuestWriteService,
   ) {
-    this.logger = this.loggerService.getLogger(GuestMutationResolver.name);
+    this.logger = this.loggerService.log(this.constructor.name);
   }
 
-  // @UseGuards(CookieAuthGuard)
-  // @Mutation(() => InvitationPayload)
-  // async createPlusOnesInvitation(
-  //   @Args('input')
-  //   input: CreatePlusOneInput,
-  //   @CurrentUser() user: CurrentUserData,
-  // ): Promise<InvitationPayload> {
-  //   return this.guestService.createPlusOne(input, user.id);
-  // }
+  @UseGuards(CookieAuthGuard)
+  @Mutation(() => InvitationPayload)
+  async createPlusOnesInvitation(
+    @Args('input')
+    input: CreatePlusOneInput,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<InvitationPayload> {
+    return this.guestService.createPlusOne(input, user.id);
+  }
 
   @Mutation(() => InvitationPayload)
   async replyInvitation(

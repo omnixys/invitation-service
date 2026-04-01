@@ -15,71 +15,128 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
+import { BannerService } from './banner.service.js';
 import { env } from './config/env.js';
-import { HandlerModule } from './handlers/handler.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InvitationModule } from './invitation/invitation.module.js';
-import { KafkaModule } from './kafka/kafka.module.js';
-import { LoggerModule } from './logger/logger.module.js';
-import { RequestLoggerMiddleware } from './logger/request-logger.middleware.js';
-import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GraphQLModule, registerEnumType } from '@nestjs/graphql';
-import { FastifyReply, FastifyRequest } from 'fastify';
-import { InvitationStatus, RsvpChoice } from './prisma/generated/client.js';
+import { Module } from '@nestjs/common';
+import { ValkeyModule } from '@omnixys/cache';
+import { OmnixysGraphQLModule } from '@omnixys/graphql';
+import { KafkaModule } from '@omnixys/kafka';
+import { LoggerModule } from '@omnixys/logger';
+import { ObservabilityModule } from '@omnixys/observability';
+import { SecurityModule } from '@omnixys/security';
+import { PrismaModule } from './prisma/prisma.module.js';
 
-const { SCHEMA_TARGET } = env;
-
-registerEnumType(InvitationStatus, {
-  name: 'InvitationStatus',
-  description:
-    'Represents the lifecycle state of an invitation. PENDING = newly created, ACCEPTED = guest confirmed, DECLINED = guest declined, CANCELED = invitation was canceled by issuer, REJECTED = invitation was rejected by admin, APPROVED = invitation has been approved by admin.',
-});
-
-registerEnumType(RsvpChoice, {
-  name: 'RsvpChoice',
-  description:
-    'Represents the RSVP response of a guest. YES = attending, NO = not attending, MAYBE = undecided.',
-});
-
+const {
+  SCHEMA_TARGET,
+  SERVICE,
+  KAFKA_BROKER,
+  TEMPO_URI,
+  PC_JWE_KEY,
+  PC_JWE_KEY_2,
+  VALKEY_URL,
+  VALKEY_PASSWORD,
+} = env;
 
 @Module({
   imports: [
-    HandlerModule,
-    HealthModule,
-    InvitationModule,
-    LoggerModule,
-    KafkaModule,
-    ConfigModule.forRoot({ isGlobal: true }),
-    GraphQLModule.forRootAsync<ApolloFederationDriverConfig>({
-      driver: ApolloFederationDriver,
-
-      inject: [ConfigService],
-      useFactory: (cfg: ConfigService) => ({
-        autoSchemaFile:
-          SCHEMA_TARGET === 'tmp'
-            ? { path: '/tmp/schema.gql', federation: 2 }
-            : SCHEMA_TARGET === 'false'
-              ? false
-              : { path: 'dist/schema.gql', federation: 2 },
-        sortSchema: true,
-        playground: cfg.get('GRAPHQL_PLAYGROUND') === 'true',
-        csrfPrevention: false,
-        introspection: true,
-
-        context: ({ req, res }: { req: FastifyRequest; res: FastifyReply }) => ({
-          req,
-          res,
-        }),
-      }),
+    OmnixysGraphQLModule.forRoot({
+      autoSchemaFile:
+        SCHEMA_TARGET === 'tmp'
+          ? { path: '/tmp/schema.gql', federation: 2 }
+          : SCHEMA_TARGET === 'false'
+            ? false
+            : { path: 'dist/schema.gql', federation: 2 },
     }),
+
+    ValkeyModule.forRoot({
+      serviceName: `${SERVICE}-service`,
+      url: VALKEY_URL,
+      password: VALKEY_PASSWORD,
+
+      pubSub: { enabled: true },
+      streams: { enabled: true },
+    }),
+
+    KafkaModule.forRoot({
+      clientId: `${SERVICE}-service`,
+      brokers: [KAFKA_BROKER],
+      groupId: `${SERVICE}-consumer`,
+    }),
+
+    SecurityModule.forRoot({
+      jwt: {
+        issuer: `${env.KC_URL}/realms/${env.KC_REALM}`,
+        jwksUri: `${env.KC_URL}/realms/${env.KC_REALM}/protocol/openid-connect/certs`,
+      },
+
+      jwe: {
+        keys: [
+          {
+            kid: 'v1',
+            value: PC_JWE_KEY!,
+          },
+          {
+            kid: 'v2',
+            value: PC_JWE_KEY_2!,
+          },
+        ],
+        defaultTtlSec: Number(process.env.PC_TTL_SEC),
+      },
+
+      session: {
+        ttlMs: Number(process.env.PC_TTL_SEC),
+      },
+
+      rateLimit: {
+        enabled: true,
+        defaultLimit: 100,
+        defaultWindowMs: 60000,
+      },
+
+      // cookie: {
+      //   secure: true,
+      //   sameSite: 'none',
+      //   domain: '.omnixys.com',
+      // },
+
+      globalGuards: false,
+    }),
+
+    ObservabilityModule.forRoot({
+      serviceName: SERVICE,
+
+      otel: {
+        endpoint: TEMPO_URI,
+        transport: 'http',
+        samplingRatio: 1,
+      },
+
+      metrics: {
+        port: 9464,
+        enabled: true,
+      },
+    }),
+
+    LoggerModule.forRoot({
+      serviceName: SERVICE,
+
+      kafka: {
+        enabled: true,
+        topic: 'logstream.input',
+      },
+      batch: {
+        enabled: true,
+        maxSize: 50,
+        flushInterval: 2000,
+      },
+    }),
+    HealthModule,
+    PrismaModule,
+    InvitationModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [BannerService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

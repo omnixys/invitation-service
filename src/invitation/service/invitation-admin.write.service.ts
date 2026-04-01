@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { KafkaProducerService } from '../../kafka/kafka-producer.service.js';
-import { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import { InvitationStatus, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { withSpan } from '../../trace/utils/span.utils.js';
 import { ApproveInvitationWithSeatInput } from '../models/input/approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { ImportInvitationsResult } from '../models/input/import-invitation.input.js';
@@ -13,8 +10,10 @@ import { InvitationUpdateInput } from '../models/input/update-invitation.input.j
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { PendingContactService } from './pending-contact.service.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ValkeyService, ValkeyKey } from '@omnixys/cache';
+import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
+import { OmnixysLogger } from '@omnixys/logger';
 import ExcelJS from 'exceljs';
 import * as fssync from 'fs';
 import * as fs from 'fs/promises';
@@ -25,9 +24,9 @@ import { join } from 'path';
 export class AdminWriteService extends InvitationBaseService {
   constructor(
     prisma: PrismaService,
-    loggerService: LoggerPlusService,
-    private readonly kafka: KafkaProducerService,
-    private readonly pending: PendingContactService,
+    loggerService: OmnixysLogger,
+    private readonly producer: KafkaProducerService,
+    private readonly cache: ValkeyService,
   ) {
     super(loggerService, prisma);
   }
@@ -226,131 +225,124 @@ export class AdminWriteService extends InvitationBaseService {
    * Approval creates the guest profile if missing and sends a Kafka event.
    */
   async approve(id: string, approve: boolean, actorId?: string): Promise<InvitationPayload> {
-    return withSpan(this.tracer, this.logger, 'invitation.approve', async (span) => {
-      this.logger.debug('approve: input=%o', { id, approve });
+    this.logger.debug('approve: input=%o', { id, approve });
 
-      const invitation = await this.ensureExists(id);
+    const invitation = await this.ensureExists(id);
 
-      // Enforce that guest must have RSVPed before approval
-      if (!invitation.rsvpChoice) {
-        this.logger.error('Guest has not submitted an RSVP yet.');
-        throw new BadRequestException('RSVP required before approval.');
-      }
+    // Enforce that guest must have RSVPed before approval
+    if (!invitation.rsvpChoice) {
+      this.logger.error('Guest has not submitted an RSVP yet.');
+      throw new BadRequestException('RSVP required before approval.');
+    }
 
-      const updated = await this.prismaService.invitation.update({
-        where: { id },
-        data: {
-          approvedByUserId: actorId ?? null,
-          approvedAt: new Date(),
-          status: InvitationStatus.APPROVED,
-        },
-      });
-
-      // Fire Kafka event only if newly approved
-      if (approve) {
-        this.logger.debug('Invite approved');
-
-        if (!updated.guestProfileId) {
-          // GuestProfile is created by another service → send event
-          if (!updated.firstName || !updated.lastName) {
-            throw new Error('Missing firstName or lastName for profile creation.');
-          }
-
-          const sc = span.spanContext();
-
-          void this.kafka.createGuest(
-            {
-              invitationId: id,
-              firstName: updated.firstName,
-              lastName: updated.lastName,
-              pendingContactId: updated.pendingContactId ?? null,
-              eventId: updated.eventId,
-            },
-            'invitation.write-service',
-            { traceId: sc.traceId, spanId: sc.spanId },
-          );
-        } else {
-          this.logger.debug('Guest profile already exists – skip Kafka event.');
-        }
-      } else {
-        this.logger.debug('Approval revoked by admin');
-      }
-
-      return InvitationMapper.toPayload(updated);
+    const updated = await this.prismaService.invitation.update({
+      where: { id },
+      data: {
+        approvedByUserId: actorId ?? null,
+        approvedAt: new Date(),
+        status: InvitationStatus.APPROVED,
+      },
     });
+
+    // Fire Kafka event only if newly approved
+    if (approve) {
+      this.logger.debug('Invite approved');
+
+      if (!updated.guestProfileId) {
+        // GuestProfile is created by another service → send event
+        if (!updated.firstName || !updated.lastName) {
+          throw new Error('Missing firstName or lastName for profile creation.');
+        }
+
+        void this.producer.send({
+          topic: KafkaTopics.user.createGuest,
+          payload: {
+            token: updated.pendingContactId!,
+          },
+          meta: {
+            service: 'invitation-service',
+            operation: 'Add Guest to UserService',
+            version: '1',
+            type: 'EVENT',
+          },
+        });
+      } else {
+        this.logger.debug('Guest profile already exists – skip Kafka event.');
+      }
+    } else {
+      this.logger.debug('Approval revoked by admin');
+    }
+
+    return InvitationMapper.toPayload(updated);
   }
 
   async approveAndCreateTicket(
     input: ApproveInvitationWithSeatInput,
     actorId: string,
   ): Promise<InvitationPayload> {
-    return withSpan(this.tracer, this.logger, 'invitation.approve', async (span) => {
-      const { invitationId, approved, seatId } = input;
-      this.logger.debug('approve: input=%o', { invitationId, approved, seatId, actorId });
+    const { invitationId, approved, seatId } = input;
+    this.logger.debug('approve: input=%o', { invitationId, approved, seatId, actorId });
 
-      const invitation = await this.ensureExists(invitationId);
+    const invitation = await this.ensureExists(invitationId);
 
-      // Enforce that guest must have RSVPed before approval
-      if (!invitation.rsvpChoice) {
-        this.logger.error('Guest has not submitted an RSVP yet.');
-        throw new BadRequestException('RSVP required before approval.');
-      }
+    // Enforce that guest must have RSVPed before approval
+    if (!invitation.rsvpChoice) {
+      this.logger.error('Guest has not submitted an RSVP yet.');
+      throw new BadRequestException('RSVP required before approval.');
+    }
 
-      const updated = await this.prismaService.invitation.update({
-        where: { id: invitationId },
-        data: {
-          approvedByUserId: actorId,
-          approvedAt: new Date(),
-          status: InvitationStatus.APPROVED,
-        },
-      });
-
-      // Fire Kafka event only if newly approved
-      if (approved) {
-        this.logger.debug('Invite approved');
-
-        if (!updated.guestProfileId) {
-          // GuestProfile is created by another service → send event
-          if (!updated.firstName || !updated.lastName) {
-            throw new Error('Missing firstName or lastName for profile creation.');
-          }
-
-          const sc = span.spanContext();
-
-          void this.kafka.createGuest(
-            {
-              invitationId,
-              firstName: updated.firstName,
-              lastName: updated.lastName,
-              pendingContactId: updated.pendingContactId ?? null,
-              eventId: updated.eventId,
-              seatId,
-              actorId,
-            },
-            'invitation.write-service',
-            { traceId: sc.traceId, spanId: sc.spanId },
-          );
-
-          // void this.kafka.createTicket(
-          //   {
-          //     eventId: updated.eventId,
-          //     invitationId,
-          //     guestProfileId: updated.guestProfileId ?? '',
-          //     seatId,
-          //     actorId,
-          //   },
-          //   'invitation.write-service',
-          //   { traceId: sc.traceId, spanId: sc.spanId },
-          // );
-        } else {
-          this.logger.debug('Guest profile already exists – skip Kafka event.');
-        }
-      } else {
-        this.logger.debug('Approval revoked by admin');
-      }
-
-      return InvitationMapper.toPayload(updated);
+    const updated = await this.prismaService.invitation.update({
+      where: { id: invitationId },
+      data: {
+        approvedByUserId: actorId,
+        approvedAt: new Date(),
+        status: InvitationStatus.APPROVED,
+      },
     });
+
+    // Fire Kafka event only if newly approved
+    if (approved) {
+      this.logger.debug('Invite approved');
+
+      if (!updated.guestProfileId) {
+        // GuestProfile is created by another service → send event
+        if (!updated.firstName || !updated.lastName) {
+          throw new Error('Missing firstName or lastName for profile creation.');
+        }
+
+        // void this.kafka.createGuest(
+        //   {
+        //     invitationId,
+        //     firstName: updated.firstName,
+        //     lastName: updated.lastName,
+        //     pendingContactId: updated.pendingContactId ?? null,
+        //     eventId: updated.eventId,
+        //     seatId,
+        //     actorId,
+        //   },
+        //   'invitation.write-service',
+        //   { traceId: sc.traceId, spanId: sc.spanId },
+        // );
+
+        // void this.kafka.createTicket(
+        //   {
+        //     eventId: updated.eventId,
+        //     invitationId,
+        //     guestProfileId: updated.guestProfileId ?? '',
+        //     seatId,
+        //     actorId,
+        //   },
+        //   'invitation.write-service',
+        //   { traceId: sc.traceId, spanId: sc.spanId },
+        // );
+      } else {
+        this.logger.debug('Guest profile already exists – skip Kafka event.');
+      }
+    } else {
+      this.logger.debug('Approval revoked by admin');
+    }
+
+    return InvitationMapper.toPayload(updated);
   }
 
   /**
@@ -422,7 +414,7 @@ export class AdminWriteService extends InvitationBaseService {
 
     // // Delete ephemeral PII from Redis
     if (inv.pendingContactId) {
-      await this.pending.delete(inv.pendingContactId).catch(() => void 0);
+      await this.cache.delete(ValkeyKey.pendingContact,inv.pendingContactId);
     }
 
     const updated = await this.prismaService.invitation.update({

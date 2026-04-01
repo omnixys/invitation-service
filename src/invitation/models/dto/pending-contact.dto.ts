@@ -1,4 +1,4 @@
-import { PhoneNumberInput } from "@omnixys/graphql";
+import { PhoneNumberInput } from '@omnixys/graphql';
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type PendingContact = {

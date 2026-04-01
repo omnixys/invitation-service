@@ -1,6 +1,3 @@
-
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/auth';
-import { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import {
   ApproveInvitationInput,
   ApproveInvitationWithSeatInput,
@@ -15,15 +12,17 @@ import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
 import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
+import { OmnixysLogger } from '@omnixys/logger';
 
 @Resolver(() => InvitationPayload)
 export class AdminMutationResolver {
   private readonly logger;
   constructor(
-    private readonly loggerService: LoggerPlusService,
+    private readonly loggerService: OmnixysLogger,
     private readonly adminService: AdminWriteService,
   ) {
-    this.logger = this.loggerService.getLogger(AdminMutationResolver.name);
+    this.logger = this.loggerService.log(this.constructor.name);
   }
 
   @UseGuards(CookieAuthGuard)

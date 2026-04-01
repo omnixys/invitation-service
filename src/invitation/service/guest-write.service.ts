@@ -1,33 +1,22 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { LoggerPlusService } from '../../logger/logger-plus.service.js';
 import { InvitationStatus, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RsvpDomain } from '../models/domain/rsvp.domain.js';
+import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
 import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { PendingContactService } from './pending-contact.service.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-
-// FIX 2: strongly typed
-export interface CreatePlusOneInput {
-  eventId: string;
-  invitedByInvitationId: string;
-  firstName: string;
-  lastName: string;
-}
+import { ValkeyKey, ValkeyService } from '@omnixys/cache';
+import { OmnixysLogger } from '@omnixys/logger';
 
 @Injectable()
 export class GuestWriteService extends InvitationBaseService {
   constructor(
     prisma: PrismaService,
-    logger: LoggerPlusService,
-    private readonly pending: PendingContactService,
+    logger: OmnixysLogger,
+    private readonly cache: ValkeyService,
   ) {
     super(logger, prisma);
   }
@@ -52,12 +41,15 @@ export class GuestWriteService extends InvitationBaseService {
         throw new BadRequestException('Missing RSVP contact details');
       }
 
-      pendingContactId = await this.pending.put({
-        invitationId: id,
-        // FIX 4: Convert null → undefined
+      const pendingUser = {
+        firstName: replyInput.firstName ?? invitation.firstName,
+        lastName: replyInput.lastName ?? invitation.lastName,
+        invitationId: invitation.id,
         email: replyInput.email ?? undefined,
         phoneNumbers: replyInput.phoneNumbers ?? undefined,
-      });
+        eventId: invitation.eventId,
+      };
+      pendingContactId = await this.cache.set(ValkeyKey.pendingContact, pendingUser, 30);
     }
 
     const updated = await this.prismaService.invitation.update({
@@ -154,7 +146,8 @@ export class GuestWriteService extends InvitationBaseService {
       }
 
       if (child.pendingContactId) {
-        await this.pending.delete(child.pendingContactId).catch(() => void 0);
+        const kp = await this.cache.delete(ValkeyKey.pendingContact, child.pendingContactId);
+        console.log({ childkp: kp });
       }
 
       const deleted = await tx.invitation.delete({ where: { id } });
@@ -191,8 +184,10 @@ export class GuestWriteService extends InvitationBaseService {
 
       for (const c of children) {
         if (c.pendingContactId) {
-          await this.pending.delete(c.pendingContactId).catch(() => void 0);
+          const kp = await this.cache.delete(ValkeyKey.pendingContact, c.pendingContactId);
+          console.log({ kp });
         }
+
         const deleted = await tx.invitation.delete({ where: { id: c.id } });
         fullChildren.push(InvitationMapper.toPayload(deleted));
       }

@@ -40,7 +40,7 @@ model Invitation {
   maxInvitees Int @default(0) @map("max_invitees")
 
   invitedByInvitationId String?     @map("invited_by_invitation_id")
-  invitedByInvitation   Invitation? @relation("invitation_by_invitation", fields: [invitedByInvitationId], references: [id])
+  invitedByInvitation   Invitation? @relation("invitation_by_invitation", fields: [invitedByInvitationId], references: [id], onDelete: Cascade)
   invitedByUserId       String?     @map("invited_by_user_id")
 
   plusOnes     Invitation[]  @relation("invitation_by_invitation")

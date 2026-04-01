@@ -80,6 +80,7 @@ export const env = {
   COOKIE_SECRET: process.env.COOKIE_SECRET ?? 'omnixys-default-secret',
 
   PC_JWE_KEY: process.env.PC_JWE_KEY ?? '',
+  PC_JWE_KEY_2: process.env.PC_JWE_KEY ?? '',
   PC_TTL_SEC: Number(process.env.PC_TTL_SEC ?? 60 * 60 * 24 * 30),
   VALKEY_URL: process.env.VALKEY_URL ?? 'valkey://localhost:6380',
   VALKEY_PASSWORD: process.env.VALKEY_PASSWORD ?? 'DeinStarkesPasswort',
