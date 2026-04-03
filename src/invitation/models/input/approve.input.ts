@@ -1,3 +1,4 @@
+import { Optional } from '@nestjs/common';
 import { Field, ID, InputType } from '@nestjs/graphql';
 
 @InputType({
@@ -16,14 +17,21 @@ export class ApproveInvitationInput {
       'Admin approval flag (true = approved, false = unapproved). Requires admin permissions.',
   })
   approved!: boolean;
-}
 
-@InputType({
-  description: 'Extended approval input including seat assignment.',
-})
-export class ApproveInvitationWithSeatInput extends ApproveInvitationInput {
-  @Field(() => ID, {
+  @Field(() => String, {
     description: 'Seat to assign when approving the invitation.',
   })
-  seatId!: string;
+  eventName!: string;
+
+  @Field(() => String, {
+    description: 'Eventname of the invitation.',
+  })
+  seat!: string;
+
+  @Field(() => ID, {
+    description: 'Eventname of the invitation.',
+    nullable: true,
+  })
+  @Optional()
+  seatId?: string;
 }

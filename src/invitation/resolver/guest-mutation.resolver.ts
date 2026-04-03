@@ -8,8 +8,12 @@ import {
 } from '../service/guest-write.service.js';
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
 import { OmnixysLogger } from '@omnixys/logger';
+import {
+  CookieAuthGuard,
+  CurrentUser,
+  CurrentUserData,
+} from '@omnixys/security';
 
 @Resolver(() => InvitationPayload)
 export class GuestMutationResolver {

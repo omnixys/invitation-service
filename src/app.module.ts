@@ -17,8 +17,10 @@
 
 import { BannerService } from './banner.service.js';
 import { env } from './config/env.js';
+import { HandlerModule } from './handlers/handler.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InvitationModule } from './invitation/invitation.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 import { Module } from '@nestjs/common';
 import { ValkeyModule } from '@omnixys/cache';
 import { OmnixysGraphQLModule } from '@omnixys/graphql';
@@ -26,7 +28,6 @@ import { KafkaModule } from '@omnixys/kafka';
 import { LoggerModule } from '@omnixys/logger';
 import { ObservabilityModule } from '@omnixys/observability';
 import { SecurityModule } from '@omnixys/security';
-import { PrismaModule } from './prisma/prisma.module.js';
 
 const {
   SCHEMA_TARGET,
@@ -134,6 +135,7 @@ const {
     }),
     HealthModule,
     PrismaModule,
+    HandlerModule,
     InvitationModule,
   ],
   controllers: [],

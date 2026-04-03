@@ -1,4 +1,4 @@
-import { InvitationStatus, RsvpChoice } from '../../prisma/generated/client.js';
+import { InvitationStatus, Language, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RsvpDomain } from '../models/domain/rsvp.domain.js';
 import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
@@ -10,6 +10,7 @@ import { InvitationBaseService } from './invitation-base.service.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache';
 import { OmnixysLogger } from '@omnixys/logger';
+import { CreateGuestDTO, mapLanguageToLocale, createTmpUsername } from '@omnixys/shared';
 
 @Injectable()
 export class GuestWriteService extends InvitationBaseService {
@@ -41,13 +42,21 @@ export class GuestWriteService extends InvitationBaseService {
         throw new BadRequestException('Missing RSVP contact details');
       }
 
-      const pendingUser = {
+      const locale = mapLanguageToLocale(invitation.preferredLanguage ?? Language.ENGLISH);
+
+      const pendingUser: CreateGuestDTO = {
         firstName: replyInput.firstName ?? invitation.firstName,
         lastName: replyInput.lastName ?? invitation.lastName,
         invitationId: invitation.id,
         email: replyInput.email ?? undefined,
         phoneNumbers: replyInput.phoneNumbers ?? undefined,
         eventId: invitation.eventId,
+        tenantId: 'omnixys',
+        locale,
+        actorId: createTmpUsername(
+          replyInput.firstName ?? invitation.firstName,
+          replyInput.lastName ?? invitation.lastName,
+        ),
       };
       pendingContactId = await this.cache.set(ValkeyKey.pendingContact, pendingUser, 30);
     }

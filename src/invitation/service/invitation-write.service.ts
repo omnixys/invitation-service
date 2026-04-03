@@ -6,6 +6,7 @@ import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
 import { OmnixysLogger } from '@omnixys/logger';
+import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 
 // ✔ Deine lokale Trigger-Konstante (NICHT abhängig von Redis)
 export const TRIGGER = {
@@ -97,17 +98,11 @@ export class InvitationWriteService extends InvitationBaseService {
     });
   }
 
-  async addGuestId({
-    guestId,
-    invitationId,
-  }: {
-    guestId: string;
-    invitationId: string;
-  }): Promise<void> {
-    this.logger.debug(`addGuestId: guestId=${guestId}`);
+  async addGuestId({ userId, invitationId }: AddGuestIdToInvitationDTO): Promise<void> {
+    this.logger.debug('addGuestId: guestId=%s, invitationId=%s', userId, invitationId);
     await this.prismaService.invitation.updateMany({
       where: { id: invitationId },
-      data: { guestProfileId: guestId },
+      data: { guestProfileId: userId },
     });
   }
 }

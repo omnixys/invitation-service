@@ -8,6 +8,8 @@ import {
   PrismaClient,
   RsvpChoice,
   PhoneNumberType,
+  Language,
+  ContactType,
 } from '../src/prisma/generated/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
@@ -33,6 +35,9 @@ async function main() {
       status: InvitationStatus.APPROVED,
       rsvpChoice: RsvpChoice.YES,
       rsvpAt: new Date(),
+
+      preferredLanguage: Language.GERMAN,
+      preferredContactType: ContactType.EMAIL,
 
       approvedAt: new Date(),
       approvedByUserId: 'admin-user-id',
@@ -68,6 +73,9 @@ async function main() {
 
       maxInvitees: 0,
 
+      preferredLanguage: Language.GERMAN,
+      preferredContactType: ContactType.EMAIL,
+
       phoneNumbers: {
         create: [
           {
@@ -92,6 +100,9 @@ async function main() {
 
       status: InvitationStatus.PENDING,
       maxInvitees: 0,
+
+      preferredLanguage: Language.GERMAN,
+      preferredContactType: ContactType.EMAIL,
 
       phoneNumbers: {
         create: [
@@ -123,6 +134,9 @@ async function main() {
       approvedByUserId: 'admin-user-id',
 
       maxInvitees: 3,
+
+      preferredLanguage: Language.GERMAN,
+      preferredContactType: ContactType.EMAIL,
 
       phoneNumbers: {
         create: [

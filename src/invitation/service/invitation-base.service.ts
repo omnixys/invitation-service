@@ -4,6 +4,7 @@ import type { Invitation } from '../../prisma/generated/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import { NotFoundException } from '@nestjs/common';
 import { OmnixysLogger, ScopedLogger } from '@omnixys/logger';
+import { InvitationNotFoundException } from '@omnixys/shared';
 
 /**
  * @file Gemeinsame Basisklasse für Inventory-Read/Write-Services:
@@ -32,9 +33,14 @@ export abstract class InvitationBaseService {
   protected async ensureExists(id: string): Promise<Invitation> {
     const found = await this.prismaService.invitation.findUnique({
       where: { id },
+      include: {
+        phoneNumbers: true,
+      },
     });
+
     if (!found) {
-      throw new NotFoundException('Invitation not found');
+      this.logger.error('Invitation not found: %s', id);
+      throw new InvitationNotFoundException(id);
     }
     return found;
   }

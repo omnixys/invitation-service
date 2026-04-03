@@ -8,6 +8,25 @@
  * 🟢 You can import this file directly.
  */
 
+export const ContactType = {
+  EMAIL: 'EMAIL',
+  PHONE: 'PHONE',
+} as const;
+
+export type ContactType = (typeof ContactType)[keyof typeof ContactType];
+
+export const Language = {
+  ENGLISH: 'ENGLISH',
+  SPANISH: 'SPANISH',
+  FRENCH: 'FRENCH',
+  GERMAN: 'GERMAN',
+  CHINESE: 'CHINESE',
+  JAPANESE: 'JAPANESE',
+  OTHER: 'OTHER',
+} as const;
+
+export type Language = (typeof Language)[keyof typeof Language];
+
 export const PhoneNumberType = {
   WHATSAPP: 'WHATSAPP',
   MOBILE: 'MOBILE',

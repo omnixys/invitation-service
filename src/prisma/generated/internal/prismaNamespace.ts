@@ -648,6 +648,8 @@ export const InvitationScalarFieldEnum = {
   maxInvitees: 'maxInvitees',
   invitedByInvitationId: 'invitedByInvitationId',
   invitedByUserId: 'invitedByUserId',
+  preferredLanguage: 'preferredLanguage',
+  preferredContactType: 'preferredContactType',
 } as const;
 
 export type InvitationScalarFieldEnum =
@@ -769,6 +771,38 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
   'Int[]'
+>;
+
+/**
+ * Reference to a field of type 'Language'
+ */
+export type EnumLanguageFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Language'
+>;
+
+/**
+ * Reference to a field of type 'Language[]'
+ */
+export type ListEnumLanguageFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Language[]'
+>;
+
+/**
+ * Reference to a field of type 'ContactType'
+ */
+export type EnumContactTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'ContactType'
+>;
+
+/**
+ * Reference to a field of type 'ContactType[]'
+ */
+export type ListEnumContactTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'ContactType[]'
 >;
 
 /**

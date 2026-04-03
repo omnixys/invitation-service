@@ -121,6 +121,44 @@ export type IntFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntFilter<$PrismaModel> | number;
 };
 
+export type EnumLanguageNullableFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.Language
+    | Prisma.EnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumLanguageNullableFilter<$PrismaModel>
+    | $Enums.Language
+    | null;
+};
+
+export type EnumContactTypeNullableFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.ContactType
+    | Prisma.EnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.ContactType[]
+    | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.ContactType[]
+    | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumContactTypeNullableFilter<$PrismaModel>
+    | $Enums.ContactType
+    | null;
+};
+
 export type SortOrderInput = {
   sort: Prisma.SortOrder;
   nulls?: Prisma.NullsOrder;
@@ -260,6 +298,51 @@ export type IntWithAggregatesFilter<$PrismaModel = never> = {
   _min?: Prisma.NestedIntFilter<$PrismaModel>;
   _max?: Prisma.NestedIntFilter<$PrismaModel>;
 };
+
+export type EnumLanguageNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.Language
+    | Prisma.EnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumLanguageNullableWithAggregatesFilter<$PrismaModel>
+    | $Enums.Language
+    | null;
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumLanguageNullableFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumLanguageNullableFilter<$PrismaModel>;
+};
+
+export type EnumContactTypeNullableWithAggregatesFilter<$PrismaModel = never> =
+  {
+    equals?:
+      | $Enums.ContactType
+      | Prisma.EnumContactTypeFieldRefInput<$PrismaModel>
+      | null;
+    in?:
+      | $Enums.ContactType[]
+      | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+      | null;
+    notIn?:
+      | $Enums.ContactType[]
+      | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+      | null;
+    not?:
+      | Prisma.NestedEnumContactTypeNullableWithAggregatesFilter<$PrismaModel>
+      | $Enums.ContactType
+      | null;
+    _count?: Prisma.NestedIntNullableFilter<$PrismaModel>;
+    _min?: Prisma.NestedEnumContactTypeNullableFilter<$PrismaModel>;
+    _max?: Prisma.NestedEnumContactTypeNullableFilter<$PrismaModel>;
+  };
 
 export type EnumPhoneNumberTypeFilter<$PrismaModel = never> = {
   equals?:
@@ -412,6 +495,44 @@ export type NestedIntFilter<$PrismaModel = never> = {
   gt?: number | Prisma.IntFieldRefInput<$PrismaModel>;
   gte?: number | Prisma.IntFieldRefInput<$PrismaModel>;
   not?: Prisma.NestedIntFilter<$PrismaModel> | number;
+};
+
+export type NestedEnumLanguageNullableFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.Language
+    | Prisma.EnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumLanguageNullableFilter<$PrismaModel>
+    | $Enums.Language
+    | null;
+};
+
+export type NestedEnumContactTypeNullableFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.ContactType
+    | Prisma.EnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.ContactType[]
+    | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.ContactType[]
+    | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumContactTypeNullableFilter<$PrismaModel>
+    | $Enums.ContactType
+    | null;
 };
 
 export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -571,6 +692,54 @@ export type NestedFloatFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>;
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>;
   not?: Prisma.NestedFloatFilter<$PrismaModel> | number;
+};
+
+export type NestedEnumLanguageNullableWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.Language
+    | Prisma.EnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.Language[]
+    | Prisma.ListEnumLanguageFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumLanguageNullableWithAggregatesFilter<$PrismaModel>
+    | $Enums.Language
+    | null;
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumLanguageNullableFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumLanguageNullableFilter<$PrismaModel>;
+};
+
+export type NestedEnumContactTypeNullableWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.ContactType
+    | Prisma.EnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  in?:
+    | $Enums.ContactType[]
+    | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  notIn?:
+    | $Enums.ContactType[]
+    | Prisma.ListEnumContactTypeFieldRefInput<$PrismaModel>
+    | null;
+  not?:
+    | Prisma.NestedEnumContactTypeNullableWithAggregatesFilter<$PrismaModel>
+    | $Enums.ContactType
+    | null;
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumContactTypeNullableFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumContactTypeNullableFilter<$PrismaModel>;
 };
 
 export type NestedEnumPhoneNumberTypeFilter<$PrismaModel = never> = {

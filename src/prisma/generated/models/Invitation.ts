@@ -52,6 +52,8 @@ export type InvitationMinAggregateOutputType = {
   maxInvitees: number | null;
   invitedByInvitationId: string | null;
   invitedByUserId: string | null;
+  preferredLanguage: $Enums.Language | null;
+  preferredContactType: $Enums.ContactType | null;
 };
 
 export type InvitationMaxAggregateOutputType = {
@@ -72,6 +74,8 @@ export type InvitationMaxAggregateOutputType = {
   maxInvitees: number | null;
   invitedByInvitationId: string | null;
   invitedByUserId: string | null;
+  preferredLanguage: $Enums.Language | null;
+  preferredContactType: $Enums.ContactType | null;
 };
 
 export type InvitationCountAggregateOutputType = {
@@ -92,6 +96,8 @@ export type InvitationCountAggregateOutputType = {
   maxInvitees: number;
   invitedByInvitationId: number;
   invitedByUserId: number;
+  preferredLanguage: number;
+  preferredContactType: number;
   _all: number;
 };
 
@@ -121,6 +127,8 @@ export type InvitationMinAggregateInputType = {
   maxInvitees?: true;
   invitedByInvitationId?: true;
   invitedByUserId?: true;
+  preferredLanguage?: true;
+  preferredContactType?: true;
 };
 
 export type InvitationMaxAggregateInputType = {
@@ -141,6 +149,8 @@ export type InvitationMaxAggregateInputType = {
   maxInvitees?: true;
   invitedByInvitationId?: true;
   invitedByUserId?: true;
+  preferredLanguage?: true;
+  preferredContactType?: true;
 };
 
 export type InvitationCountAggregateInputType = {
@@ -161,6 +171,8 @@ export type InvitationCountAggregateInputType = {
   maxInvitees?: true;
   invitedByInvitationId?: true;
   invitedByUserId?: true;
+  preferredLanguage?: true;
+  preferredContactType?: true;
   _all?: true;
 };
 
@@ -275,6 +287,8 @@ export type InvitationGroupByOutputType = {
   maxInvitees: number;
   invitedByInvitationId: string | null;
   invitedByUserId: string | null;
+  preferredLanguage: $Enums.Language | null;
+  preferredContactType: $Enums.ContactType | null;
   _count: InvitationCountAggregateOutputType | null;
   _avg: InvitationAvgAggregateOutputType | null;
   _sum: InvitationSumAggregateOutputType | null;
@@ -328,6 +342,14 @@ export type InvitationWhereInput = {
     | string
     | null;
   invitedByUserId?: Prisma.StringNullableFilter<'Invitation'> | string | null;
+  preferredLanguage?:
+    | Prisma.EnumLanguageNullableFilter<'Invitation'>
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.EnumContactTypeNullableFilter<'Invitation'>
+    | $Enums.ContactType
+    | null;
   invitedByInvitation?: Prisma.XOR<
     Prisma.InvitationNullableScalarRelationFilter,
     Prisma.InvitationWhereInput
@@ -354,6 +376,8 @@ export type InvitationOrderByWithRelationInput = {
   maxInvitees?: Prisma.SortOrder;
   invitedByInvitationId?: Prisma.SortOrderInput | Prisma.SortOrder;
   invitedByUserId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  preferredLanguage?: Prisma.SortOrderInput | Prisma.SortOrder;
+  preferredContactType?: Prisma.SortOrderInput | Prisma.SortOrder;
   invitedByInvitation?: Prisma.InvitationOrderByWithRelationInput;
   plusOnes?: Prisma.InvitationOrderByRelationAggregateInput;
   phoneNumbers?: Prisma.PhoneNumberOrderByRelationAggregateInput;
@@ -396,6 +420,14 @@ export type InvitationWhereUniqueInput = Prisma.AtLeast<
       | string
       | null;
     invitedByUserId?: Prisma.StringNullableFilter<'Invitation'> | string | null;
+    preferredLanguage?:
+      | Prisma.EnumLanguageNullableFilter<'Invitation'>
+      | $Enums.Language
+      | null;
+    preferredContactType?:
+      | Prisma.EnumContactTypeNullableFilter<'Invitation'>
+      | $Enums.ContactType
+      | null;
     invitedByInvitation?: Prisma.XOR<
       Prisma.InvitationNullableScalarRelationFilter,
       Prisma.InvitationWhereInput
@@ -424,6 +456,8 @@ export type InvitationOrderByWithAggregationInput = {
   maxInvitees?: Prisma.SortOrder;
   invitedByInvitationId?: Prisma.SortOrderInput | Prisma.SortOrder;
   invitedByUserId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  preferredLanguage?: Prisma.SortOrderInput | Prisma.SortOrder;
+  preferredContactType?: Prisma.SortOrderInput | Prisma.SortOrder;
   _count?: Prisma.InvitationCountOrderByAggregateInput;
   _avg?: Prisma.InvitationAvgOrderByAggregateInput;
   _max?: Prisma.InvitationMaxOrderByAggregateInput;
@@ -487,6 +521,14 @@ export type InvitationScalarWhereWithAggregatesInput = {
     | Prisma.StringNullableWithAggregatesFilter<'Invitation'>
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.EnumLanguageNullableWithAggregatesFilter<'Invitation'>
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.EnumContactTypeNullableWithAggregatesFilter<'Invitation'>
+    | $Enums.ContactType
+    | null;
 };
 
 export type InvitationCreateInput = {
@@ -506,6 +548,8 @@ export type InvitationCreateInput = {
   approvedByUserId?: string | null;
   maxInvitees?: number;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   invitedByInvitation?: Prisma.InvitationCreateNestedOneWithoutPlusOnesInput;
   plusOnes?: Prisma.InvitationCreateNestedManyWithoutInvitedByInvitationInput;
   phoneNumbers?: Prisma.PhoneNumberCreateNestedManyWithoutInvitationInput;
@@ -529,6 +573,8 @@ export type InvitationUncheckedCreateInput = {
   maxInvitees?: number;
   invitedByInvitationId?: string | null;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   plusOnes?: Prisma.InvitationUncheckedCreateNestedManyWithoutInvitedByInvitationInput;
   phoneNumbers?: Prisma.PhoneNumberUncheckedCreateNestedManyWithoutInvitationInput;
 };
@@ -574,6 +620,14 @@ export type InvitationUpdateInput = {
   invitedByUserId?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
+    | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
     | null;
   invitedByInvitation?: Prisma.InvitationUpdateOneWithoutPlusOnesNestedInput;
   plusOnes?: Prisma.InvitationUpdateManyWithoutInvitedByInvitationNestedInput;
@@ -626,6 +680,14 @@ export type InvitationUncheckedUpdateInput = {
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
+    | null;
   plusOnes?: Prisma.InvitationUncheckedUpdateManyWithoutInvitedByInvitationNestedInput;
   phoneNumbers?: Prisma.PhoneNumberUncheckedUpdateManyWithoutInvitationNestedInput;
 };
@@ -648,6 +710,8 @@ export type InvitationCreateManyInput = {
   maxInvitees?: number;
   invitedByInvitationId?: string | null;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
 };
 
 export type InvitationUpdateManyMutationInput = {
@@ -691,6 +755,14 @@ export type InvitationUpdateManyMutationInput = {
   invitedByUserId?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
+    | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
     | null;
 };
 
@@ -740,6 +812,14 @@ export type InvitationUncheckedUpdateManyInput = {
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
+    | null;
 };
 
 export type InvitationNullableScalarRelationFilter = {
@@ -775,6 +855,8 @@ export type InvitationCountOrderByAggregateInput = {
   maxInvitees?: Prisma.SortOrder;
   invitedByInvitationId?: Prisma.SortOrder;
   invitedByUserId?: Prisma.SortOrder;
+  preferredLanguage?: Prisma.SortOrder;
+  preferredContactType?: Prisma.SortOrder;
 };
 
 export type InvitationAvgOrderByAggregateInput = {
@@ -799,6 +881,8 @@ export type InvitationMaxOrderByAggregateInput = {
   maxInvitees?: Prisma.SortOrder;
   invitedByInvitationId?: Prisma.SortOrder;
   invitedByUserId?: Prisma.SortOrder;
+  preferredLanguage?: Prisma.SortOrder;
+  preferredContactType?: Prisma.SortOrder;
 };
 
 export type InvitationMinOrderByAggregateInput = {
@@ -819,6 +903,8 @@ export type InvitationMinOrderByAggregateInput = {
   maxInvitees?: Prisma.SortOrder;
   invitedByInvitationId?: Prisma.SortOrder;
   invitedByUserId?: Prisma.SortOrder;
+  preferredLanguage?: Prisma.SortOrder;
+  preferredContactType?: Prisma.SortOrder;
 };
 
 export type InvitationSumOrderByAggregateInput = {
@@ -904,6 +990,14 @@ export type IntFieldUpdateOperationsInput = {
   decrement?: number;
   multiply?: number;
   divide?: number;
+};
+
+export type NullableEnumLanguageFieldUpdateOperationsInput = {
+  set?: $Enums.Language | null;
+};
+
+export type NullableEnumContactTypeFieldUpdateOperationsInput = {
+  set?: $Enums.ContactType | null;
 };
 
 export type InvitationUpdateOneWithoutPlusOnesNestedInput = {
@@ -1043,6 +1137,8 @@ export type InvitationCreateWithoutPlusOnesInput = {
   approvedByUserId?: string | null;
   maxInvitees?: number;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   invitedByInvitation?: Prisma.InvitationCreateNestedOneWithoutPlusOnesInput;
   phoneNumbers?: Prisma.PhoneNumberCreateNestedManyWithoutInvitationInput;
 };
@@ -1065,6 +1161,8 @@ export type InvitationUncheckedCreateWithoutPlusOnesInput = {
   maxInvitees?: number;
   invitedByInvitationId?: string | null;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   phoneNumbers?: Prisma.PhoneNumberUncheckedCreateNestedManyWithoutInvitationInput;
 };
 
@@ -1093,6 +1191,8 @@ export type InvitationCreateWithoutInvitedByInvitationInput = {
   approvedByUserId?: string | null;
   maxInvitees?: number;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   plusOnes?: Prisma.InvitationCreateNestedManyWithoutInvitedByInvitationInput;
   phoneNumbers?: Prisma.PhoneNumberCreateNestedManyWithoutInvitationInput;
 };
@@ -1114,6 +1214,8 @@ export type InvitationUncheckedCreateWithoutInvitedByInvitationInput = {
   approvedByUserId?: string | null;
   maxInvitees?: number;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   plusOnes?: Prisma.InvitationUncheckedCreateNestedManyWithoutInvitedByInvitationInput;
   phoneNumbers?: Prisma.PhoneNumberUncheckedCreateNestedManyWithoutInvitationInput;
 };
@@ -1195,6 +1297,14 @@ export type InvitationUpdateWithoutPlusOnesInput = {
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
+    | null;
   invitedByInvitation?: Prisma.InvitationUpdateOneWithoutPlusOnesNestedInput;
   phoneNumbers?: Prisma.PhoneNumberUpdateManyWithoutInvitationNestedInput;
 };
@@ -1244,6 +1354,14 @@ export type InvitationUncheckedUpdateWithoutPlusOnesInput = {
   invitedByUserId?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
+    | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
     | null;
   phoneNumbers?: Prisma.PhoneNumberUncheckedUpdateManyWithoutInvitationNestedInput;
 };
@@ -1309,6 +1427,14 @@ export type InvitationScalarWhereInput = {
     | string
     | null;
   invitedByUserId?: Prisma.StringNullableFilter<'Invitation'> | string | null;
+  preferredLanguage?:
+    | Prisma.EnumLanguageNullableFilter<'Invitation'>
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.EnumContactTypeNullableFilter<'Invitation'>
+    | $Enums.ContactType
+    | null;
 };
 
 export type InvitationCreateWithoutPhoneNumbersInput = {
@@ -1328,6 +1454,8 @@ export type InvitationCreateWithoutPhoneNumbersInput = {
   approvedByUserId?: string | null;
   maxInvitees?: number;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   invitedByInvitation?: Prisma.InvitationCreateNestedOneWithoutPlusOnesInput;
   plusOnes?: Prisma.InvitationCreateNestedManyWithoutInvitedByInvitationInput;
 };
@@ -1350,6 +1478,8 @@ export type InvitationUncheckedCreateWithoutPhoneNumbersInput = {
   maxInvitees?: number;
   invitedByInvitationId?: string | null;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
   plusOnes?: Prisma.InvitationUncheckedCreateNestedManyWithoutInvitedByInvitationInput;
 };
 
@@ -1423,6 +1553,14 @@ export type InvitationUpdateWithoutPhoneNumbersInput = {
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
+    | null;
   invitedByInvitation?: Prisma.InvitationUpdateOneWithoutPlusOnesNestedInput;
   plusOnes?: Prisma.InvitationUpdateManyWithoutInvitedByInvitationNestedInput;
 };
@@ -1473,6 +1611,14 @@ export type InvitationUncheckedUpdateWithoutPhoneNumbersInput = {
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
+    | null;
   plusOnes?: Prisma.InvitationUncheckedUpdateManyWithoutInvitedByInvitationNestedInput;
 };
 
@@ -1493,6 +1639,8 @@ export type InvitationCreateManyInvitedByInvitationInput = {
   approvedByUserId?: string | null;
   maxInvitees?: number;
   invitedByUserId?: string | null;
+  preferredLanguage?: $Enums.Language | null;
+  preferredContactType?: $Enums.ContactType | null;
 };
 
 export type InvitationUpdateWithoutInvitedByInvitationInput = {
@@ -1536,6 +1684,14 @@ export type InvitationUpdateWithoutInvitedByInvitationInput = {
   invitedByUserId?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
+    | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
     | null;
   plusOnes?: Prisma.InvitationUpdateManyWithoutInvitedByInvitationNestedInput;
   phoneNumbers?: Prisma.PhoneNumberUpdateManyWithoutInvitationNestedInput;
@@ -1583,6 +1739,14 @@ export type InvitationUncheckedUpdateWithoutInvitedByInvitationInput = {
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
     | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
+    | null;
   plusOnes?: Prisma.InvitationUncheckedUpdateManyWithoutInvitedByInvitationNestedInput;
   phoneNumbers?: Prisma.PhoneNumberUncheckedUpdateManyWithoutInvitationNestedInput;
 };
@@ -1628,6 +1792,14 @@ export type InvitationUncheckedUpdateManyWithoutInvitedByInvitationInput = {
   invitedByUserId?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
+    | null;
+  preferredLanguage?:
+    | Prisma.NullableEnumLanguageFieldUpdateOperationsInput
+    | $Enums.Language
+    | null;
+  preferredContactType?:
+    | Prisma.NullableEnumContactTypeFieldUpdateOperationsInput
+    | $Enums.ContactType
     | null;
 };
 
@@ -1703,6 +1875,8 @@ export type InvitationSelect<
     maxInvitees?: boolean;
     invitedByInvitationId?: boolean;
     invitedByUserId?: boolean;
+    preferredLanguage?: boolean;
+    preferredContactType?: boolean;
     invitedByInvitation?:
       | boolean
       | Prisma.Invitation$invitedByInvitationArgs<ExtArgs>;
@@ -1735,6 +1909,8 @@ export type InvitationSelectCreateManyAndReturn<
     maxInvitees?: boolean;
     invitedByInvitationId?: boolean;
     invitedByUserId?: boolean;
+    preferredLanguage?: boolean;
+    preferredContactType?: boolean;
     invitedByInvitation?:
       | boolean
       | Prisma.Invitation$invitedByInvitationArgs<ExtArgs>;
@@ -1764,6 +1940,8 @@ export type InvitationSelectUpdateManyAndReturn<
     maxInvitees?: boolean;
     invitedByInvitationId?: boolean;
     invitedByUserId?: boolean;
+    preferredLanguage?: boolean;
+    preferredContactType?: boolean;
     invitedByInvitation?:
       | boolean
       | Prisma.Invitation$invitedByInvitationArgs<ExtArgs>;
@@ -1789,6 +1967,8 @@ export type InvitationSelectScalar = {
   maxInvitees?: boolean;
   invitedByInvitationId?: boolean;
   invitedByUserId?: boolean;
+  preferredLanguage?: boolean;
+  preferredContactType?: boolean;
 };
 
 export type InvitationOmit<
@@ -1811,7 +1991,9 @@ export type InvitationOmit<
   | 'approvedByUserId'
   | 'maxInvitees'
   | 'invitedByInvitationId'
-  | 'invitedByUserId',
+  | 'invitedByUserId'
+  | 'preferredLanguage'
+  | 'preferredContactType',
   ExtArgs['result']['invitation']
 >;
 export type InvitationInclude<
@@ -1871,6 +2053,8 @@ export type $InvitationPayload<
       maxInvitees: number;
       invitedByInvitationId: string | null;
       invitedByUserId: string | null;
+      preferredLanguage: $Enums.Language | null;
+      preferredContactType: $Enums.ContactType | null;
     },
     ExtArgs['result']['invitation']
   >;
@@ -2517,6 +2701,8 @@ export interface InvitationFieldRefs {
   readonly maxInvitees: Prisma.FieldRef<'Invitation', 'Int'>;
   readonly invitedByInvitationId: Prisma.FieldRef<'Invitation', 'String'>;
   readonly invitedByUserId: Prisma.FieldRef<'Invitation', 'String'>;
+  readonly preferredLanguage: Prisma.FieldRef<'Invitation', 'Language'>;
+  readonly preferredContactType: Prisma.FieldRef<'Invitation', 'ContactType'>;
 }
 
 // Custom InputTypes

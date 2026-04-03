@@ -9,7 +9,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
+import {
+  CookieAuthGuard,
+  CurrentUser,
+  CurrentUserData,
+} from '@omnixys/security';
 
 @Resolver(() => InvitationPayload)
 export class InvitationQueryResolver {

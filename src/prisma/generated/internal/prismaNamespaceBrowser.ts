@@ -92,6 +92,8 @@ export const InvitationScalarFieldEnum = {
   maxInvitees: 'maxInvitees',
   invitedByInvitationId: 'invitedByInvitationId',
   invitedByUserId: 'invitedByUserId',
+  preferredLanguage: 'preferredLanguage',
+  preferredContactType: 'preferredContactType',
 } as const;
 
 export type InvitationScalarFieldEnum =

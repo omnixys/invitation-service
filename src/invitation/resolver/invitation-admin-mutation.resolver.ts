@@ -1,7 +1,4 @@
-import {
-  ApproveInvitationInput,
-  ApproveInvitationWithSeatInput,
-} from '../models/input/approve.input.js';
+import { ApproveInvitationInput } from '../models/input/approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import {
   ImportInvitationsInput,
@@ -12,8 +9,13 @@ import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
 import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
 import { OmnixysLogger } from '@omnixys/logger';
+import { TraceRunner } from '@omnixys/observability';
+import {
+  CookieAuthGuard,
+  CurrentUser,
+  CurrentUserData,
+} from '@omnixys/security';
 
 @Resolver(() => InvitationPayload)
 export class AdminMutationResolver {
@@ -63,67 +65,25 @@ export class AdminMutationResolver {
     @CurrentUser()
     user: CurrentUserData,
   ): Promise<InvitationPayload> {
-    if (!user?.id) {
-      // Kein authentifizierter Nutzer im Kontext
-      throw new UnauthorizedException('Not authenticated');
-    }
-    const result = await this.adminService.approve(
-      input.invitationId,
-      input.approved,
-      user?.id,
-    );
+    return TraceRunner.run('[RESOLVER] approveInvitation', async () => {
+      if (!user?.id) {
+        throw new UnauthorizedException('Not authenticated');
+      }
 
-    if (!result) {
-      throw new Error('Gast hat sich noch nicht entschieden!');
-    }
-    return result;
-  }
+      const result = await this.adminService.approve({
+        id: input.invitationId,
+        approve: input.approved,
+        actorId: user.id,
+        eventName: input.eventName,
+        seat: input.seat,
+        seatId: input.seatId,
+      });
 
-  @UseGuards(CookieAuthGuard)
-  @Mutation(() => InvitationPayload)
-  async approveInvitationAndCreateTicket(
-    @Args('input', {
-      type: () => ApproveInvitationWithSeatInput,
-    })
-    input: ApproveInvitationWithSeatInput,
-    @CurrentUser()
-    user: CurrentUserData,
-  ): Promise<InvitationPayload> {
-    if (!user?.id) {
-      // Kein authentifizierter Nutzer im Kontext
-      throw new UnauthorizedException('Not authenticated');
-    }
-    const result = await this.adminService.approveAndCreateTicket(
-      input,
-      user.id,
-    );
-
-    if (!result) {
-      throw new Error('Gast hat sich noch nicht entschieden!');
-    }
-    return result;
-  }
-
-  @UseGuards(CookieAuthGuard)
-  @Mutation(() => InvitationPayload)
-  async rejectInvitation(
-    @Args('id', {
-      type: () => ID,
-    })
-    id: string,
-    @CurrentUser()
-    user: CurrentUserData,
-  ): Promise<InvitationPayload> {
-    if (!user?.id) {
-      // Kein authentifizierter Nutzer im Kontext
-      throw new UnauthorizedException('Not authenticated');
-    }
-    const result = await this.adminService.reject(id, user?.id);
-
-    if (!result) {
-      throw new Error('Gast hat sich noch nicht entschieden!');
-    }
-    return result;
+      if (!result) {
+        throw new Error('Gast hat sich noch nicht entschieden!');
+      }
+      return result;
+    });
   }
 
   @UseGuards(CookieAuthGuard)
