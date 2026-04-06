@@ -8,12 +8,15 @@ import {
 } from '../service/guest-write.service.js';
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { ClientInfo } from '@omnixys/context';
 import { OmnixysLogger } from '@omnixys/logger';
+import { TraceRunner } from '@omnixys/observability';
 import {
   CookieAuthGuard,
   CurrentUser,
   CurrentUserData,
 } from '@omnixys/security';
+import { ClientContext } from '@omnixys/shared';
 
 @Resolver(() => InvitationPayload)
 export class GuestMutationResolver {
@@ -41,8 +44,11 @@ export class GuestMutationResolver {
       type: () => RSVPInput,
     })
     input: RSVPInput,
+    @ClientInfo() clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
-    return this.guestService.reply(input);
+    return TraceRunner.run('[RESOLVER] approve', async () => {
+      return this.guestService.reply(input,clientInfo);
+    });
   }
 
   // 🔻 NEU: Einzelnes Plus-One löschen (gibt 1 Slot an Parent zurück)
@@ -73,11 +79,14 @@ export class GuestMutationResolver {
   @Mutation(() => InvitationPayload)
   async createInvitationFromRsvp(
     @Args('input') input: PublicRsvpInput,
+    @ClientInfo() clientContext: ClientContext
   ): Promise<InvitationPayload> {
-    this.logger.debug(
-      '[RSVP] Public RSVP submission for event %s',
-      input.eventId,
-    );
-    return this.guestService.createFromPublicRsvp(input);
+    return TraceRunner.run('[RESOLVER] createInvitationFromRsvp', async () => {
+      this.logger.debug(
+        '[RSVP] Public RSVP submission for event %s',
+        input.eventId,
+      );
+      return this.guestService.createFromPublicRsvp(input, clientContext);
+    });
   }
 }

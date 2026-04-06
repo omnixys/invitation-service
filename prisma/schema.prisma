@@ -43,9 +43,6 @@ model Invitation {
   invitedByInvitation   Invitation? @relation("invitation_by_invitation", fields: [invitedByInvitationId], references: [id], onDelete: Cascade)
   invitedByUserId       String?     @map("invited_by_user_id")
 
-  preferredLanguage Language? @map("preferred_language") @default(ENGLISH)
-  preferredContactType ContactType? @map("preferred_contact_type") @default(EMAIL)
-
   plusOnes     Invitation[]  @relation("invitation_by_invitation")
   phoneNumbers PhoneNumber[]
 
@@ -82,18 +79,6 @@ model PhoneNumber {
 enum ContactType {
   EMAIL
   PHONE
-
-  @@schema("invitation")
-}
-
-enum Language {
-  ENGLISH
-  SPANISH
-  FRENCH
-  GERMAN
-  CHINESE
-  JAPANESE
-  OTHER
 
   @@schema("invitation")
 }

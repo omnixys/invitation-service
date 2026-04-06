@@ -80,7 +80,7 @@ export class AdminMutationResolver {
       });
 
       if (!result) {
-        throw new Error('Gast hat sich noch nicht entschieden!');
+        throw new Error('Gast hat sich noch nicht entschieden!', {cause: 456});
       }
       return result;
     });

@@ -16,12 +16,14 @@
  */
 
 import { InvitationModule } from '../invitation/invitation.module.js';
+import { AuthenticationHandler } from './authentication.handler.js';
+import { EventHandler } from './event.handler.js';
 import { TicketHandler } from './ticket.handler.js';
 import { Module } from '@nestjs/common';
 
 @Module({
   imports: [InvitationModule],
-  providers: [TicketHandler],
-  exports: [TicketHandler],
+  providers: [TicketHandler, AuthenticationHandler, EventHandler],
+  exports: [TicketHandler, AuthenticationHandler, EventHandler],
 })
 export class HandlerModule {}

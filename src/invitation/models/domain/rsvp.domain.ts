@@ -5,6 +5,7 @@ import {
   InvitationStatus,
   RsvpChoice,
 } from '../../../prisma/generated/client.js';
+import { RsvpAlreadyAcceptedException } from '@omnixys/shared';
 
 export interface RSVPDecision {
   newChoice: RsvpChoice;
@@ -17,10 +18,15 @@ export class RsvpDomain {
    * Computes the new RSVP state and whether user must submit contact data.
    */
   static decide(
-    previousChoice: RsvpChoice | undefined,
+    previousChoice: RsvpChoice | undefined | null,
     newChoice: RsvpChoice,
-    hasReplyInput: boolean,
+    hasContactDetails: boolean,
   ): RSVPDecision {
+    if (previousChoice === newChoice) {
+      if( newChoice === RsvpChoice.YES)  throw new RsvpAlreadyAcceptedException();
+      throw new Error('Already declined');
+    }
+
     if (newChoice === RsvpChoice.NO) {
       return {
         newChoice,
@@ -33,19 +39,14 @@ export class RsvpDomain {
       return {
         newChoice,
         newStatus: InvitationStatus.PENDING,
-        needsContactDetails: hasReplyInput,
+        needsContactDetails: false,
       };
-    }
-
-    // YES
-    if (previousChoice === RsvpChoice.YES) {
-      throw new Error('Invitation already accepted');
     }
 
     return {
       newChoice,
       newStatus: InvitationStatus.ACCEPTED,
-      needsContactDetails: true,
+      needsContactDetails: !!hasContactDetails,
     };
   }
 }

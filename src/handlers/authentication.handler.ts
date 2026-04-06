@@ -15,55 +15,63 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import { Injectable } from '@nestjs/common';
-
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
+import { Injectable } from '@nestjs/common';
 import {
   IKafkaEventContext,
+  KAFKA_HEADERS,
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
 } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import {
-  AddGuestIdToInvitationDTO,
-} from '@omnixys/shared';
+import { UserIdDTO } from '@omnixys/shared';
 
 /**
- * Kafka event handler responsible for useristrative commands such as
- * shutdown and restart. It listens for specific user-related topics
- * and delegates the actual process control logic to the {@link UserService}.
+ * Central Kafka Authentication Handler.
  *
- * @category Messaging
- * @since 1.0.0
+ * Design principles:
+ * - One class per domain (authentication)
+ * - One method per Kafka topic
+ * - Strict typing per method
+ * - No switch/case
+ * - No casting
  */
-@KafkaEventHandler('ticket')
+@KafkaEventHandler('authentication')
 @Injectable()
-export class TicketHandler {
+export class AuthenticationHandler {
   private readonly logger;
 
   /**
-   * Creates a new instance of {@link UserHandler}.
+   * Creates a new instance of {@link EventHandler}.
    *
    * @param loggerService - The central logger service used for structured logging.
    * @param userService - The service responsible for handling system-level user operations.
    */
   constructor(
-    loggerService: OmnixysLogger,
+    private readonly omnixysLogger: OmnixysLogger,
     private readonly invitationWriteService: InvitationWriteService,
   ) {
-    this.logger = loggerService.log(this.constructor.name);
+    this.logger = this.omnixysLogger.log(this.constructor.name);
   }
 
-  @KafkaEvent(KafkaTopics.invitation.addGuestId)
-  async handleAddGuestId(
-    payload: AddGuestIdToInvitationDTO,
-    _context: IKafkaEventContext,
-  ) {
-    return TraceRunner.run('[HANDLER] addGuestId', async () => {
-      this.logger.debug(`AuthenticationHandler: addGuestId= %o`, payload);
-      void this.invitationWriteService.addGuestId(payload);
+  @KafkaEvent(KafkaTopics.invitation.deleteUserInvitations)
+  async handleDeleteInvitation(
+    payload: UserIdDTO,
+    context: IKafkaEventContext,
+  ): Promise<void> {
+    return TraceRunner.run('[HANDLER] Delete Invitation', async () => {
+      const headers = context.headers;
+      const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
+
+      this.logger.debug(
+        'handleDeleteInvitation: %s | actorId=%s',
+        payload.userId,
+        actorId,
+      );
+
+      await this.invitationWriteService.deleteByGuestId(payload.userId);
     });
   }
 }

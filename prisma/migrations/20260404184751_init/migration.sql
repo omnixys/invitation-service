@@ -2,9 +2,6 @@
 CREATE TYPE "ContactType" AS ENUM ('EMAIL', 'PHONE');
 
 -- CreateEnum
-CREATE TYPE "Language" AS ENUM ('ENGLISH', 'SPANISH', 'FRENCH', 'GERMAN', 'CHINESE', 'JAPANESE', 'OTHER');
-
--- CreateEnum
 CREATE TYPE "PhoneNumberType" AS ENUM ('WHATSAPP', 'MOBILE', 'PRIVATE', 'WORK', 'HOME', 'OTHER');
 
 -- CreateEnum
@@ -32,8 +29,6 @@ CREATE TABLE "invitation" (
     "max_invitees" INTEGER NOT NULL DEFAULT 0,
     "invited_by_invitation_id" TEXT,
     "invited_by_user_id" TEXT,
-    "preferred_language" "Language" DEFAULT 'ENGLISH',
-    "preferred_contact_type" "ContactType" DEFAULT 'EMAIL',
 
     CONSTRAINT "invitation_pkey" PRIMARY KEY ("id")
 );

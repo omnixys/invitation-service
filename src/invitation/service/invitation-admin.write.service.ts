@@ -10,7 +10,7 @@ import { InvitationUpdateInput } from '../models/input/update-invitation.input.j
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ValkeyService, ValkeyKey } from '@omnixys/cache';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
@@ -18,8 +18,6 @@ import { TraceRunner } from '@omnixys/observability';
 import {
   RsvpNotSubmittedException,
   RsvpNotAcceptedException,
-  InvitationAlreadyAcceptedException,
-  InvitationNotFoundException,
   MissingGuestNameException,
   InvitationAlreadyApprovedException,
   InvitationAlreadyRejectedException,
@@ -266,7 +264,7 @@ export class AdminWriteService extends InvitationBaseService {
       if (!approve && invitation.status === InvitationStatus.REJECTED) {
         this.logger.error('Invitation already rejected.');
         throw new InvitationAlreadyRejectedException();
-      }
+       }
 
       // Fire Kafka event only if newly approved
       if (approve) {

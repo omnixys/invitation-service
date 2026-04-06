@@ -1,4 +1,9 @@
-import { InvitationStatus, Language, RsvpChoice } from '../../prisma/generated/client.js';
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+
+import { Invitation, InvitationStatus, PhoneNumberType, Prisma, RsvpChoice } from '../../prisma/generated/client.js';
+import { PhoneNumberType as PrismaPhoneNumberType } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RsvpDomain } from '../models/domain/rsvp.domain.js';
 import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
@@ -10,7 +15,42 @@ import { InvitationBaseService } from './invitation-base.service.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache';
 import { OmnixysLogger } from '@omnixys/logger';
-import { CreateGuestDTO, mapLanguageToLocale, createTmpUsername } from '@omnixys/shared';
+import { TraceRunner } from '@omnixys/observability';
+import {
+  createTmpUsername,
+  MissingRsvpContactDetailsException,
+  MissingContactMethodException,
+  ClientContext,
+  CreatePendingUserDTO,
+  n2u,
+  PhoneNumberDTO,
+} from '@omnixys/shared';
+import { PhoneNumberType as SharedPhoneNumberType } from '@omnixys/shared';
+
+type InvitationWithPhones = Prisma.InvitationGetPayload<{
+  include: { phoneNumbers: true };
+}>;
+
+/**
+ * Maps Prisma enum → Shared enum
+ */
+export function mapPhoneNumberType(
+  type: PrismaPhoneNumberType,
+): SharedPhoneNumberType {
+  return type as unknown as SharedPhoneNumberType;
+}
+
+function mapPhoneNumber(
+  ph: any, // better: Prisma.PhoneNumber
+): PhoneNumberDTO {
+  return {
+    number: ph.number,
+    type: mapPhoneNumberType(ph.type),
+    label: ph.label ?? undefined,
+    isPrimary: ph.isPrimary,
+    countryCode: ph.countryCode,
+  };
+}
 
 @Injectable()
 export class GuestWriteService extends InvitationBaseService {
@@ -22,155 +62,328 @@ export class GuestWriteService extends InvitationBaseService {
     super(logger, prisma);
   }
 
-  async reply(input: RSVPInput): Promise<InvitationPayload> {
-    const { invitationId: id, choice, replyInput } = input;
-    this.logger.debug(`reply: id=${id} choice=${choice}`);
+  /**
+   * RSVP reply for an existing invitation.
+   *
+   * Business rules:
+   * - PlusOnes ONLY exist when RSVP = YES
+   * - For MAYBE / NO → no plusOnes must be processed
+   */
+  async reply(input: RSVPInput, clientInfo: ClientContext): Promise<InvitationPayload> {
+    return TraceRunner.run('[SERVICE] reply', async () => {
+      const { invitationId: id, choice, replyInput } = input;
 
-    const invitation = await this.ensureExists(id);
-    const now = new Date();
+      this.logger.debug(`reply: id=${id} choice=${choice}`);
 
-    // FIX 3: Avoid undefined → force null fallback
-    const previous = (invitation.rsvpChoice as RsvpChoice) ?? undefined;
+      const invitation = await this.ensureExists(id);
 
-    const decision = RsvpDomain.decide(previous, choice, !!replyInput);
-
-    // optional pending contact
-    let pendingContactId: string | undefined = undefined;
-
-    if (decision.needsContactDetails) {
-      if (!replyInput) {
-        throw new BadRequestException('Missing RSVP contact details');
+      /**
+       * Prevent double RSVP
+       */
+      if (invitation.rsvpChoice === RsvpChoice.YES || invitation.rsvpChoice === RsvpChoice.NO) {
+        throw new BadRequestException('Already RSVPed');
       }
 
-      const locale = mapLanguageToLocale(invitation.preferredLanguage ?? Language.ENGLISH);
+      const now = new Date();
+      const previous = invitation.rsvpChoice ?? null;
 
-      const pendingUser: CreateGuestDTO = {
-        firstName: replyInput.firstName ?? invitation.firstName,
-        lastName: replyInput.lastName ?? invitation.lastName,
-        invitationId: invitation.id,
-        email: replyInput.email ?? undefined,
-        phoneNumbers: replyInput.phoneNumbers ?? undefined,
-        eventId: invitation.eventId,
-        tenantId: 'omnixys',
-        locale,
-        actorId: createTmpUsername(
-          replyInput.firstName ?? invitation.firstName,
-          replyInput.lastName ?? invitation.lastName,
-        ),
-      };
-      pendingContactId = await this.cache.set(ValkeyKey.pendingContact, pendingUser, 30);
-    }
+      const decision = RsvpDomain.decide(previous, choice, !!replyInput);
 
-    const updated = await this.prismaService.invitation.update({
-      where: { id },
-      data: {
-        rsvpChoice: decision.newChoice,
-        status: decision.newStatus,
-        rsvpAt: now,
-        ...(replyInput?.firstName ? { firstName: replyInput.firstName } : {}),
-        ...(replyInput?.lastName ? { lastName: replyInput.lastName } : {}),
-        ...(pendingContactId ? { pendingContactId } : {}),
-      },
+      /**
+       * Validate contact details for YES
+       */
+      if (decision.newChoice === RsvpChoice.YES) {
+        if (!replyInput) {
+          throw new MissingRsvpContactDetailsException();
+        }
+
+        if (!replyInput.email && !replyInput.phoneNumbers?.length) {
+          throw new MissingContactMethodException();
+        }
+      }
+
+      const inputPlusOnes = replyInput?.plusOnes ?? [];
+
+      /**
+       * Validate plusOnes
+       */
+      if (decision.newChoice === RsvpChoice.YES) {
+        for (const p of inputPlusOnes) {
+          if (!p.firstName || !p.lastName) {
+            throw new BadRequestException('PlusOne must have firstName and lastName');
+          }
+        }
+      }
+
+      /**
+       * 🔥 TRANSACTION (CRITICAL)
+       */
+      const result = await this.prismaService.$transaction(async (tx) => {
+        /**
+         * 1. Update parent invitation
+         */
+        const updatedInvitation = await tx.invitation.update({
+          where: { id },
+          data: {
+            rsvpChoice: decision.newChoice,
+            status: decision.newStatus,
+            rsvpAt: now,
+            firstName: replyInput?.firstName ?? invitation.firstName,
+            lastName: replyInput?.lastName ?? invitation.lastName,
+          },
+        });
+
+        /**
+         * 2. Create plusOnes ONLY if YES
+         */
+        const createdPlusOnes: InvitationWithPhones[] = [];
+
+        if (decision.newChoice === RsvpChoice.YES && inputPlusOnes.length > 0) {
+          for (const p of inputPlusOnes) {
+            const created = await tx.invitation.create({
+              data: {
+                eventId: invitation.eventId,
+                firstName: p.firstName,
+                lastName: p.lastName,
+                email: p.email ?? null,
+
+                status: InvitationStatus.ACCEPTED,
+                rsvpChoice: RsvpChoice.YES,
+                rsvpAt: now,
+
+                invitedByInvitationId: invitation.id,
+
+                /**
+                 * Nested phone numbers
+                 */
+                phoneNumbers: p.phoneNumbers?.length
+                  ? {
+                      createMany: {
+                        data: p.phoneNumbers.map((ph) => ({
+                          number: ph.number,
+                          type: ph.type as PhoneNumberType,
+                          label: ph.label ?? null,
+                          isPrimary: ph.isPrimary ?? false,
+                          countryCode: ph.countryCode,
+                        })),
+                      },
+                    }
+                  : undefined,
+              },
+              include: {
+                phoneNumbers: true,
+              },
+            });
+
+            createdPlusOnes.push(created);
+          }
+        }
+
+        /**
+         * 3. Build pending contact (optional flow)
+         */
+        let pendingContactId: string | undefined;
+
+        if (decision.needsContactDetails) {
+          const pendingUser: CreatePendingUserDTO = {
+            firstName: replyInput!.firstName ?? invitation.firstName,
+            lastName: replyInput!.lastName ?? invitation.lastName,
+            invitationId: invitation.id,
+            email: replyInput!.email,
+            phoneNumbers: replyInput!.phoneNumbers,
+            eventId: invitation.eventId,
+            tenantId: 'omnixys',
+            locale: clientInfo.locale,
+            actorId: createTmpUsername(
+              replyInput!.firstName ?? invitation.firstName,
+              replyInput!.lastName ?? invitation.lastName,
+            ),
+
+            /**
+             * Now mapped from DB-created plusOnes
+             */
+            plusOnes: createdPlusOnes.map((p) => ({
+              invitationId: p.id,
+              firstName: p.firstName,
+              lastName: p.lastName,
+              email: n2u(p.email),
+              phoneNumbers: p.phoneNumbers.map(mapPhoneNumber),
+            })),
+          };
+
+          pendingContactId = await this.cache.set(
+            ValkeyKey.pendingContact,
+            JSON.stringify(pendingUser),
+            60 * 60 * 24,
+          );
+
+          /**
+           * Attach pendingContactId AFTER creation
+           */
+          await tx.invitation.update({
+            where: { id },
+            data: { pendingContactId },
+          });
+        }
+
+        return updatedInvitation;
+      });
+
+      return InvitationMapper.toPayload(result);
     });
-
-    return InvitationMapper.toPayload(updated);
   }
 
+  /**
+   * Creates a plus-one invitation.
+   */
   async createPlusOne(input: CreatePlusOneInput, userId?: string): Promise<InvitationPayload> {
     const { eventId, invitedByInvitationId, firstName, lastName } = input;
 
-    if (!eventId) {
-      throw new BadRequestException('eventId required');
-    }
-    if (!invitedByInvitationId) {
-      throw new BadRequestException('invitedByInvitationId required');
+    if (!eventId || !invitedByInvitationId) {
+      throw new BadRequestException('Missing required fields');
     }
 
-    return this.prismaService.$transaction(async (tx): Promise<InvitationPayload> => {
-      const updateParent = await tx.invitation.updateMany({
-        where: { id: invitedByInvitationId, eventId, maxInvitees: { gt: 0 } },
+    return this.prismaService.$transaction(async (tx) => {
+      const updated = await tx.invitation.updateMany({
+        where: {
+          id: invitedByInvitationId,
+          eventId,
+          maxInvitees: { gt: 0 },
+        },
         data: { maxInvitees: { decrement: 1 } },
       });
 
-      if (updateParent.count !== 1) {
-        const exists = await tx.invitation.findUnique({
-          where: { id: invitedByInvitationId },
-          select: { id: true },
-        });
-
-        if (!exists) {
-          throw new NotFoundException('Parent invitation does not exist');
-        }
+      if (updated.count !== 1) {
         throw new BadRequestException('No Plus-Ones remaining');
       }
 
       const child = await tx.invitation.create({
         data: {
           eventId,
-          status: InvitationStatus.PENDING,
           invitedByInvitationId,
           invitedByUserId: userId,
           firstName,
           lastName,
+          status: InvitationStatus.PENDING,
           maxInvitees: 0,
         },
       });
-
-      // await tx.invitation.update({
-      //   where: { id: invitedByInvitationId },
-      //   data: { plusOnes: { push: child.id } },
-      // });
 
       return InvitationMapper.toPayload(child);
     });
   }
 
+  /**
+   * Deletes a plus-one invitation.
+   */
   async deletePlusOne(id: string): Promise<InvitationPayload> {
     return this.prismaService.$transaction(async (tx) => {
       const child = await tx.invitation.findUnique({
         where: { id },
-        select: {
-          id: true,
-          eventId: true,
-          invitedByInvitationId: true,
-          pendingContactId: true,
-        },
       });
 
-      // FIX 5: Validate child non-null early
       if (!child) {
         throw new NotFoundException('Invitation not found');
       }
 
       this.ensureIsPlusOne(child);
 
-      const parent = await tx.invitation.findUnique({
-        where: { id: child.invitedByInvitationId! },
-        select: { id: true, plusOnes: true },
-      });
-
-      // FIX 6: Validate parent non-null early
-      if (!parent) {
-        throw new NotFoundException('Parent invitation not found');
-      }
-
       if (child.pendingContactId) {
-        const kp = await this.cache.delete(ValkeyKey.pendingContact, child.pendingContactId);
-        console.log({ childkp: kp });
+        await this.cache.delete(ValkeyKey.pendingContact, child.pendingContactId);
       }
 
       const deleted = await tx.invitation.delete({ where: { id } });
 
       await tx.invitation.update({
-        where: { id: parent.id },
+        where: { id: child.invitedByInvitationId! },
         data: {
           maxInvitees: { increment: 1 },
-          // plusOnes: { set: parent.plusOnes.filter((x) => x !== id) },
         },
       });
 
       return InvitationMapper.toPayload(deleted);
     });
+  }
+
+  /**
+   * Public RSVP → creates invitation + plusOnes + pending user
+   */
+  async createFromPublicRsvp(
+    input: PublicRsvpInput,
+    clientInfo: ClientContext,
+  ): Promise<InvitationPayload> {
+    /**
+     * 1. Create main invitation
+     */
+    const invitee = await this.prismaService.invitation.create({
+      data: {
+        eventId: input.eventId,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        status: InvitationStatus.ACCEPTED,
+        rsvpChoice: RsvpChoice.YES,
+        rsvpAt: new Date(),
+        maxInvitees: input.plusOnes?.length ?? 0,
+      },
+    });
+
+    /**
+     * 2. Create plusOnes WITH IDs
+     */
+    const plusOneInvitations: Invitation[] = [];
+
+    for (const p of input.plusOnes ?? []) {
+      if (!p.firstName || !p.lastName) continue;
+
+      const created = await this.prismaService.invitation.create({
+        data: {
+          eventId: input.eventId,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          status: InvitationStatus.ACCEPTED,
+          rsvpChoice: RsvpChoice.YES,
+          rsvpAt: new Date(),
+          invitedByInvitationId: invitee.id,
+        },
+      });
+
+      plusOneInvitations.push(created);
+    }
+
+    /**
+     * 3. Build pending user (deterministic!)
+     */
+    const pendingUser: CreatePendingUserDTO = {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      invitationId: invitee.id,
+      email: input.email,
+      phoneNumbers: input.phoneNumbers,
+      eventId: input.eventId,
+      tenantId: 'omnixys',
+      locale: clientInfo.locale,
+      actorId: createTmpUsername(input.firstName, input.lastName),
+
+      plusOnes: plusOneInvitations.map((p) => ({
+        invitationId: p.id,
+        firstName: p.firstName,
+        lastName: p.lastName,
+        email: n2u(p.email),
+      })),
+    };
+
+    const pendingContactId = await this.cache.set(
+      ValkeyKey.pendingContact,
+      JSON.stringify(pendingUser),
+      60 * 60 * 24 * 7,
+    );
+
+    const updated = await this.prismaService.invitation.update({
+      where: { id: invitee.id },
+      data: { pendingContactId },
+    });
+
+    return InvitationMapper.toPayload(updated);
   }
 
   async deleteAllPlusOnes(parentId: string): Promise<InvitationPayload[]> {
@@ -212,43 +425,9 @@ export class GuestWriteService extends InvitationBaseService {
     });
   }
 
-  async createFromPublicRsvp(input: PublicRsvpInput) {
-    // 1) Haupt-Einladung (Invitee) anlegen
-    const invitee = await this.prismaService.invitation.create({
-      data: {
-        eventId: input.eventId,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        status: 'ACCEPTED',
-        rsvpChoice: 'YES',
-        rsvpAt: new Date(),
-        maxInvitees: input.plusOnes?.length ?? 0,
-      },
-    });
-
-    // 2) Plus-Ones als eigene Invitations anlegen (Self-Relation)
-    if (input.plusOnes && input.plusOnes.length > 0) {
-      await this.prismaService.invitation.createMany({
-        data: input.plusOnes
-          .filter((p) => p.firstName && p.lastName)
-          .map((p) => ({
-            eventId: input.eventId,
-            firstName: p.firstName,
-            lastName: p.lastName,
-            status: 'ACCEPTED',
-            rsvpChoice: 'YES',
-            rsvpAt: new Date(),
-            invitedByInvitationId: invitee.id,
-          })),
-      });
-    }
-
-    return InvitationMapper.toPayload(invitee);
-  }
-
-  private ensureIsPlusOne(child: any): void {
-    if (!child?.invitedByInvitationId) {
-      throw new Error('This invitation is not a Plus-One');
+  private ensureIsPlusOne(child: Invitation): void {
+    if (!child.invitedByInvitationId) {
+      throw new BadRequestException('Not a plus-one');
     }
   }
 }

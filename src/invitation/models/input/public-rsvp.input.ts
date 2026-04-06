@@ -21,6 +21,11 @@ export class PublicRsvpInput {
 
   @Field(() => String, {
     nullable: true,
+  })
+  email?: string;
+
+  @Field(() => String, {
+    nullable: true,
     description: 'Optional RSVP message from guest',
   })
   message?: string;
@@ -39,4 +44,10 @@ export class PublicPlusOneInput {
 
   @Field(() => String)
   lastName!: string;
+
+  @Field(() => String, { nullable: true })
+  email?: string;
+
+  @Field(() => [PhoneNumberInput], { nullable: true })
+  phoneNumbers?: PhoneNumberInput[];
 }

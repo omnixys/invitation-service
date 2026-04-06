@@ -6,6 +6,7 @@ import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
 import { OmnixysLogger } from '@omnixys/logger';
+import { TraceRunner } from '@omnixys/observability';
 import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 
 // ✔ Deine lokale Trigger-Konstante (NICHT abhängig von Redis)
@@ -91,10 +92,64 @@ export class InvitationWriteService extends InvitationBaseService {
     return { inserted: result.length };
   }
 
-  async deleteMany(guestId: string): Promise<void> {
-    this.logger.debug(`deleteMany: guestId=${guestId}`);
-    await this.prismaService.invitation.deleteMany({
-      where: { guestProfileId: guestId },
+  async deleteByGuestId(guestId: string): Promise<void> {
+    return TraceRunner.run('[SERVICE] Delete Guest Invitation', async () => {
+      this.logger.warn('Delete invitations by guestId=%s', guestId);
+
+      /**
+       * 1. Find root invitations
+       */
+      const rootInvitations = await this.prismaService.invitation.findMany({
+        where: { guestProfileId: guestId },
+        select: { id: true },
+      });
+
+      if (rootInvitations.length === 0) {
+        this.logger.warn('No invitations found for guestId=%s', guestId);
+        return;
+      }
+
+      /**
+       * 2. Collect full hierarchy (root + plusOnes)
+       */
+      const invitationIds = await this.collectInvitationTree(rootInvitations.map((i) => i.id));
+
+      this.logger.debug('Deleting invitations=%o', invitationIds);
+
+      /**
+       * 3. Delete all (PhoneNumbers auto via cascade)
+       */
+      const result = await this.prismaService.invitation.deleteMany({
+        where: {
+          id: { in: invitationIds },
+        },
+      });
+
+      this.logger.info(
+        'Deleted %d invitations (including plusOnes) for guestId=%s',
+        result.count,
+        guestId,
+      );
+    });
+  }
+  async deleteByEventIds(eventIds: string[]): Promise<void> {
+    return TraceRunner.run('[SERVICE] Delete Event Invitation', async () => {
+      this.logger.debug('deleteByEventIds: eventIds=%o', eventIds);
+
+      if (!eventIds || eventIds.length === 0) {
+        this.logger.warn('No eventIds provided → skipping delete');
+        return;
+      }
+
+      const deletedInvitations = await this.prismaService.invitation.deleteMany({
+        where: {
+          eventId: {
+            in: eventIds,
+          },
+        },
+      });
+
+      this.logger.debug('%s invitations deleted', deletedInvitations.count)
     });
   }
 
@@ -103,6 +158,31 @@ export class InvitationWriteService extends InvitationBaseService {
     await this.prismaService.invitation.updateMany({
       where: { id: invitationId },
       data: { guestProfileId: userId },
+    });
+  }
+
+  private async collectInvitationTree(rootIds: string[]): Promise<string[]> {
+    return TraceRunner.run('[SERVICE] Collect Invitation Tree', async () => {
+
+      const all = new Set<string>(rootIds);
+      let queue = [...rootIds];
+
+      while (queue.length > 0) {
+        const children = await this.prismaService.invitation.findMany({
+          where: {
+            invitedByInvitationId: { in: queue },
+          },
+          select: { id: true },
+        });
+
+        const ids = children.map((c) => c.id);
+
+        ids.forEach((id) => all.add(id));
+
+        queue = ids;
+      }
+
+      return Array.from(all);
     });
   }
 }

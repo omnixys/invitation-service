@@ -15,6 +15,7 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
+import { ValkeyAdapterModule } from './adapter/valkey-adapter.module.js';
 import { BannerService } from './banner.service.js';
 import { env } from './config/env.js';
 import { HandlerModule } from './handlers/handler.module.js';
@@ -34,10 +35,10 @@ const {
   SERVICE,
   KAFKA_BROKER,
   TEMPO_URI,
-  PC_JWE_KEY,
-  PC_JWE_KEY_2,
   VALKEY_URL,
   VALKEY_PASSWORD,
+  KC_URL,
+  KC_REALM,
 } = env;
 
 @Module({
@@ -52,7 +53,7 @@ const {
     }),
 
     ValkeyModule.forRoot({
-      serviceName: `${SERVICE}-service`,
+      serviceName: SERVICE,
       url: VALKEY_URL,
       password: VALKEY_PASSWORD,
 
@@ -61,48 +62,24 @@ const {
     }),
 
     KafkaModule.forRoot({
-      clientId: `${SERVICE}-service`,
+      clientId: SERVICE,
       brokers: [KAFKA_BROKER],
-      groupId: `${SERVICE}-consumer`,
+      groupId: `${SERVICE}-group`,
+      serviceName: SERVICE,
     }),
 
     SecurityModule.forRoot({
       jwt: {
-        issuer: `${env.KC_URL}/realms/${env.KC_REALM}`,
-        jwksUri: `${env.KC_URL}/realms/${env.KC_REALM}/protocol/openid-connect/certs`,
-      },
-
-      jwe: {
-        keys: [
-          {
-            kid: 'v1',
-            value: PC_JWE_KEY!,
-          },
-          {
-            kid: 'v2',
-            value: PC_JWE_KEY_2!,
-          },
-        ],
-        defaultTtlSec: Number(process.env.PC_TTL_SEC),
-      },
-
-      session: {
-        ttlMs: Number(process.env.PC_TTL_SEC),
+        issuer: `${KC_URL}/realms/${KC_REALM}`,
+        jwksUri: `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/certs`,
       },
 
       rateLimit: {
         enabled: true,
         defaultLimit: 100,
-        defaultWindowMs: 60000,
+        defaultWindowMs: 600,
+        imports: [ValkeyAdapterModule],
       },
-
-      // cookie: {
-      //   secure: true,
-      //   sameSite: 'none',
-      //   domain: '.omnixys.com',
-      // },
-
-      globalGuards: false,
     }),
 
     ObservabilityModule.forRoot({
