@@ -4,6 +4,7 @@ import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OmnixysLogger } from '@omnixys/logger';
+import { TraceRunner } from '@omnixys/observability';
 
 @Injectable()
 export class InvitationReadService extends InvitationBaseService {
@@ -30,6 +31,20 @@ export class InvitationReadService extends InvitationBaseService {
     return InvitationMapper.toPayloadList(list);
   }
 
+  async findFullByEventIds(eventIds: string[]): Promise<InvitationPayload[]> {
+    return TraceRunner.run('[SERVICE] findFullByEventIds', async () => {
+      this.logger.debug('findFullByEventIds: eventIds=%o', eventIds);
+      const list = await this.prismaService.invitation.findMany({
+        where: {
+          eventId: {
+            in: eventIds,
+          },
+        },
+      });
+      return InvitationMapper.toPayloadList(list);
+    });
+  }
+
   /**
    * Returns one invitation by id.
    * Throws NotFoundException if not found.
@@ -38,6 +53,8 @@ export class InvitationReadService extends InvitationBaseService {
     const found = await this.prismaService.invitation.findUnique({
       where: { id },
     });
+
+    console.log({ found });
 
     if (!found) {
       throw new NotFoundException('Invitation not found');
@@ -58,11 +75,13 @@ export class InvitationReadService extends InvitationBaseService {
   }
 
   async findByUser(userId: string): Promise<InvitationPayload[]> {
-    this.logger.debug('Finding invitations for userId=%s', userId);
-    const list = await this.prismaService.invitation.findMany({
-      where: { guestProfileId: userId },
+    return TraceRunner.run('[SERVICE] findByUser Event Invitation', async () => {
+      this.logger.debug('Finding invitations for userId=%s', userId);
+      const list = await this.prismaService.invitation.findMany({
+        where: { guestProfileId: userId },
+      });
+      return InvitationMapper.toPayloadList(list);
     });
-    return InvitationMapper.toPayloadList(list);
   }
 
   async findPlusOnesByInvitation(invitationId: string): Promise<InvitationPayload[]> {

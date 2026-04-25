@@ -1,4 +1,4 @@
-import { InvitationStatus } from '../../prisma/generated/client.js';
+import { InvitationStatus, InvitationType } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
@@ -77,12 +77,14 @@ export class InvitationWriteService extends InvitationBaseService {
     const ops = records.map((r) =>
       this.prismaService.invitation.create({
         data: {
+          type: InvitationType.PRIVATE,
           firstName: r.firstName,
           lastName: r.lastName,
           eventId: r.eventId,
           status: InvitationStatus.PENDING,
           maxInvitees: r.maxInvitees ?? 0,
           invitedByInvitationId: r.invitedByInvitationId ?? null,
+          phoneNumber: r.phoneNumber,
         },
       }),
     );
@@ -149,7 +151,7 @@ export class InvitationWriteService extends InvitationBaseService {
         },
       });
 
-      this.logger.debug('%s invitations deleted', deletedInvitations.count)
+      this.logger.debug('%s invitations deleted', deletedInvitations.count);
     });
   }
 
@@ -163,7 +165,6 @@ export class InvitationWriteService extends InvitationBaseService {
 
   private async collectInvitationTree(rootIds: string[]): Promise<string[]> {
     return TraceRunner.run('[SERVICE] Collect Invitation Tree', async () => {
-
       const all = new Set<string>(rootIds);
       let queue = [...rootIds];
 

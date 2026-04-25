@@ -26,9 +26,7 @@ import {
 } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import {
-  AddGuestIdToInvitationDTO,
-} from '@omnixys/shared';
+import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 
 /**
  * Kafka event handler responsible for useristrative commands such as

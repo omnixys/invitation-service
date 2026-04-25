@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { InvitationStatus, RsvpChoice } from '../../prisma/generated/client.js';
+import { InvitationStatus, InvitationType, PhoneNumberType, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { ApproveInvitationDTO } from '../models/dto/approve.dto.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
@@ -10,7 +10,7 @@ import { InvitationUpdateInput } from '../models/input/update-invitation.input.j
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ValkeyService, ValkeyKey } from '@omnixys/cache';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
@@ -22,12 +22,12 @@ import {
   InvitationAlreadyApprovedException,
   InvitationAlreadyRejectedException,
   MissingPendingContactException,
+  getPrimaryPhoneNumber,
 } from '@omnixys/shared';
+import { FILE_STORAGE, FileStorage } from '@omnixys/storage';
 import ExcelJS from 'exceljs';
-import * as fssync from 'fs';
-import * as fs from 'fs/promises';
+import { Buffer as NodeBuffer } from 'node:buffer';
 import Papa from 'papaparse';
-import { join } from 'path';
 
 @Injectable()
 export class AdminWriteService extends InvitationBaseService {
@@ -36,6 +36,9 @@ export class AdminWriteService extends InvitationBaseService {
     loggerService: OmnixysLogger,
     private readonly producer: KafkaProducerService,
     private readonly cache: ValkeyService,
+
+    @Inject(FILE_STORAGE)
+    private readonly storage: FileStorage,
   ) {
     super(loggerService, prisma);
   }
@@ -55,6 +58,7 @@ export class AdminWriteService extends InvitationBaseService {
 
     const created = await this.prismaService.invitation.create({
       data: {
+        type: InvitationType.PRIVATE,
         eventId: input.eventId,
         firstName: input.firstName ?? null,
         lastName: input.lastName ?? null,
@@ -62,171 +66,26 @@ export class AdminWriteService extends InvitationBaseService {
         invitedByUserId: eventAdminId ?? null,
         maxInvitees: input.maxInvitees ?? 0,
         status: InvitationStatus.PENDING,
+
+        phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
+        email: input.email,
+        phoneNumbers: input.phoneNumbers?.length
+          ? {
+              createMany: {
+                data: input.phoneNumbers.map((ph) => ({
+                  number: ph.number,
+                  type: ph.type as PhoneNumberType,
+                  label: ph.label ?? null,
+                  isPrimary: ph.isPrimary ?? false,
+                  countryCode: ph.countryCode,
+                })),
+              },
+            }
+          : undefined,
       },
     });
 
     return InvitationMapper.toPayload(created);
-  }
-
-  async importInvitations(
-    eventId: string,
-    uploadId: string,
-    uploadType: string,
-  ): Promise<ImportInvitationsResult> {
-    // Ensure local tmp folder exists → absolute path
-    const tmpDir = join(process.cwd(), 'tmp');
-    if (!fssync.existsSync(tmpDir)) {
-      await fs.mkdir(tmpDir, { recursive: true });
-    }
-
-    const filePath = join(tmpDir, `${uploadId}.${uploadType}`);
-
-    /** ============================
-     *  CHECK FILE EXISTENCE
-     *  ============================ */
-    try {
-      await fs.access(filePath);
-    } catch {
-      throw new Error(`Upload file not found: ${filePath}`);
-    }
-
-    /** ============================
-     *  PARSE FILE
-     *  ============================ */
-    const isCsv = filePath.endsWith('.csv');
-    const isExcel = filePath.endsWith('.xlsx');
-
-    let rows: any[] = [];
-
-    /** ---- CSV ---- */
-    if (isCsv) {
-      const content = await fs.readFile(filePath, 'utf8');
-      const parsed = Papa.parse(content, {
-        header: true,
-        skipEmptyLines: true,
-      });
-
-      rows = parsed.data as any[];
-    }
-
-    /** ---- XLSX ---- */
-    if (isExcel) {
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.readFile(filePath);
-
-      const sheet = workbook.worksheets[0];
-      if (!sheet) {
-        return {
-          total: 0,
-          imported: 0,
-          skipped: 0,
-          duplicates: [],
-          errors: ['No first sheet found in Excel file.'],
-        };
-      }
-
-      const headerRow = sheet.getRow(1);
-      const rawHeaders = Array.isArray(headerRow.values)
-        ? (headerRow.values as Array<string | null>)
-        : [];
-
-      const headers = rawHeaders.map((h) => (h === undefined ? null : h));
-
-      rows = [];
-
-      sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) {
-          return;
-        }
-
-        const values = Array.isArray(row.values) ? row.values : [];
-        const obj: Record<string, any> = {};
-
-        values.forEach((cellVal, colIndex) => {
-          const key = headers[colIndex];
-          if (typeof key === 'string') {
-            obj[key] = cellVal ?? null;
-          }
-        });
-
-        rows.push(obj);
-      });
-    }
-
-    /** ============================
-     *  VALIDATION (ONLY MISSING FIELDS)
-     *  ============================ */
-    const required = ['firstName', 'lastName'];
-    const errors: string[] = [];
-
-    rows.forEach((row, i) => {
-      required.forEach((key) => {
-        if (!row[key]) {
-          errors.push(`Row ${i + 2}: Missing required field "${key}"`);
-        }
-      });
-    });
-
-    // If validation errors → stop import
-    if (errors.length > 0) {
-      return {
-        total: rows.length,
-        imported: 0,
-        skipped: rows.length,
-        duplicates: [],
-        errors,
-      };
-    }
-
-    /** ============================
-     *  INSERT (SKIP DUPLICATES)
-     *  ============================ */
-    let imported = 0;
-    const duplicates: string[] = [];
-
-    for (const r of rows) {
-      const firstName = String(r.firstName).trim();
-      const lastName = String(r.lastName).trim();
-
-      // Check duplicate in DB
-      const exists = await this.prismaService.invitation.findFirst({
-        where: {
-          eventId,
-          firstName,
-          lastName,
-        },
-      });
-
-      if (exists) {
-        duplicates.push(`${firstName} ${lastName}`);
-        continue; // skip
-      }
-
-      // Insert new invitation
-      await this.prismaService.invitation.create({
-        data: {
-          eventId,
-          firstName,
-          lastName,
-          maxInvitees: Number(r.maxPlusOnes ?? 0),
-        },
-      });
-
-      imported++;
-    }
-
-    const skipped = rows.length - imported;
-
-    /** ============================
-     *  FINAL RESULT
-     *  ============================ */
-    return {
-      total: rows.length,
-      imported,
-      skipped,
-      duplicates,
-      errors: [], // no errors besides validation
-    };
   }
 
   /**
@@ -246,12 +105,12 @@ export class AdminWriteService extends InvitationBaseService {
 
       const invitation = await this.ensureExists(id);
 
-      if (!invitation.rsvpChoice) {
+      if (!invitation.rsvpChoice && approve) {
         this.logger.error('Guest has not submitted an RSVP yet.');
         throw new RsvpNotSubmittedException();
       }
 
-      if (invitation.rsvpChoice !== RsvpChoice.YES) {
+      if (invitation.rsvpChoice !== RsvpChoice.YES && approve) {
         this.logger.error('Guest has not accepted the RSVP.');
         throw new RsvpNotAcceptedException();
       }
@@ -264,7 +123,7 @@ export class AdminWriteService extends InvitationBaseService {
       if (!approve && invitation.status === InvitationStatus.REJECTED) {
         this.logger.error('Invitation already rejected.');
         throw new InvitationAlreadyRejectedException();
-       }
+      }
 
       // Fire Kafka event only if newly approved
       if (approve) {
@@ -391,6 +250,211 @@ export class AdminWriteService extends InvitationBaseService {
       await this.ensureExists(id);
       await this.prismaService.invitation.delete({ where: { id } });
       return true;
+    });
+  }
+
+  /**
+   * Bulk approval for invitations with per-invitation metadata.
+   *
+   * WHY:
+   * - Each invitation can belong to a different event
+   * - Each invitation may require a different seat
+   * - Avoids incorrect global assumptions
+   */
+  async bulkApprove(params: {
+    invitationIds: {
+      invitationId: string;
+      eventName: string;
+      seat: string;
+      seatId?: string;
+    }[];
+    approved: boolean;
+    actorId: string;
+  }): Promise<InvitationPayload[]> {
+    return TraceRunner.run('[SERVICE] bulkApprove', async () => {
+      const { invitationIds, approved, actorId } = params;
+
+      this.logger.debug('Bulk approve start', {
+        actorId,
+        count: invitationIds.length,
+      });
+
+      const results: InvitationPayload[] = [];
+
+      /**
+       * Sequential processing
+       *
+       * WHY:
+       * - Kafka side effects must stay deterministic
+       * - Seat assignment must not race
+       * - Easier error tracking per invitation
+       */
+      for (const item of invitationIds) {
+        const { invitationId, eventName, seat, seatId } = item;
+
+        try {
+          const result = await this.approve({
+            id: invitationId,
+            approve: approved,
+            actorId,
+            eventName,
+            seat: seat ?? 'debug',
+            seatId,
+          });
+
+          results.push(result);
+        } catch (err) {
+          /**
+           * DO NOT break the loop
+           *
+           * WHY:
+           * - Partial success is better than full failure
+           * - Admin can retry failed ones
+           */
+          this.logger.error('Bulk approve failed for invitation', {
+            invitationId,
+            error: err,
+          });
+        }
+      }
+
+      this.logger.debug('Bulk approve finished', {
+        success: results.length,
+        total: invitationIds.length,
+      });
+
+      return results;
+    });
+  }
+
+  async importInvitations(
+    eventId: string,
+    key: string,
+    uploadType: string,
+    actorId: string,
+  ): Promise<ImportInvitationsResult> {
+    return TraceRunner.run('[SERVICE] importInvitations', async () => {
+      this.logger.debug('Import start', {
+        actorId,
+        eventId,
+        key,
+        uploadType,
+      });
+
+      /**
+       * 🔥 LOAD FILE FROM STORAGE
+       */
+      const buffer = await this.storage.get({ key });
+
+      let rows: Record<string, unknown>[] = [];
+
+      /**
+       * ---------------- CSV ----------------
+       */
+      if (uploadType === 'csv') {
+        const content = buffer.toString('utf8');
+
+        const parsed = Papa.parse<Record<string, unknown>>(content, {
+          header: true,
+          skipEmptyLines: true,
+        });
+
+        rows = parsed.data;
+      }
+
+      /**
+       * ---------------- XLSX ----------------
+       */
+      if (uploadType === 'xlsx') {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(NodeBuffer.from(buffer) as unknown as import('exceljs').Buffer);
+
+        const sheet = workbook.worksheets[0];
+
+        if (!sheet) {
+          throw new Error('Excel file has no sheets');
+        }
+
+        const headers = sheet.getRow(1).values as string[];
+
+        sheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+
+          const obj: Record<string, unknown> = {};
+
+          row.eachCell((cell, colNumber) => {
+            const key = headers[colNumber];
+            if (key) obj[key] = cell.value;
+          });
+
+          rows.push(obj);
+        });
+      }
+
+      /**
+       * ---------------- VALIDATION ----------------
+       */
+      const errors: string[] = [];
+      const required = ['firstName', 'lastName'];
+
+      rows.forEach((row, i) => {
+        required.forEach((field) => {
+          if (!row[field]) {
+            errors.push(`Row ${i + 2}: Missing "${field}"`);
+          }
+        });
+      });
+
+      if (errors.length) {
+        return {
+          total: rows.length,
+          imported: 0,
+          skipped: rows.length,
+          duplicates: [],
+          errors,
+        };
+      }
+
+      /**
+       * ---------------- INSERT ----------------
+       */
+      let imported = 0;
+      const duplicates: string[] = [];
+
+      for (const row of rows) {
+        const firstName = String(row.firstName).trim();
+        const lastName = String(row.lastName).trim();
+
+        const exists = await this.prismaService.invitation.findFirst({
+          where: { eventId, firstName, lastName },
+        });
+
+        if (exists) {
+          duplicates.push(`${firstName} ${lastName}`);
+          continue;
+        }
+
+        await this.prismaService.invitation.create({
+          data: {
+            type: InvitationType.PRIVATE,
+            eventId,
+            firstName,
+            lastName,
+            maxInvitees: Number(row.maxPlusOnes ?? 0),
+            invitedByUserId: actorId,
+          },
+        });
+
+        imported++;
+      }
+
+      return {
+        total: rows.length,
+        imported,
+        skipped: rows.length - imported,
+        duplicates,
+        errors: [],
+      };
     });
   }
 }

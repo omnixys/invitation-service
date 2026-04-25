@@ -205,8 +205,8 @@ export type PhoneNumberWhereInput = {
   AND?: Prisma.PhoneNumberWhereInput | Prisma.PhoneNumberWhereInput[]
   OR?: Prisma.PhoneNumberWhereInput[]
   NOT?: Prisma.PhoneNumberWhereInput | Prisma.PhoneNumberWhereInput[]
-  id?: Prisma.StringFilter<"PhoneNumber"> | string
-  invitationId?: Prisma.StringFilter<"PhoneNumber"> | string
+  id?: Prisma.UuidFilter<"PhoneNumber"> | string
+  invitationId?: Prisma.UuidFilter<"PhoneNumber"> | string
   number?: Prisma.StringFilter<"PhoneNumber"> | string
   type?: Prisma.EnumPhoneNumberTypeFilter<"PhoneNumber"> | $Enums.PhoneNumberType
   label?: Prisma.StringNullableFilter<"PhoneNumber"> | string | null
@@ -235,7 +235,7 @@ export type PhoneNumberWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.PhoneNumberWhereInput | Prisma.PhoneNumberWhereInput[]
   OR?: Prisma.PhoneNumberWhereInput[]
   NOT?: Prisma.PhoneNumberWhereInput | Prisma.PhoneNumberWhereInput[]
-  invitationId?: Prisma.StringFilter<"PhoneNumber"> | string
+  invitationId?: Prisma.UuidFilter<"PhoneNumber"> | string
   number?: Prisma.StringFilter<"PhoneNumber"> | string
   type?: Prisma.EnumPhoneNumberTypeFilter<"PhoneNumber"> | $Enums.PhoneNumberType
   label?: Prisma.StringNullableFilter<"PhoneNumber"> | string | null
@@ -265,8 +265,8 @@ export type PhoneNumberScalarWhereWithAggregatesInput = {
   AND?: Prisma.PhoneNumberScalarWhereWithAggregatesInput | Prisma.PhoneNumberScalarWhereWithAggregatesInput[]
   OR?: Prisma.PhoneNumberScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PhoneNumberScalarWhereWithAggregatesInput | Prisma.PhoneNumberScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"PhoneNumber"> | string
-  invitationId?: Prisma.StringWithAggregatesFilter<"PhoneNumber"> | string
+  id?: Prisma.UuidWithAggregatesFilter<"PhoneNumber"> | string
+  invitationId?: Prisma.UuidWithAggregatesFilter<"PhoneNumber"> | string
   number?: Prisma.StringWithAggregatesFilter<"PhoneNumber"> | string
   type?: Prisma.EnumPhoneNumberTypeWithAggregatesFilter<"PhoneNumber"> | $Enums.PhoneNumberType
   label?: Prisma.StringNullableWithAggregatesFilter<"PhoneNumber"> | string | null
@@ -507,8 +507,8 @@ export type PhoneNumberScalarWhereInput = {
   AND?: Prisma.PhoneNumberScalarWhereInput | Prisma.PhoneNumberScalarWhereInput[]
   OR?: Prisma.PhoneNumberScalarWhereInput[]
   NOT?: Prisma.PhoneNumberScalarWhereInput | Prisma.PhoneNumberScalarWhereInput[]
-  id?: Prisma.StringFilter<"PhoneNumber"> | string
-  invitationId?: Prisma.StringFilter<"PhoneNumber"> | string
+  id?: Prisma.UuidFilter<"PhoneNumber"> | string
+  invitationId?: Prisma.UuidFilter<"PhoneNumber"> | string
   number?: Prisma.StringFilter<"PhoneNumber"> | string
   type?: Prisma.EnumPhoneNumberTypeFilter<"PhoneNumber"> | $Enums.PhoneNumberType
   label?: Prisma.StringNullableFilter<"PhoneNumber"> | string | null

@@ -15,6 +15,7 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
+import { StorageModule } from '@omnixys/storage';
 import { ValkeyAdapterModule } from './adapter/valkey-adapter.module.js';
 import { BannerService } from './banner.service.js';
 import { env } from './config/env.js';
@@ -43,7 +44,24 @@ const {
 
 @Module({
   imports: [
+    StorageModule.forRoot({
+      region: 'eu-central-1',
+      endpoint: 'http://localhost:9000',
+      accessKeyId: 'admin',
+      secretAccessKey: 'password',
+      bucket: 'omnixys',
+      publicUrl: 'http://localhost:9000/omnixys',
+      forcePathStyle: true,
+    }),
+
+    
     OmnixysGraphQLModule.forRoot({
+      context: ({ req, reply }: any) => {
+        return {
+          req,
+          reply,
+        };
+      },
       autoSchemaFile:
         SCHEMA_TARGET === 'tmp'
           ? { path: '/tmp/schema.gql', federation: 2 }

@@ -21,7 +21,7 @@ export class InvitationCreateInput {
     nullable: true,
     description: 'Optional: ID of the parent invitation (for invite chains).',
   })
-  invitedByInvitationId?: string | null;
+  invitedByInvitationId?: string;
 
   @Field(() => String, {
     description: 'Optional: first name of the invited guest.',
@@ -33,8 +33,14 @@ export class InvitationCreateInput {
   })
   lastName!: string;
 
+  @Field(() => String, { nullable: true })
+  email?: string;
+
   @Field(() => [PhoneNumberInput], {
     nullable: true,
   })
   phoneNumbers?: PhoneNumberInput[];
+
+  @Field(() => String, { nullable: true })
+  phoneNumber?: string;
 }

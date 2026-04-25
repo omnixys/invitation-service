@@ -14,15 +14,18 @@ datasource db {
   schemas  = ["invitation"]
 }
 
+
 model Invitation {
-  id String @id @default(cuid()) @map("id")
+  id String @id @default(uuid()) @db.Uuid @map("id")
+  type InvitationType
 
   firstName String @map("first_name")
   lastName  String @map("last_name")
 
-  eventId        String  @map("event_id")
-  guestProfileId String? @map("guest_profile_id")
+  eventId        String  @map("event_id") @db.Uuid
+  guestProfileId String? @map("guest_profile_id") @db.Uuid
   email          String? @map("email")
+  phoneNumber    String? @map("phone_number")
 
   status InvitationStatus @default(PENDING) @map("status")
 
@@ -39,9 +42,9 @@ model Invitation {
 
   maxInvitees Int @default(0) @map("max_invitees")
 
-  invitedByInvitationId String?     @map("invited_by_invitation_id")
+  invitedByInvitationId String?     @map("invited_by_invitation_id") @db.Uuid
   invitedByInvitation   Invitation? @relation("invitation_by_invitation", fields: [invitedByInvitationId], references: [id], onDelete: Cascade)
-  invitedByUserId       String?     @map("invited_by_user_id")
+  invitedByUserId       String?     @map("invited_by_user_id") @db.Uuid
 
   plusOnes     Invitation[]  @relation("invitation_by_invitation")
   phoneNumbers PhoneNumber[]
@@ -55,8 +58,8 @@ model Invitation {
 }
 
 model PhoneNumber {
-  id           String @id @default(cuid()) @map("id")
-  invitationId String @map("invitation_id")
+  id           String @id @default(uuid()) @db.Uuid @map("id")
+  invitationId String @map("invitation_id") @db.Uuid
 
   number      String          @map("number")
   type        PhoneNumberType @map("type")
@@ -74,6 +77,13 @@ model PhoneNumber {
   @@index([invitationId, isPrimary])
   @@map("phone_number")
   @@schema("invitation")
+}
+
+enum InvitationType {
+  PUBLIC
+  PRIVATE
+
+    @@schema("invitation")
 }
 
 enum ContactType {

@@ -26,7 +26,7 @@ import {
 } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import {  EventIdsDTO } from '@omnixys/shared';
+import { EventIdsDTO } from '@omnixys/shared';
 
 /**
  * Kafka event handler responsible for useristrative commands such as
@@ -49,27 +49,27 @@ export class EventHandler {
    */
   constructor(
     private readonly omnixysLogger: OmnixysLogger,
-    private readonly invitationWriteService: InvitationWriteService
+    private readonly invitationWriteService: InvitationWriteService,
   ) {
     this.logger = this.omnixysLogger.log(this.constructor.name);
   }
 
   @KafkaEvent(KafkaTopics.invitation.deleteEventInvitations)
-  async handleDeleteInvitationsByEventIds(payload: EventIdsDTO, context: IKafkaEventContext) {
+  async handleDeleteInvitationsByEventIds(
+    payload: EventIdsDTO,
+    context: IKafkaEventContext,
+  ) {
     return TraceRunner.run('[HANDLER] create Seats', async () => {
-                  const headers = context.headers;
-                  const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
-      
-      
+      const headers = context.headers;
+      const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
+
       this.logger.debug(
         'handleDeleteInvitationsByEventIds: %o | actorId=%s',
         payload,
-        actorId
+        actorId,
       );
-
 
       await this.invitationWriteService.deleteByEventIds(payload.eventIds);
     });
   }
-
 }

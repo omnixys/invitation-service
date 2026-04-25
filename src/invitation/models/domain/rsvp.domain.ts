@@ -23,8 +23,12 @@ export class RsvpDomain {
     hasContactDetails: boolean,
   ): RSVPDecision {
     if (previousChoice === newChoice) {
-      if( newChoice === RsvpChoice.YES)  throw new RsvpAlreadyAcceptedException();
-      throw new Error('Already declined');
+      if (newChoice === RsvpChoice.YES) {
+        throw new RsvpAlreadyAcceptedException();
+      } else if (newChoice === RsvpChoice.NO) {
+                    throw new Error('Already declined');
+
+      } 
     }
 
     if (newChoice === RsvpChoice.NO) {

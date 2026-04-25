@@ -1,6 +1,7 @@
 import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
 import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
+import { UpdatePlusOneInput } from '../models/input/update-plus-one.input.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import {
   // CreatePlusOneInput,
@@ -34,10 +35,24 @@ export class GuestMutationResolver {
     @Args('input')
     input: CreatePlusOneInput,
     @CurrentUser() user: CurrentUserData,
+    @ClientInfo() clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
-    return this.guestService.createPlusOne(input, user.id);
+    return TraceRunner.run('[RESOLVER] createPlusOnesInvitation', async () => {
+      return this.guestService.createPlusOne(input, user.id, clientInfo);
+    });
   }
 
+  @UseGuards(CookieAuthGuard)
+  @Mutation(() => InvitationPayload)
+  async updatePlusOnesInvitation(
+    @Args('input')
+    input: UpdatePlusOneInput,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<InvitationPayload> {
+    return TraceRunner.run('[RESOLVER] updatePlusOnesInvitation', async () => {
+      return this.guestService.updatePlusOne(input, user.id);
+    });
+  }
   @Mutation(() => InvitationPayload)
   async replyInvitation(
     @Args('input', {
@@ -47,11 +62,10 @@ export class GuestMutationResolver {
     @ClientInfo() clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[RESOLVER] approve', async () => {
-      return this.guestService.reply(input,clientInfo);
+      return this.guestService.reply(input, clientInfo);
     });
   }
 
-  // 🔻 NEU: Einzelnes Plus-One löschen (gibt 1 Slot an Parent zurück)
   @Mutation(() => InvitationPayload)
   @UseGuards(CookieAuthGuard)
   async removePlusOneInvitation(
@@ -62,24 +76,26 @@ export class GuestMutationResolver {
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload> {
     console.debug(user.username);
-    return this.guestService.deletePlusOne(id);
+    return this.guestService.deletePlusOne(id, user.id);
   }
 
   // 🔻 NEU: Alle Plus-Ones einer Parent-Einladung löschen (gibt alle Slots zurück)
   @Mutation(() => [InvitationPayload])
+  @UseGuards(CookieAuthGuard)
   async removeAllPlusOnesByInvitationId(
     @Args('invitedByInvitationId', {
       type: () => ID,
     })
     invitedByInvitationId: string,
+    @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload[]> {
-    return this.guestService.deleteAllPlusOnes(invitedByInvitationId);
+    return this.guestService.deleteAllPlusOnes(invitedByInvitationId, user.id);
   }
 
   @Mutation(() => InvitationPayload)
   async createInvitationFromRsvp(
     @Args('input') input: PublicRsvpInput,
-    @ClientInfo() clientContext: ClientContext
+    @ClientInfo() clientContext: ClientContext,
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[RESOLVER] createInvitationFromRsvp', async () => {
       this.logger.debug(

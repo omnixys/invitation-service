@@ -9,6 +9,14 @@
 * 🟢 You can import this file directly.
 */
 
+export const InvitationType = {
+  PUBLIC: 'PUBLIC',
+  PRIVATE: 'PRIVATE'
+} as const
+
+export type InvitationType = (typeof InvitationType)[keyof typeof InvitationType]
+
+
 export const ContactType = {
   EMAIL: 'EMAIL',
   PHONE: 'PHONE'

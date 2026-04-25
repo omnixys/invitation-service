@@ -1,14 +1,7 @@
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationReadService } from '../service/invitation-read.service.js';
 import { UseGuards } from '@nestjs/common';
-import {
-  Args,
-  ID,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import {
   CookieAuthGuard,
   CurrentUser,
@@ -36,6 +29,18 @@ export class InvitationQueryResolver {
     eventId: string,
   ): Promise<InvitationPayload[]> {
     return this.service.findByEventId(eventId);
+  }
+
+  @Query(() => [InvitationPayload], {
+    name: 'getFullByEventIds',
+  })
+  getFullByEventIds(
+    @Args('eventIds', {
+      type: () => [ID],
+    })
+    eventIds: string[],
+  ): Promise<InvitationPayload[]> {
+    return this.service.findFullByEventIds(eventIds);
   }
 
   @Query(() => InvitationPayload, {
@@ -70,12 +75,5 @@ export class InvitationQueryResolver {
     invitationId: string,
   ): Promise<InvitationPayload[]> {
     return this.service.findPlusOnesByInvitation(invitationId);
-  }
-
-  @ResolveField(() => [InvitationPayload])
-  async plusOnes(
-    @Parent() parent: InvitationPayload,
-  ): Promise<InvitationPayload[]> {
-    return this.service.findPlusOnesByInvitation(parent.id);
   }
 }

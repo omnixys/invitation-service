@@ -2,12 +2,9 @@ import { Field, ID, InputType } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
 
 @InputType()
-export class CreatePlusOneInput {
+export class UpdatePlusOneInput {
   @Field(() => ID)
-  eventId!: string;
-
-  @Field(() => ID)
-  invitedByInvitationId!: string;
+  id!: string;
 
   @Field(() => String)
   firstName!: string;
@@ -15,7 +12,9 @@ export class CreatePlusOneInput {
   @Field(() => String)
   lastName!: string;
 
-  @Field(() => String, {nullable: true})
+  @Field(() => String, {
+    nullable: true,
+  })
   email?: string;
 
   @Field(() => [PhoneNumberInput], {

@@ -6,11 +6,11 @@ import { n2u } from '@omnixys/shared';
  * Maps Prisma Invitation → GraphQL Invitation entity.
  * Required because Prisma enums differ from GraphQL enums.
  */
-
 export class InvitationMapper {
   static toPayload(invitation: Invitation): InvitationPayload {
     return {
       id: invitation.id,
+      type: invitation.type,
       status: invitation.status,
       eventId: invitation.eventId,
       firstName: n2u(invitation.firstName),
@@ -26,6 +26,8 @@ export class InvitationMapper {
       maxInvitees: invitation.maxInvitees,
       invitedByInvitationId: n2u(invitation.invitedByInvitationId),
       invitedByUserId: n2u(invitation.invitedByUserId),
+      email: n2u(invitation.email),
+      phoneNumber: n2u(invitation.phoneNumber),
     };
   }
 

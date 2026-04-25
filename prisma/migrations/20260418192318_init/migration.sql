@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "InvitationType" AS ENUM ('PUBLIC', 'PRIVATE');
+
+-- CreateEnum
 CREATE TYPE "ContactType" AS ENUM ('EMAIL', 'PHONE');
 
 -- CreateEnum
@@ -12,12 +15,14 @@ CREATE TYPE "RsvpChoice" AS ENUM ('YES', 'NO', 'MAYBE');
 
 -- CreateTable
 CREATE TABLE "invitation" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
+    "type" "InvitationType" NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
-    "event_id" TEXT NOT NULL,
-    "guest_profile_id" TEXT,
+    "event_id" UUID NOT NULL,
+    "guest_profile_id" UUID,
     "email" TEXT,
+    "phone_number" TEXT,
     "status" "InvitationStatus" NOT NULL DEFAULT 'PENDING',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -27,16 +32,16 @@ CREATE TABLE "invitation" (
     "approved_at" TIMESTAMP(3),
     "approved_by_user_id" TEXT,
     "max_invitees" INTEGER NOT NULL DEFAULT 0,
-    "invited_by_invitation_id" TEXT,
-    "invited_by_user_id" TEXT,
+    "invited_by_invitation_id" UUID,
+    "invited_by_user_id" UUID,
 
     CONSTRAINT "invitation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "phone_number" (
-    "id" TEXT NOT NULL,
-    "invitation_id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
+    "invitation_id" UUID NOT NULL,
     "number" TEXT NOT NULL,
     "type" "PhoneNumberType" NOT NULL,
     "label" TEXT,

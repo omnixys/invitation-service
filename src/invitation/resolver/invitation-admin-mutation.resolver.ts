@@ -1,4 +1,5 @@
 import { ApproveInvitationInput } from '../models/input/approve.input.js';
+import { BulkApproveInvitationInput } from '../models/input/bulk-approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import {
   ImportInvitationsInput,
@@ -16,6 +17,11 @@ import {
   CurrentUser,
   CurrentUserData,
 } from '@omnixys/security';
+
+export enum UploadType {
+  CSV = 'csv',
+  XLSX = 'xlsx',
+}
 
 @Resolver(() => InvitationPayload)
 export class AdminMutationResolver {
@@ -43,18 +49,64 @@ export class AdminMutationResolver {
     return this.adminService.create(input, user?.id);
   }
 
-  @Mutation(() => ImportInvitationsResult)
+  @UseGuards(CookieAuthGuard)
+  @Mutation(() => ImportInvitationsResult, {
+    description:
+      'Imports invitations from CSV or Excel file stored temporarily on the server.',
+  })
   async importInvitations(
     @Args('input', { type: () => ImportInvitationsInput })
     input: ImportInvitationsInput,
+    @CurrentUser() user: CurrentUserData,
   ): Promise<ImportInvitationsResult> {
-    return this.adminService.importInvitations(
-      input.eventId,
-      input.uploadId,
-      input.uploadType,
-    );
-  }
+    return TraceRunner.run('[RESOLVER] importInvitations', async () => {
+      /**
+       * WHY:
+       * Import is a critical admin operation → must be authenticated
+       */
+      if (!user?.id) {
+        this.logger.warn('Unauthorized import attempt', {
+          input,
+        });
+        throw new UnauthorizedException('Not authenticated');
+      }
 
+      /**
+       * Basic input validation
+       */
+      if (!input.eventId) {
+        throw new Error('eventId is required');
+      }
+
+      if (!input.uploadId || !input.uploadType) {
+        throw new Error('uploadId and uploadType are required');
+      }
+
+      this.logger.debug('Import invitations requested', {
+        actorId: user.id,
+        eventId: input.eventId,
+        uploadId: input.uploadId,
+        uploadType: input.uploadType,
+      });
+
+      /**
+       * Delegate to service layer
+       */
+      const result = await this.adminService.importInvitations(
+        input.eventId,
+        input.uploadId,
+        input.uploadType,
+        user.id,
+      );
+
+      this.logger.debug('Import completed', {
+        actorId: user.id,
+        result,
+      });
+
+      return result;
+    });
+  }
   @UseGuards(CookieAuthGuard)
   @Mutation(() => InvitationPayload)
   async approveInvitation(
@@ -80,7 +132,9 @@ export class AdminMutationResolver {
       });
 
       if (!result) {
-        throw new Error('Gast hat sich noch nicht entschieden!', {cause: 456});
+        throw new Error('Gast hat sich noch nicht entschieden!', {
+          cause: 456,
+        });
       }
       return result;
     });
@@ -100,5 +154,34 @@ export class AdminMutationResolver {
       ok,
       message: `Einladung '${id}' Gelöscht`,
     };
+  }
+
+  @UseGuards(CookieAuthGuard)
+  @Mutation(() => [InvitationPayload])
+  async bulkApproveInvitations(
+    @Args('input', { type: () => BulkApproveInvitationInput })
+    input: BulkApproveInvitationInput,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<InvitationPayload[]> {
+    return TraceRunner.run('[RESOLVER] bulkApproveInvitations', async () => {
+      if (!user?.id) {
+        throw new UnauthorizedException('Not authenticated');
+      }
+
+      if (!input.invitationIds?.length) {
+        throw new Error('invitationIds must not be empty');
+      }
+
+      this.logger.debug('Bulk approve requested', {
+        actorId: user.id,
+        count: input.invitationIds.length,
+      });
+
+      return this.adminService.bulkApprove({
+        invitationIds: input.invitationIds,
+        approved: input.approved,
+        actorId: user.id,
+      });
+    });
   }
 }

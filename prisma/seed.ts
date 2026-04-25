@@ -8,6 +8,7 @@ import {
   PrismaClient,
   RsvpChoice,
   PhoneNumberType,
+  InvitationType,
 } from '../src/prisma/generated/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
@@ -16,7 +17,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const EVENT_ID = 'cmm52hirb00007r06xfzglibb';
+  const EVENT_ID = '682a7d08-5785-4a2d-970b-daf12c46ae6e';
   const GUEST_ID = 'ae489d9b-96ce-4942-bcb1-c2e2a0c92e83';
 
   /* ------------------------------------------------------------------
@@ -29,16 +30,17 @@ async function main() {
       lastName: 'Omnixys',
       guestProfileId: GUEST_ID,
       email: 'guest@omnixys.com',
+      type: InvitationType.PRIVATE,
 
       status: InvitationStatus.APPROVED,
       rsvpChoice: RsvpChoice.YES,
       rsvpAt: new Date(),
-  
 
       approvedAt: new Date(),
       approvedByUserId: 'admin-user-id',
 
       maxInvitees: 0,
+      phoneNumber: '+4915111951223',
 
       phoneNumbers: {
         create: [
@@ -62,12 +64,13 @@ async function main() {
       firstName: 'Mark',
       lastName: 'Schneider',
       email: 'mark@test.de',
+      type: InvitationType.PRIVATE,
 
       status: InvitationStatus.DECLINED,
       rsvpChoice: RsvpChoice.NO,
       rsvpAt: new Date(),
 
-      maxInvitees: 0,  
+      maxInvitees: 0,
 
       phoneNumbers: {
         create: [
@@ -90,20 +93,11 @@ async function main() {
       eventId: EVENT_ID,
       firstName: 'Julia',
       lastName: 'Becker',
+      type: InvitationType.PRIVATE,
 
       status: InvitationStatus.PENDING,
-      maxInvitees: 0, 
-
-      phoneNumbers: {
-        create: [
-          {
-            number: '1533333333',
-            countryCode: '+49',
-            type: PhoneNumberType.WHATSAPP,
-            isPrimary: true,
-          },
-        ],
-      },
+      maxInvitees: 0,
+      email: 'asd@ok.de'
     },
   });
 
@@ -115,6 +109,7 @@ async function main() {
       eventId: EVENT_ID,
       firstName: 'Daniel',
       lastName: 'Klein',
+      type: InvitationType.PRIVATE,
 
       status: InvitationStatus.ACCEPTED,
       rsvpChoice: RsvpChoice.YES,
@@ -122,6 +117,7 @@ async function main() {
 
       approvedAt: new Date(),
       approvedByUserId: 'admin-user-id',
+      phoneNumber: '+4915111951223',
 
       maxInvitees: 3,
 
@@ -144,25 +140,31 @@ async function main() {
   await prisma.invitation.createMany({
     data: [
       {
+        type: InvitationType.PRIVATE,
         eventId: EVENT_ID,
         firstName: 'Laura',
         lastName: 'Klein',
         status: InvitationStatus.ACCEPTED,
         invitedByInvitationId: mainWithPlusOnes.id,
+        phoneNumber: '+4915111951223',
       },
       {
+        type: InvitationType.PRIVATE,
         eventId: EVENT_ID,
         firstName: 'Tom',
         lastName: 'Klein',
         status: InvitationStatus.ACCEPTED,
         invitedByInvitationId: mainWithPlusOnes.id,
+        phoneNumber: '+4915111951223',
       },
       {
         eventId: EVENT_ID,
+        type: InvitationType.PRIVATE,
         firstName: 'Sophie',
         lastName: 'Klein',
         status: InvitationStatus.ACCEPTED,
         invitedByInvitationId: mainWithPlusOnes.id,
+        phoneNumber: '+4915111951223',
       },
     ],
   });

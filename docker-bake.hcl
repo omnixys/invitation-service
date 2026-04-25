@@ -26,11 +26,11 @@ variable "APP_NAME" {
 
 # Automatically use today's date (YYYY-MM-DD) as version tag
 variable "APP_VERSION" {
-  default = "0.0.0-dev"
+  default = "dev"
 }
 
 variable "NODE_VERSION" {
-  default = "24.10.0"
+  default = "25.8.2"
 }
 
 variable "CREATED" {
@@ -53,6 +53,10 @@ target "build" {
   dockerfile = "./Dockerfile"
   context = "."
 
+        secret = [
+    "id=omnixys_token,src=.secrets/omnixys_token"
+      ]
+
   args = {
     NODE_VERSION = "${NODE_VERSION}"
     APP_NAME     = "${APP_NAME}"
@@ -61,7 +65,7 @@ target "build" {
     REVISION     = "${REVISION}"
   }
 
-  labels = {
+   labels = {
     "org.opencontainers.image.title"         = "omnixys-${APP_NAME}-service"
     "org.opencontainers.image.version"       = "${APP_VERSION}"
     "org.opencontainers.image.created"       = "${CREATED}"
@@ -73,7 +77,6 @@ target "build" {
   }
 
   tags = [
-    "omnixys/${APP_NAME}-service:latest",
     "omnixys/${APP_NAME}-service:${APP_VERSION}"
   ]
 
