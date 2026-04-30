@@ -37,9 +37,9 @@ export class GuestMutationResolver {
     @CurrentUser() user: CurrentUserData,
     @ClientInfo() clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
-    return TraceRunner.run('[RESOLVER] createPlusOnesInvitation', async () => {
-      return this.guestService.createPlusOne(input, user.id, clientInfo);
-    });
+    return TraceRunner.run('[RESOLVER] createPlusOnesInvitation', async () =>
+      this.guestService.createPlusOne(input, user.id, clientInfo),
+    );
   }
 
   @UseGuards(CookieAuthGuard)
@@ -49,9 +49,9 @@ export class GuestMutationResolver {
     input: UpdatePlusOneInput,
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload> {
-    return TraceRunner.run('[RESOLVER] updatePlusOnesInvitation', async () => {
-      return this.guestService.updatePlusOne(input, user.id);
-    });
+    return TraceRunner.run('[RESOLVER] updatePlusOnesInvitation', async () =>
+      this.guestService.updatePlusOne(input, user.id),
+    );
   }
   @Mutation(() => InvitationPayload)
   async replyInvitation(
@@ -61,9 +61,9 @@ export class GuestMutationResolver {
     input: RSVPInput,
     @ClientInfo() clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
-    return TraceRunner.run('[RESOLVER] approve', async () => {
-      return this.guestService.reply(input, clientInfo);
-    });
+    return TraceRunner.run('[RESOLVER] approve', async () =>
+      this.guestService.reply(input, clientInfo),
+    );
   }
 
   @Mutation(() => InvitationPayload)

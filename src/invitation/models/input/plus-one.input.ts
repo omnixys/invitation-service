@@ -15,7 +15,7 @@ export class CreatePlusOneInput {
   @Field(() => String)
   lastName!: string;
 
-  @Field(() => String, {nullable: true})
+  @Field(() => String, { nullable: true })
   email?: string;
 
   @Field(() => [PhoneNumberInput], {

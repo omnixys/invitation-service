@@ -5,6 +5,7 @@ import { InvitationFieldResolver } from './resolver/invitation-field.resolver.js
 import { InvitationQueryResolver } from './resolver/invitation-query.resolver.js';
 import { GuestWriteService } from './service/guest-write.service.js';
 import { AdminWriteService } from './service/invitation-admin.write.service.js';
+import { InvitationPreviewService } from './service/invitation-preview.service.js';
 import { InvitationReadService } from './service/invitation-read.service.js';
 import { InvitationWriteService } from './service/invitation-write.service.js';
 import { LoaderFactory } from './utils/loader.factory.js';
@@ -25,6 +26,7 @@ import { Module } from '@nestjs/common';
     InvitationFieldResolver,
     PhoneNumberLoader,
     LoaderFactory,
+    InvitationPreviewService,
   ],
   exports: [InvitationReadService, AdminWriteService, InvitationWriteService, GuestWriteService],
 })

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-import { InvitationStatus, InvitationType, PhoneNumberType, RsvpChoice } from '../../prisma/generated/client.js';
+import { InvitationStatus, InvitationType, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { applyMapping } from '../../utils/apply-mapping.js';
+import { mapColumns } from '../../utils/column-mapper.js';
 import { ApproveInvitationDTO } from '../models/dto/approve.dto.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { ImportInvitationsResult } from '../models/input/import-invitation.input.js';
@@ -14,6 +13,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ValkeyService, ValkeyKey } from '@omnixys/cache';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
+import { FILE_STORAGE, FileStorage } from '@omnixys/media';
 import { TraceRunner } from '@omnixys/observability';
 import {
   RsvpNotSubmittedException,
@@ -24,9 +24,7 @@ import {
   MissingPendingContactException,
   getPrimaryPhoneNumber,
 } from '@omnixys/shared';
-import { FILE_STORAGE, FileStorage } from '@omnixys/storage';
 import ExcelJS from 'exceljs';
-import { Buffer as NodeBuffer } from 'node:buffer';
 import Papa from 'papaparse';
 
 @Injectable()
@@ -74,7 +72,7 @@ export class AdminWriteService extends InvitationBaseService {
               createMany: {
                 data: input.phoneNumbers.map((ph) => ({
                   number: ph.number,
-                  type: ph.type as PhoneNumberType,
+                  type: ph.type,
                   label: ph.label ?? null,
                   isPrimary: ph.isPrimary ?? false,
                   countryCode: ph.countryCode,
@@ -141,8 +139,12 @@ export class AdminWriteService extends InvitationBaseService {
         if (!updated.guestProfileId) {
           const missing: string[] = [];
 
-          if (!updated.firstName) missing.push('firstName');
-          if (!updated.lastName) missing.push('lastName');
+          if (!updated.firstName) {
+            missing.push('firstName');
+          }
+          if (!updated.lastName) {
+            missing.push('lastName');
+          }
 
           if (missing.length) {
             throw new MissingGuestNameException(missing);
@@ -155,7 +157,7 @@ export class AdminWriteService extends InvitationBaseService {
           await this.producer.send({
             topic: KafkaTopics.notification.confirmGuest,
             payload: {
-              token: updated.pendingContactId!,
+              token: updated.pendingContactId,
               eventName,
               seat,
               seatId,
@@ -165,7 +167,7 @@ export class AdminWriteService extends InvitationBaseService {
               operation: 'Send confirm guest notification',
               version: '1',
               type: 'EVENT',
-              actorId: actorId,
+              actorId,
               tenantId: 'omnixys',
             },
           });
@@ -262,12 +264,12 @@ export class AdminWriteService extends InvitationBaseService {
    * - Avoids incorrect global assumptions
    */
   async bulkApprove(params: {
-    invitationIds: {
+    invitationIds: Array<{
       invitationId: string;
       eventName: string;
       seat: string;
       seatId?: string;
-    }[];
+    }>;
     approved: boolean;
     actorId: string;
   }): Promise<InvitationPayload[]> {
@@ -330,7 +332,7 @@ export class AdminWriteService extends InvitationBaseService {
   async importInvitations(
     eventId: string,
     key: string,
-    uploadType: string,
+    uploadType: 'csv' | 'xlsx',
     actorId: string,
   ): Promise<ImportInvitationsResult> {
     return TraceRunner.run('[SERVICE] importInvitations', async () => {
@@ -342,15 +344,14 @@ export class AdminWriteService extends InvitationBaseService {
       });
 
       /**
-       * 🔥 LOAD FILE FROM STORAGE
+       * LOAD FILE FROM STORAGE
        */
       const buffer = await this.storage.get({ key });
 
-      let rows: Record<string, unknown>[] = [];
+      let rawRows: Array<Record<string, unknown>> = [];
+      let headers: string[] = [];
 
-      /**
-       * ---------------- CSV ----------------
-       */
+      /* ---------------- CSV ---------------- */
       if (uploadType === 'csv') {
         const content = buffer.toString('utf8');
 
@@ -359,40 +360,56 @@ export class AdminWriteService extends InvitationBaseService {
           skipEmptyLines: true,
         });
 
-        rows = parsed.data;
+        rawRows = parsed.data;
+        headers = Object.keys(rawRows[0] ?? {});
       }
 
-      /**
-       * ---------------- XLSX ----------------
-       */
+      /* ---------------- XLSX ---------------- */
       if (uploadType === 'xlsx') {
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(NodeBuffer.from(buffer) as unknown as import('exceljs').Buffer);
+
+        const xlsxBuffer = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength,
+        ) as Parameters<typeof workbook.xlsx.load>[0];
+
+        await workbook.xlsx.load(xlsxBuffer);
 
         const sheet = workbook.worksheets[0];
-
         if (!sheet) {
           throw new Error('Excel file has no sheets');
         }
 
-        const headers = sheet.getRow(1).values as string[];
+        sheet.getRow(1).eachCell((cell) => {
+          headers.push(cell.text);
+        });
 
         sheet.eachRow((row, rowNumber) => {
-          if (rowNumber === 1) return;
+          if (rowNumber === 1) {
+            return;
+          }
 
           const obj: Record<string, unknown> = {};
 
           row.eachCell((cell, colNumber) => {
-            const key = headers[colNumber];
-            if (key) obj[key] = cell.value;
+            const key = headers[colNumber - 1];
+            if (key) {
+              obj[key] = cell.value;
+            }
           });
 
-          rows.push(obj);
+          rawRows.push(obj);
         });
       }
 
       /**
-       * ---------------- VALIDATION ----------------
+       * 🔥 COLUMN MAPPING (CRITICAL)
+       */
+      const { mapping } = mapColumns(headers);
+      const rows = applyMapping(rawRows, mapping);
+
+      /**
+       * VALIDATION
        */
       const errors: string[] = [];
       const required = ['firstName', 'lastName'];
@@ -416,7 +433,17 @@ export class AdminWriteService extends InvitationBaseService {
       }
 
       /**
-       * ---------------- INSERT ----------------
+       * 🔥 OPTIMIZED DUPLICATE CHECK
+       */
+      const existing = await this.prismaService.invitation.findMany({
+        where: { eventId },
+        select: { firstName: true, lastName: true },
+      });
+
+      const existingSet = new Set(existing.map((e) => `${e.firstName}-${e.lastName}`));
+
+      /**
+       * INSERT
        */
       let imported = 0;
       const duplicates: string[] = [];
@@ -425,11 +452,9 @@ export class AdminWriteService extends InvitationBaseService {
         const firstName = String(row.firstName).trim();
         const lastName = String(row.lastName).trim();
 
-        const exists = await this.prismaService.invitation.findFirst({
-          where: { eventId, firstName, lastName },
-        });
+        const key = `${firstName}-${lastName}`;
 
-        if (exists) {
+        if (existingSet.has(key)) {
           duplicates.push(`${firstName} ${lastName}`);
           continue;
         }
@@ -445,6 +470,7 @@ export class AdminWriteService extends InvitationBaseService {
           },
         });
 
+        existingSet.add(key);
         imported++;
       }
 

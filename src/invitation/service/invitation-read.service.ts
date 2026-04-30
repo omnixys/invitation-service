@@ -54,7 +54,7 @@ export class InvitationReadService extends InvitationBaseService {
       where: { id },
     });
 
-    console.log({ found });
+    console.debug({ found });
 
     if (!found) {
       throw new NotFoundException('Invitation not found');

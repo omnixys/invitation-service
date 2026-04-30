@@ -12,19 +12,16 @@ import { IsEmail, IsOptional, IsString } from 'class-validator';
 export class AcceptRSVPInput {
   @Field(() => String, {
     description: 'First name of the guest submitting the RSVP.',
-    nullable: true,
   })
-  @IsOptional()
   @IsString()
-  firstName?: string;
+  firstName!: string;
 
   @Field(() => String, {
     description: 'Last name of the guest submitting the RSVP.',
-    nullable: true,
   })
   @IsOptional()
   @IsString()
-  lastName?: string;
+  lastName!: string;
 
   @Field(() => String, {
     description: 'Email address of the guest. Optional.',

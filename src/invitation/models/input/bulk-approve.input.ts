@@ -22,9 +22,6 @@ export class BulkApproveInvitationInput {
   approved!: boolean;
 }
 
-
-
-
 @InputType()
 export class ApproveInvitationDataInput {
   @Field(() => ID, {

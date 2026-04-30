@@ -24,7 +24,7 @@ import {
   KafkaEventHandler,
   KafkaTopics,
 } from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
+import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 
@@ -39,7 +39,7 @@ import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 @KafkaEventHandler('ticket')
 @Injectable()
 export class TicketHandler {
-  private readonly logger;
+  private readonly logger: ScopedLogger;
 
   /**
    * Creates a new instance of {@link UserHandler}.
@@ -58,7 +58,7 @@ export class TicketHandler {
   async handleAddGuestId(
     payload: AddGuestIdToInvitationDTO,
     _context: IKafkaEventContext,
-  ) {
+  ): Promise<void> {
     return TraceRunner.run('[HANDLER] addGuestId', async () => {
       this.logger.debug(`AuthenticationHandler: addGuestId= %o`, payload);
       void this.invitationWriteService.addGuestId(payload);

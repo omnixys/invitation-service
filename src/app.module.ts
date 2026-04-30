@@ -15,7 +15,6 @@
  * For more information, visit <https://www.gnu.org/licenses/>.
  */
 
-import { StorageModule } from '@omnixys/storage';
 import { ValkeyAdapterModule } from './adapter/valkey-adapter.module.js';
 import { BannerService } from './banner.service.js';
 import { env } from './config/env.js';
@@ -28,8 +27,10 @@ import { ValkeyModule } from '@omnixys/cache';
 import { OmnixysGraphQLModule } from '@omnixys/graphql';
 import { KafkaModule } from '@omnixys/kafka';
 import { LoggerModule } from '@omnixys/logger';
+import { StorageModule } from '@omnixys/media';
 import { ObservabilityModule } from '@omnixys/observability';
 import { SecurityModule } from '@omnixys/security';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 const {
   SCHEMA_TARGET,
@@ -40,28 +41,34 @@ const {
   VALKEY_PASSWORD,
   KC_URL,
   KC_REALM,
+
+  STORAGE_REGION,
+  STORAGE_ENDPOINT,
+  STORAGE_ACCESS_KEY_ID,
+  STORAGE_SECRET_ACCESS_KEY,
+  STORAGE_BUCKET,
+  STORAGE_PUBLIC_URL,
+  STORAGE_FORCE_PATH_STYLE,
 } = env;
 
 @Module({
   imports: [
     StorageModule.forRoot({
-      region: 'eu-central-1',
-      endpoint: 'http://localhost:9000',
-      accessKeyId: 'admin',
-      secretAccessKey: 'password',
-      bucket: 'omnixys',
-      publicUrl: 'http://localhost:9000/omnixys',
-      forcePathStyle: true,
+      region: STORAGE_REGION,
+      endpoint: STORAGE_ENDPOINT,
+      accessKeyId: STORAGE_ACCESS_KEY_ID,
+      secretAccessKey: STORAGE_SECRET_ACCESS_KEY,
+      bucket: STORAGE_BUCKET,
+      publicUrl: STORAGE_PUBLIC_URL,
+      forcePathStyle: STORAGE_FORCE_PATH_STYLE,
+      linkTTL: 60,
     }),
 
-    
     OmnixysGraphQLModule.forRoot({
-      context: ({ req, reply }: any) => {
-        return {
-          req,
-          reply,
-        };
-      },
+      context: ({ req, reply }: { req: FastifyRequest; reply: FastifyReply }) => ({
+        req,
+        reply,
+      }),
       autoSchemaFile:
         SCHEMA_TARGET === 'tmp'
           ? { path: '/tmp/schema.gql', federation: 2 }

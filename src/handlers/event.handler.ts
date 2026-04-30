@@ -24,7 +24,7 @@ import {
   IKafkaEventContext,
   KAFKA_HEADERS,
 } from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
+import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import { EventIdsDTO } from '@omnixys/shared';
 
@@ -39,7 +39,7 @@ import { EventIdsDTO } from '@omnixys/shared';
 @KafkaEventHandler('event')
 @Injectable()
 export class EventHandler {
-  private readonly logger;
+  private readonly logger: ScopedLogger;
 
   /**
    * Creates a new instance of {@link EventHandler}.
@@ -58,7 +58,7 @@ export class EventHandler {
   async handleDeleteInvitationsByEventIds(
     payload: EventIdsDTO,
     context: IKafkaEventContext,
-  ) {
+  ): Promise<void> {
     return TraceRunner.run('[HANDLER] create Seats', async () => {
       const headers = context.headers;
       const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';

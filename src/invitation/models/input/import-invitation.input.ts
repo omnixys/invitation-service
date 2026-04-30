@@ -5,11 +5,11 @@ export class ImportInvitationsInput {
   @Field(() => ID)
   eventId!: string;
 
-  @Field(() => ID)
-  uploadId!: string;
+  @Field(() => String)
+  key!: string;
 
   @Field(() => String)
-  uploadType!: string;
+  uploadType!: 'csv' | 'xlsx';
 }
 
 @ObjectType()

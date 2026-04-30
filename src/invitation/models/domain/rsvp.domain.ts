@@ -26,9 +26,8 @@ export class RsvpDomain {
       if (newChoice === RsvpChoice.YES) {
         throw new RsvpAlreadyAcceptedException();
       } else if (newChoice === RsvpChoice.NO) {
-                    throw new Error('Already declined');
-
-      } 
+        throw new Error('Already declined');
+      }
     }
 
     if (newChoice === RsvpChoice.NO) {

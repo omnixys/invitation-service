@@ -35,6 +35,6 @@ export class PhoneNumberLoader {
       map.get(row.invitationId)?.push(mapped);
     }
 
-    return ids.map((id) => map.get(id)!);
+    return ids.map((id) => map.get(id) ?? []);
   }
 }

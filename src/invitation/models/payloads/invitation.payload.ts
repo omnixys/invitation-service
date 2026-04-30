@@ -16,8 +16,6 @@ registerEnum('InvitationStatus', InvitationStatus);
 registerEnum('RsvpChoice', RsvpChoice);
 registerEnum('InvitationType', InvitationType);
 
-
-
 @ObjectType({
   description: 'GraphQL Invitation entity matching the Prisma model exactly.',
 })
@@ -28,16 +26,11 @@ export class InvitationPayload {
   @Field(() => InvitationType)
   type!: InvitationType;
 
-  // optional strings
-  @Field(() => String, {
-    nullable: true,
-  })
-  firstName?: string;
+  @Field(() => String)
+  firstName!: string;
 
-  @Field(() => String, {
-    nullable: true,
-  })
-  lastName?: string;
+  @Field(() => String)
+  lastName!: string;
 
   @Field(() => ID)
   eventId!: string;

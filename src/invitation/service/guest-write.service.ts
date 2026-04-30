@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-
 import {
   Invitation,
   InvitationStatus,
   InvitationType,
-  PhoneNumberType,
   Prisma,
+  PhoneNumber,
   PhoneNumberType as PrismaPhoneNumberType,
   RsvpChoice,
 } from '../../prisma/generated/client.js';
@@ -20,7 +16,12 @@ import { UpdatePlusOneInput } from '../models/input/update-plus-one.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
@@ -48,9 +49,7 @@ export function mapPhoneNumberType(type: PrismaPhoneNumberType): SharedPhoneNumb
   return type as unknown as SharedPhoneNumberType;
 }
 
-function mapPhoneNumber(
-  ph: any, // better: Prisma.PhoneNumber
-): PhoneNumberDTO {
+function mapPhoneNumber(ph: PhoneNumber): PhoneNumberDTO {
   return {
     number: ph.number,
     type: mapPhoneNumberType(ph.type),
@@ -66,7 +65,7 @@ export class GuestWriteService extends InvitationBaseService {
     prisma: PrismaService,
     logger: OmnixysLogger,
     private readonly cache: ValkeyService,
-        private readonly producer: KafkaProducerService,
+    private readonly producer: KafkaProducerService,
   ) {
     super(logger, prisma);
   }
@@ -181,7 +180,7 @@ export class GuestWriteService extends InvitationBaseService {
                       createMany: {
                         data: p.phoneNumbers.map((ph) => ({
                           number: ph.number,
-                          type: ph.type as PhoneNumberType,
+                          type: ph.type,
                           label: ph.label ?? null,
                           isPrimary: ph.isPrimary ?? false,
                           countryCode: ph.countryCode,
@@ -205,18 +204,22 @@ export class GuestWriteService extends InvitationBaseService {
         let pendingContactId: string | undefined;
 
         if (decision.needsContactDetails) {
+          if (!replyInput) {
+            throw new MissingRsvpContactDetailsException();
+          }
+
           const pendingUser: CreatePendingUserDTO = {
-            firstName: replyInput!.firstName ?? invitation.firstName,
-            lastName: replyInput!.lastName ?? invitation.lastName,
+            firstName: replyInput.firstName ?? invitation.firstName,
+            lastName: replyInput.lastName ?? invitation.lastName,
             invitationId: invitation.id,
-            email: replyInput!.email,
-            phoneNumbers: replyInput!.phoneNumbers,
+            email: replyInput.email,
+            phoneNumbers: replyInput.phoneNumbers,
             eventId: invitation.eventId,
             tenantId: 'omnixys',
             locale: clientInfo.locale,
             actorId: createTmpUsername(
-              replyInput!.firstName ?? invitation.firstName,
-              replyInput!.lastName ?? invitation.lastName,
+              replyInput.firstName ?? invitation.firstName,
+              replyInput.lastName ?? invitation.lastName,
             ),
 
             /**
@@ -266,7 +269,11 @@ export class GuestWriteService extends InvitationBaseService {
   /**
    * Creates a plus-one invitation.
    */
-  async createPlusOne(input: CreatePlusOneInput, actorId: string, clientInfo: ClientContext): Promise<InvitationPayload> {
+  async createPlusOne(
+    input: CreatePlusOneInput,
+    actorId: string,
+    clientInfo: ClientContext,
+  ): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] createPlusOne', async () => {
       const { eventId, invitedByInvitationId, firstName, lastName, email, phoneNumbers } = input;
 
@@ -334,7 +341,7 @@ export class GuestWriteService extends InvitationBaseService {
                   createMany: {
                     data: phoneNumbers.map((ph) => ({
                       number: ph.number,
-                      type: ph.type as PhoneNumberType,
+                      type: ph.type,
                       label: ph.label ?? null,
                       isPrimary: ph.isPrimary ?? false,
                       countryCode: ph.countryCode,
@@ -350,23 +357,23 @@ export class GuestWriteService extends InvitationBaseService {
           lastName,
           invitationId: child.id,
           email: email ?? undefined,
-          phoneNumbers: phoneNumbers,
+          phoneNumbers,
           eventId,
           tenantId: 'omnixys',
           locale: clientInfo.locale,
           actorId,
-        }
+        };
 
         const pendingContactId = await this.cache.set(
-            ValkeyKey.pendingContact,
-            JSON.stringify(pendingUser),
-            60 * 60 * 24,
-          );
+          ValkeyKey.pendingContact,
+          JSON.stringify(pendingUser),
+          60 * 60 * 24,
+        );
 
-          await tx.invitation.update({
-            where: { id: child.id },
-            data: { pendingContactId },
-          });
+        await tx.invitation.update({
+          where: { id: child.id },
+          data: { pendingContactId },
+        });
 
         return InvitationMapper.toPayload(child);
       });
@@ -418,7 +425,12 @@ export class GuestWriteService extends InvitationBaseService {
 
         this.ensureIsPlusOne(existing);
 
-        await this.ensureUserCanManageParentInvitation(tx, existing.invitedByInvitationId!, userId);
+        const parentInvitationId = existing.invitedByInvitationId;
+        if (!parentInvitationId) {
+          throw new BadRequestException('Plus-one parent invitation not found');
+        }
+
+        await this.ensureUserCanManageParentInvitation(tx, parentInvitationId, userId);
 
         await tx.phoneNumber.deleteMany({
           where: {
@@ -440,7 +452,7 @@ export class GuestWriteService extends InvitationBaseService {
                   createMany: {
                     data: phoneNumbers.map((phoneNumber) => ({
                       number: phoneNumber.number,
-                      type: phoneNumber.type as PhoneNumberType,
+                      type: phoneNumber.type,
                       label: phoneNumber.label ?? null,
                       isPrimary: phoneNumber.isPrimary ?? false,
                       countryCode: phoneNumber.countryCode,
@@ -461,51 +473,57 @@ export class GuestWriteService extends InvitationBaseService {
    */
   async deletePlusOne(id: string, actorId: string): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] deletePlusOne', async () => {
-          this.logger.debug('removing Plus One %s | actorId=%s', id, actorId)
-          return this.prismaService.$transaction(async (tx) => {
-            const child = await tx.invitation.findUnique({
-              where: { id },
-            });
-
-            if (!child) {
-              throw new NotFoundException('Invitation not found');
-            }
-
-            this.ensureIsPlusOne(child);
-
-            const guestId = child.guestProfileId;
-            if (child.pendingContactId) {
-              await this.cache.delete(ValkeyKey.pendingContact, child.pendingContactId);
-            }
-
-            const deleted = await tx.invitation.delete({ where: { id } });
-
-            await tx.invitation.update({
-              where: { id: child.invitedByInvitationId! },
-              data: {
-                maxInvitees: { increment: 1 },
-              },
-            });
-
-            if(guestId)
-            await this.producer.send({
-              topic: KafkaTopics.authentication.deleteGuest,
-              payload: {
-                userId: guestId,
-              },
-              meta: {
-                service: 'invitation-service',
-                operation: 'Send confirm guest notification',
-                version: '1',
-                type: 'EVENT',
-                actorId: actorId,
-                tenantId: 'omnixys',
-              },
-            });
-
-            return InvitationMapper.toPayload(deleted);
-          });
+      this.logger.debug('removing Plus One %s | actorId=%s', id, actorId);
+      return this.prismaService.$transaction(async (tx) => {
+        const child = await tx.invitation.findUnique({
+          where: { id },
         });
+
+        if (!child) {
+          throw new NotFoundException('Invitation not found');
+        }
+
+        this.ensureIsPlusOne(child);
+
+        const parentInvitationId = child.invitedByInvitationId;
+        if (!parentInvitationId) {
+          throw new BadRequestException('Plus-one parent invitation not found');
+        }
+
+        const guestId = child.guestProfileId;
+        if (child.pendingContactId) {
+          await this.cache.delete(ValkeyKey.pendingContact, child.pendingContactId);
+        }
+
+        const deleted = await tx.invitation.delete({ where: { id } });
+
+        await tx.invitation.update({
+          where: { id: parentInvitationId },
+          data: {
+            maxInvitees: { increment: 1 },
+          },
+        });
+
+        if (guestId) {
+          await this.producer.send({
+            topic: KafkaTopics.authentication.deleteGuest,
+            payload: {
+              userId: guestId,
+            },
+            meta: {
+              service: 'invitation-service',
+              operation: 'Send confirm guest notification',
+              version: '1',
+              type: 'EVENT',
+              actorId,
+              tenantId: 'omnixys',
+            },
+          });
+        }
+
+        return InvitationMapper.toPayload(deleted);
+      });
+    });
   }
 
   /**
@@ -516,8 +534,7 @@ export class GuestWriteService extends InvitationBaseService {
     clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] createFromPublicRsvp', async () => {
-
-      console.log({ input });
+      console.debug({ input });
       /**
        * 1. Create main invitation
        */
@@ -536,16 +553,16 @@ export class GuestWriteService extends InvitationBaseService {
           phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
           phoneNumbers: input.phoneNumbers?.length
             ? {
-              createMany: {
-                data: input.phoneNumbers.map((ph) => ({
-                  number: ph.number,
-                  type: ph.type as PhoneNumberType,
-                  label: ph.label ?? null,
-                  isPrimary: ph.isPrimary ?? false,
-                  countryCode: ph.countryCode,
-                })),
-              },
-            }
+                createMany: {
+                  data: input.phoneNumbers.map((ph) => ({
+                    number: ph.number,
+                    type: ph.type,
+                    label: ph.label ?? null,
+                    isPrimary: ph.isPrimary ?? false,
+                    countryCode: ph.countryCode,
+                  })),
+                },
+              }
             : undefined,
         },
       });
@@ -556,7 +573,9 @@ export class GuestWriteService extends InvitationBaseService {
       const plusOneInvitations = [];
 
       for (const p of input.plusOnes ?? []) {
-        if (!p.firstName || !p.lastName) continue;
+        if (!p.firstName || !p.lastName) {
+          continue;
+        }
         const created = await this.prismaService.invitation.create({
           data: {
             type: InvitationType.PUBLIC,
@@ -572,16 +591,16 @@ export class GuestWriteService extends InvitationBaseService {
             phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
             phoneNumbers: p.phoneNumbers?.length
               ? {
-                createMany: {
-                  data: p.phoneNumbers.map((ph) => ({
-                    number: ph.number,
-                    type: ph.type as PhoneNumberType,
-                    label: ph.label ?? null,
-                    isPrimary: ph.isPrimary ?? false,
-                    countryCode: ph.countryCode,
-                  })),
-                },
-              }
+                  createMany: {
+                    data: p.phoneNumbers.map((ph) => ({
+                      number: ph.number,
+                      type: ph.type,
+                      label: ph.label ?? null,
+                      isPrimary: ph.isPrimary ?? false,
+                      countryCode: ph.countryCode,
+                    })),
+                  },
+                }
               : undefined,
           },
           include: {
@@ -637,8 +656,8 @@ export class GuestWriteService extends InvitationBaseService {
   }
 
   async deleteAllPlusOnes(parentId: string, actorId: string): Promise<InvitationPayload[]> {
-    return TraceRunner.run('[SERVICE] deleteAllPlusOnes', async () => {
-      return this.prismaService.$transaction(async (tx) => {
+    return TraceRunner.run('[SERVICE] deleteAllPlusOnes', async () =>
+      this.prismaService.$transaction(async (tx) => {
         const parent = await tx.invitation.findUnique({
           where: { id: parentId },
           select: { id: true, eventId: true, plusOnes: true },
@@ -661,7 +680,9 @@ export class GuestWriteService extends InvitationBaseService {
             await this.cache.delete(ValkeyKey.pendingContact, c.pendingContactId);
           }
 
-          plusOneIds.push(c.guestProfileId)
+          if (c.guestProfileId) {
+            plusOneIds.push(c.guestProfileId);
+          }
 
           const deleted = await tx.invitation.delete({ where: { id: c.id } });
           fullChildren.push(InvitationMapper.toPayload(deleted));
@@ -686,14 +707,14 @@ export class GuestWriteService extends InvitationBaseService {
               operation: 'Delete Guest Accounts',
               version: '1',
               type: 'EVENT',
-              actorId: actorId,
+              actorId,
               tenantId: 'omnixys',
             },
           });
         }
         return fullChildren;
-      });
-    });
+      }),
+    );
   }
 
   private ensureIsPlusOne(child: Invitation): void {
@@ -702,7 +723,7 @@ export class GuestWriteService extends InvitationBaseService {
     }
   }
 
-    /**
+  /**
    * Ensures the authenticated user may manage the parent invitation.
    *
    * Rule:

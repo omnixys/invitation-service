@@ -29,10 +29,14 @@ export class InvitationLoader {
     }
 
     for (const row of rows) {
+      if (!row.invitedByInvitationId) {
+        continue;
+      }
+
       const mapped = InvitationMapper.toPayload(row);
-      map.get(row.invitedByInvitationId!)?.push(mapped);
+      map.get(row.invitedByInvitationId)?.push(mapped);
     }
 
-    return ids.map((id) => map.get(id)!);
+    return ids.map((id) => map.get(id) ?? []);
   }
 }

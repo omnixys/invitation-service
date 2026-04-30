@@ -2,7 +2,7 @@
 
 import type { Invitation } from '../../prisma/generated/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
-import { OmnixysLogger, ScopedLogger } from '@omnixys/logger';
+import type { OmnixysLogger, ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import { InvitationNotFoundException } from '@omnixys/shared';
 

@@ -51,8 +51,7 @@ export class AdminMutationResolver {
 
   @UseGuards(CookieAuthGuard)
   @Mutation(() => ImportInvitationsResult, {
-    description:
-      'Imports invitations from CSV or Excel file stored temporarily on the server.',
+    description: 'Imports invitations from CSV/XLSX stored in object storage',
   })
   async importInvitations(
     @Args('input', { type: () => ImportInvitationsInput })
@@ -61,40 +60,37 @@ export class AdminMutationResolver {
   ): Promise<ImportInvitationsResult> {
     return TraceRunner.run('[RESOLVER] importInvitations', async () => {
       /**
-       * WHY:
-       * Import is a critical admin operation → must be authenticated
+       * SECURITY
        */
       if (!user?.id) {
-        this.logger.warn('Unauthorized import attempt', {
-          input,
-        });
+        this.logger.warn('Unauthorized import attempt', { input });
         throw new UnauthorizedException('Not authenticated');
       }
 
       /**
-       * Basic input validation
+       * VALIDATION
        */
       if (!input.eventId) {
         throw new Error('eventId is required');
       }
 
-      if (!input.uploadId || !input.uploadType) {
-        throw new Error('uploadId and uploadType are required');
+      if (!input.key || !input.uploadType) {
+        throw new Error('key and uploadType are required');
       }
 
       this.logger.debug('Import invitations requested', {
         actorId: user.id,
         eventId: input.eventId,
-        uploadId: input.uploadId,
+        key: input.key,
         uploadType: input.uploadType,
       });
 
       /**
-       * Delegate to service layer
+       * SERVICE
        */
       const result = await this.adminService.importInvitations(
         input.eventId,
-        input.uploadId,
+        input.key,
         input.uploadType,
         user.id,
       );
@@ -107,6 +103,7 @@ export class AdminMutationResolver {
       return result;
     });
   }
+
   @UseGuards(CookieAuthGuard)
   @Mutation(() => InvitationPayload)
   async approveInvitation(
