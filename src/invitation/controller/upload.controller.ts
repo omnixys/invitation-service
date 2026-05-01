@@ -19,7 +19,7 @@ import {
   type InvitationPreviewResult,
 } from '../service/invitation-preview.service.js';
 import { OmnixysLogger } from '@omnixys/logger';
-import { FILE_STORAGE, FileStorage } from '@omnixys/media';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
 import { TraceRunner } from '@omnixys/observability';
 import { IsIn, IsString } from 'class-validator';
 

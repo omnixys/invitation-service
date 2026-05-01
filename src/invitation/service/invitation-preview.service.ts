@@ -2,7 +2,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { applyMapping } from '../../utils/apply-mapping.js';
 import { mapColumns } from '../../utils/column-mapper.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { FILE_STORAGE, FileStorage } from '@omnixys/media';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
 import { TraceRunner } from '@omnixys/observability';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';

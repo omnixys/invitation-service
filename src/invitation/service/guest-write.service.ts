@@ -27,7 +27,6 @@ import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import {
-  ClientContext,
   CreatePendingUserDTO,
   createTmpUsername,
   getPrimaryPhoneNumber,
@@ -37,6 +36,7 @@ import {
   PhoneNumberDTO,
   PhoneNumberType as SharedPhoneNumberType,
 } from '@omnixys/shared';
+import type { ClientContext } from '@omnixys/shared';
 
 type InvitationWithPhones = Prisma.InvitationGetPayload<{
   include: { phoneNumbers: true };

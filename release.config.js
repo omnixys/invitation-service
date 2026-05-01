@@ -176,7 +176,7 @@ export default {
 ---
 
 🏢 **Organization:** Omnixys
-📦 **Service:** Invitation
+📦 **Service:** Invitation Service
 🔗 **Repository:** Repository: <%= options.repositoryUrl %>
 🧭 **Docs:** https://omnixys.com/docs
 `,

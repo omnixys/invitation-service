@@ -80,4 +80,14 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .extras/doc
+
+.extras/json
+.extras/data
+.extras/sql
+.npmrc
+.secrets
+__tests__
+log
+TODO.md
+.vscode
 node_profiles

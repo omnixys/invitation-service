@@ -17,7 +17,7 @@ import {
   CurrentUser,
   CurrentUserData,
 } from '@omnixys/security';
-import { ClientContext } from '@omnixys/shared';
+import type { ClientContext } from '@omnixys/shared';
 
 @Resolver(() => InvitationPayload)
 export class GuestMutationResolver {

@@ -54,6 +54,14 @@ export const corsOptions: FastifyCorsOptions = {
   origin: [
     'http://localhost:3000', // lokales Next.js-Frontend
     'https://studio.apollographql.com', // GraphQL Playground / Apollo Studio
+
+    'https://ui.omnixys.com',
+    'https://omnixys.com',
+    'https://www.omnixys.com',
+    'https://www.api-dev.omnixys.com',
+    'https://www.api.omnixys.com',
+    'https://nexys.omnixys.com',
+    'https://checkpoint.omnixys.com',
   ],
 
   // ======================================================

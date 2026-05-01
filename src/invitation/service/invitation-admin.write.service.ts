@@ -13,7 +13,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ValkeyService, ValkeyKey } from '@omnixys/cache';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
-import { FILE_STORAGE, FileStorage } from '@omnixys/media';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
 import { TraceRunner } from '@omnixys/observability';
 import {
   RsvpNotSubmittedException,
