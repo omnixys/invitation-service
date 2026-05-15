@@ -1,33 +1,33 @@
 -- CreateEnum
-CREATE TYPE "InvitationType" AS ENUM ('PUBLIC', 'PRIVATE');
+CREATE TYPE "invitation_type" AS ENUM ('PUBLIC', 'PRIVATE');
 
 -- CreateEnum
-CREATE TYPE "ContactType" AS ENUM ('EMAIL', 'PHONE');
+CREATE TYPE "contact_type" AS ENUM ('EMAIL', 'PHONE');
 
 -- CreateEnum
-CREATE TYPE "PhoneNumberType" AS ENUM ('WHATSAPP', 'MOBILE', 'PRIVATE', 'WORK', 'HOME', 'OTHER');
+CREATE TYPE "phone_number_type" AS ENUM ('WHATSAPP', 'MOBILE', 'PRIVATE', 'WORK', 'HOME', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "InvitationStatus" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELED', 'REJECTED', 'APPROVED');
+CREATE TYPE "invitation_status" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'CANCELED', 'REJECTED', 'APPROVED');
 
 -- CreateEnum
-CREATE TYPE "RsvpChoice" AS ENUM ('YES', 'NO', 'MAYBE');
+CREATE TYPE "rsvp_choice" AS ENUM ('YES', 'NO', 'MAYBE');
 
 -- CreateTable
 CREATE TABLE "invitation" (
     "id" UUID NOT NULL,
-    "type" "InvitationType" NOT NULL,
+    "type" "invitation_type" NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
     "event_id" UUID NOT NULL,
     "guest_profile_id" UUID,
     "email" TEXT,
     "phone_number" TEXT,
-    "status" "InvitationStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "invitation_status" NOT NULL DEFAULT 'PENDING',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "pending_contact_id" TEXT,
-    "rsvp_choice" "RsvpChoice",
+    "rsvp_choice" "rsvp_choice",
     "rsvp_at" TIMESTAMP(3),
     "approved_at" TIMESTAMP(3),
     "approved_by_user_id" TEXT,
@@ -43,12 +43,12 @@ CREATE TABLE "phone_number" (
     "id" UUID NOT NULL,
     "invitation_id" UUID NOT NULL,
     "number" TEXT NOT NULL,
-    "type" "PhoneNumberType" NOT NULL,
+    "type" "phone_number_type" NOT NULL,
     "label" TEXT,
     "is_primary" BOOLEAN NOT NULL DEFAULT false,
     "country_code" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
+    "updated_at" TIMESTAMP(3),
 
     CONSTRAINT "phone_number_pkey" PRIMARY KEY ("id")
 );
