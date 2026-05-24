@@ -89,6 +89,8 @@ jobs:
         run: |
           echo "@omnixys:registry=https://npm.pkg.github.com" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=${OMNIXYS_TOKEN}" >> .npmrc
+          echo "minimum-release-age=1440" >> ~/.npmrc
+          echo "minimum-release-age-exclude[]=@omnixys/*" >> ~/.npmrc
         env:
           OMNIXYS_TOKEN: ${{ secrets.OMNIXYS_TOKEN }}
 
@@ -126,6 +128,8 @@ jobs:
         run: |
           echo "@omnixys:registry=https://npm.pkg.github.com" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=${OMNIXYS_TOKEN}" >> .npmrc
+          echo "minimum-release-age=1440" >> ~/.npmrc
+          echo "minimum-release-age-exclude[]=@omnixys/*" >> ~/.npmrc
         env:
           OMNIXYS_TOKEN: ${{ secrets.OMNIXYS_TOKEN }}
 
