@@ -27,7 +27,7 @@ model Invitation {
 
   status InvitationStatus @default(PENDING) @map("status")
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
   pendingContactId String? @unique @map("pending_contact_id")
