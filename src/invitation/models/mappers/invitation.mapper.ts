@@ -17,7 +17,7 @@ export class InvitationMapper {
       lastName: invitation.lastName,
       guestProfileId: n2u(invitation.guestProfileId),
       createdAt: invitation.createdAt,
-      updatedAt: invitation.updatedAt,
+      updatedAt: n2u(invitation.updatedAt),
       pendingContactId: n2u(invitation.pendingContactId),
       rsvpChoice: n2u(invitation.rsvpChoice),
       rsvpAt: n2u(invitation.rsvpAt),

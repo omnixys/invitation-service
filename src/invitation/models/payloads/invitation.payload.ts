@@ -55,7 +55,7 @@ export class InvitationPayload {
   createdAt!: Date;
 
   @Field(() => GraphQLISODateTime)
-  updatedAt!: Date;
+  updatedAt?: Date | undefined;
 
   @Field(() => String, {
     nullable: true,
