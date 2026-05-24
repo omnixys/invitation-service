@@ -3,6 +3,35 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.0.1](https://github.com/omnixys/invitation-service/compare/v1.0.0...v1.0.1) (2026-05-24)
+
+### Ci
+
+* **Ci:** update ([](https://github.com/omnixys/invitation-service/commit/6f170d30ab4c6af4a4b6074b913a056fe1fa4fa5))
+* **Ci:** update ([](https://github.com/omnixys/invitation-service/commit/7eb0eb515038daefe1cba127ec9c42fd20cf6b3d))
+
+### Debug
+
+* **Debug:** debug ([](https://github.com/omnixys/invitation-service/commit/b59f73ef4c152c758b36dced87637fe3e6368eed))
+* **Debug:** debug ([](https://github.com/omnixys/invitation-service/commit/2a92de69f98bd67ef2e291200adf87df9d4be589))
+
+### Docker
+
+* **Docker:** build ([](https://github.com/omnixys/invitation-service/commit/6e25cb53dbaa07ac096f978be05d6f64948f38cd))
+* **Docker:** build ([](https://github.com/omnixys/invitation-service/commit/c2283a4bd9b285c08c426fdf5cb9151cb642d960))
+* **Docker:** update pnpm version ([](https://github.com/omnixys/invitation-service/commit/fd757183f8e42a52b0b49b8854c08df4dbd1a05a))
+
+### Prisma
+
+* **Prisma:** add client ([](https://github.com/omnixys/invitation-service/commit/31849712749356fa3adb7a385c5a7b75c732463b))
+* **Prisma:** generate prisma client ([](https://github.com/omnixys/invitation-service/commit/fc56ec2b97a0ef6d6ef11e7f0d053af653a8ce00))
+* **Prisma:** kp ([](https://github.com/omnixys/invitation-service/commit/0f847c24036a9ff8fdfceb36ace7cf16b9c45d4d))
+* **Prisma:** update prisma schema ([](https://github.com/omnixys/invitation-service/commit/5b21cec8592b6e2d259df24ab172ea8b664ea853))
+
+### Update
+
+* **Update:** ci ([](https://github.com/omnixys/invitation-service/commit/aba101edfa68cd0901d7a9ec728ab81f4fb1f4ec))
+
 ## 1.0.0 (2026-05-01)
 
 ### ⚠ BREAKING CHANGE
