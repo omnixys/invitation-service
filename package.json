@@ -20,7 +20,7 @@
   "private": false,
   "engines": {
     "node": ">=24.10.0",
-    "pnpm": ">=10.19.0"
+    "pnpm": ">=11.1.2"
   },
   "scripts": {
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
@@ -76,7 +76,7 @@
     "@nestjs/terminus": "^11.1.1",
     "@omnixys/cache": "^1.0.0",
     "@omnixys/context": "^1.0.0",
-    "@omnixys/graphql": "^1.0.0",
+    "@omnixys/graphql": "^1.0.1",
     "@omnixys/kafka": "^1.0.0",
     "@omnixys/logger": "^1.0.0",
     "@omnixys/media": "^1.0.0",
