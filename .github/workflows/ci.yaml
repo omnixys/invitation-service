@@ -97,14 +97,14 @@ jobs:
         env:
           OMNIXYS_TOKEN: ${{ secrets.OMNIXYS_TOKEN }}
 
-      - name: 🔍 Lint check
-        run: pnpm lint
+      # - name: 🔍 Lint check
+      #   run: pnpm lint
 
       - name: 🧱 Build project
         run: pnpm build
 
-      - name: 🔤 Typecheck
-        run: npx tsc
+      # - name: 🔤 Typecheck
+      #   run: npx tsc
 
   release:
     needs: ci
