@@ -100,8 +100,8 @@ jobs:
       # - name: 🔍 Lint check
       #   run: pnpm lint
 
-      - name: generate prisma client
-        run: pnpm generate
+      # - name: generate prisma client
+      #   run: pnpm generate
 
       - name: 🧱 Build project
         run: pnpm build

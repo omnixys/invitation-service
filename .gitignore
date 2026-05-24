@@ -92,4 +92,4 @@ TODO.md
 .vscode
 node_profiles
 
-src/prisma/generated
+# src/prisma/generated
