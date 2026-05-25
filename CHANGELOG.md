@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.0.4](https://github.com/omnixys/invitation-service/compare/v1.0.3...v1.0.4) (2026-05-25)
+
+### Docker
+
+* **Docker:** Dockerfile ([](https://github.com/omnixys/invitation-service/commit/0c1aa59e09aab332695b2e6e21a0aadf63be977e))
+
+### Other
+
+* **Other:** Merge branch 'main' of https://github.com/omnixys/invitation-service ([](https://github.com/omnixys/invitation-service/commit/228d02f8ce49ad1abe2826d72465aa2b721dbdb0))
+
 ## [1.0.3](https://github.com/omnixys/invitation-service/compare/v1.0.2...v1.0.3) (2026-05-25)
 
 ### Docker
