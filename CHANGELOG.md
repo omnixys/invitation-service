@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.0.2](https://github.com/omnixys/invitation-service/compare/v1.0.1...v1.0.2) (2026-05-24)
+
+### Graphql
+
+* **Graphql:** add explicit type for the "updatedAt" ([](https://github.com/omnixys/invitation-service/commit/fcc30f2f573837877692cd9b1b67eb733db10e73))
+
 ## [1.0.1](https://github.com/omnixys/invitation-service/compare/v1.0.0...v1.0.1) (2026-05-24)
 
 ### Ci
