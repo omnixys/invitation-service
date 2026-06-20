@@ -133,6 +133,8 @@ export class GuestWriteService extends InvitationBaseService {
       /**
        * 🔥 TRANSACTION (CRITICAL)
        */
+      this.logger.debug('RSVP transaction started: invitationId=%s', id);
+
       const result = await this.prismaService.$transaction(async (tx) => {
         /**
          * 1. Update parent invitation
@@ -251,6 +253,13 @@ export class GuestWriteService extends InvitationBaseService {
 
         return updatedInvitation;
       });
+
+      this.logger.debug(
+        'RSVP transaction completed: invitationId=%s | choice=%s',
+        id,
+        decision.newChoice,
+      );
+
       const truncated = inputPlusOnes.length > maxInvitees;
 
       if (inputPlusOnes.length > maxInvitees) {
@@ -277,6 +286,13 @@ export class GuestWriteService extends InvitationBaseService {
     return TraceRunner.run('[SERVICE] createPlusOne', async () => {
       const { eventId, invitedByInvitationId, firstName, lastName, email, phoneNumbers } = input;
 
+      this.logger.debug(
+        'createPlusOne: eventId=%s | invitationId=%s | actorId=%s',
+        eventId,
+        invitedByInvitationId,
+        actorId,
+      );
+
       if (!eventId || !invitedByInvitationId) {
         throw new BadRequestException('Missing required fields');
       }
@@ -296,7 +312,9 @@ export class GuestWriteService extends InvitationBaseService {
         }
       }
 
-      return this.prismaService.$transaction(async (tx) => {
+      this.logger.debug('Creating Plus One: invitationId=%s', invitedByInvitationId);
+
+      const result = await this.prismaService.$transaction(async (tx) => {
         const parent = await tx.invitation.findUnique({
           where: { id: invitedByInvitationId },
         });
@@ -377,6 +395,14 @@ export class GuestWriteService extends InvitationBaseService {
 
         return InvitationMapper.toPayload(child);
       });
+
+      this.logger.debug(
+        'Plus One created: invitationId=%s | parentInvitationId=%s',
+        result.id,
+        invitedByInvitationId,
+      );
+
+      return result;
     });
   }
 
@@ -392,6 +418,8 @@ export class GuestWriteService extends InvitationBaseService {
   async updatePlusOne(input: UpdatePlusOneInput, userId: string): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] updatePlusOne', async () => {
       const { id, firstName, lastName, email, phoneNumbers } = input;
+
+      this.logger.debug('updatePlusOne: invitationId=%s | actorId=%s', id, userId);
 
       if (!id) {
         throw new BadRequestException('Missing plus-one id');
@@ -409,7 +437,9 @@ export class GuestWriteService extends InvitationBaseService {
         }
       }
 
-      return this.prismaService.$transaction(async (tx) => {
+      this.logger.debug('Updating Plus One: invitationId=%s', id);
+
+      const result = await this.prismaService.$transaction(async (tx) => {
         const existing = await tx.invitation.findUnique({
           where: {
             id,
@@ -465,6 +495,10 @@ export class GuestWriteService extends InvitationBaseService {
 
         return InvitationMapper.toPayload(updated);
       });
+
+      this.logger.debug('Plus One updated: invitationId=%s | actorId=%s', id, userId);
+
+      return result;
     });
   }
 
@@ -474,7 +508,7 @@ export class GuestWriteService extends InvitationBaseService {
   async deletePlusOne(id: string, actorId: string): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] deletePlusOne', async () => {
       this.logger.debug('removing Plus One %s | actorId=%s', id, actorId);
-      return this.prismaService.$transaction(async (tx) => {
+      const result = await this.prismaService.$transaction(async (tx) => {
         const child = await tx.invitation.findUnique({
           where: { id },
         });
@@ -505,6 +539,13 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (guestId) {
+          this.logger.debug(
+            'Sending Kafka event: topic=%s | invitationId=%s | guestId=%s',
+            KafkaTopics.authentication.deleteGuest,
+            id,
+            guestId,
+          );
+
           await this.producer.send({
             topic: KafkaTopics.authentication.deleteGuest,
             payload: {
@@ -519,10 +560,23 @@ export class GuestWriteService extends InvitationBaseService {
               tenantId: 'omnixys',
             },
           });
+
+          this.logger.debug(
+            'Kafka event sent: topic=%s | invitationId=%s | guestId=%s',
+            KafkaTopics.authentication.deleteGuest,
+            id,
+            guestId,
+          );
+        } else {
+          this.logger.debug('Guest profile not found – skip Kafka event: invitationId=%s', id);
         }
 
         return InvitationMapper.toPayload(deleted);
       });
+
+      this.logger.debug('Plus One deleted: invitationId=%s | actorId=%s', id, actorId);
+
+      return result;
     });
   }
 
@@ -534,7 +588,12 @@ export class GuestWriteService extends InvitationBaseService {
     clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] createFromPublicRsvp', async () => {
-      console.debug({ input });
+      this.logger.debug(
+        'createFromPublicRsvp: eventId=%s | plusOnes=%s',
+        input.eventId,
+        input.plusOnes?.length ?? 0,
+      );
+
       /**
        * 1. Create main invitation
        */
@@ -566,6 +625,12 @@ export class GuestWriteService extends InvitationBaseService {
             : undefined,
         },
       });
+
+      this.logger.debug(
+        'Public RSVP invitation created: invitationId=%s | eventId=%s',
+        invitee.id,
+        input.eventId,
+      );
 
       /**
        * 2. Create plusOnes WITH IDs
@@ -611,6 +676,12 @@ export class GuestWriteService extends InvitationBaseService {
         plusOneInvitations.push(created);
       }
 
+      this.logger.debug(
+        'Public RSVP Plus Ones created: invitationId=%s | count=%s',
+        invitee.id,
+        plusOneInvitations.length,
+      );
+
       /**
        * 3. Build pending user (deterministic!)
        */
@@ -651,13 +722,21 @@ export class GuestWriteService extends InvitationBaseService {
         data: { pendingContactId },
       });
 
+      this.logger.debug(
+        'Public RSVP completed: invitationId=%s | eventId=%s',
+        invitee.id,
+        input.eventId,
+      );
+
       return InvitationMapper.toPayload(updated);
     });
   }
 
   async deleteAllPlusOnes(parentId: string, actorId: string): Promise<InvitationPayload[]> {
-    return TraceRunner.run('[SERVICE] deleteAllPlusOnes', async () =>
-      this.prismaService.$transaction(async (tx) => {
+    return TraceRunner.run('[SERVICE] deleteAllPlusOnes', async () => {
+      this.logger.debug('deleteAllPlusOnes: invitationId=%s | actorId=%s', parentId, actorId);
+
+      const result = await this.prismaService.$transaction(async (tx) => {
         const parent = await tx.invitation.findUnique({
           where: { id: parentId },
           select: { id: true, eventId: true, plusOnes: true },
@@ -697,6 +776,13 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (plusOneIds.length > 0) {
+          this.logger.debug(
+            'Sending Kafka event: topic=%s | invitationId=%s | count=%s',
+            KafkaTopics.authentication.deleteGuestList,
+            parentId,
+            plusOneIds.length,
+          );
+
           await this.producer.send({
             topic: KafkaTopics.authentication.deleteGuestList,
             payload: {
@@ -711,10 +797,31 @@ export class GuestWriteService extends InvitationBaseService {
               tenantId: 'omnixys',
             },
           });
+
+          this.logger.debug(
+            'Kafka event sent: topic=%s | invitationId=%s | count=%s',
+            KafkaTopics.authentication.deleteGuestList,
+            parentId,
+            plusOneIds.length,
+          );
+        } else {
+          this.logger.debug(
+            'Guest profiles not found – skip Kafka event: invitationId=%s',
+            parentId,
+          );
         }
+
         return fullChildren;
-      }),
-    );
+      });
+
+      this.logger.debug(
+        'All Plus Ones deleted: invitationId=%s | count=%s',
+        parentId,
+        result.length,
+      );
+
+      return result;
+    });
   }
 
   private ensureIsPlusOne(child: Invitation): void {

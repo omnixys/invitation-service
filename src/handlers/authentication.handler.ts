@@ -61,17 +61,42 @@ export class AuthenticationHandler {
     payload: UserIdDTO,
     context: IKafkaEventContext,
   ): Promise<void> {
+    this.logger.debug(
+      'Kafka message received: topic=%s | guestId=%s',
+      KafkaTopics.invitation.deleteUserInvitations,
+      payload.userId,
+    );
+
     return TraceRunner.run('[HANDLER] Delete Invitation', async () => {
       const headers = context.headers;
       const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
 
       this.logger.debug(
-        'handleDeleteInvitation: %s | actorId=%s',
+        'Kafka processing started: topic=%s | guestId=%s | actorId=%s',
+        KafkaTopics.invitation.deleteUserInvitations,
         payload.userId,
         actorId,
       );
 
-      await this.invitationWriteService.deleteByGuestId(payload.userId);
+      try {
+        await this.invitationWriteService.deleteByGuestId(payload.userId);
+
+        this.logger.debug(
+          'Kafka processing completed: topic=%s | guestId=%s | actorId=%s',
+          KafkaTopics.invitation.deleteUserInvitations,
+          payload.userId,
+          actorId,
+        );
+      } catch (error) {
+        this.logger.error(
+          'Kafka processing failed: topic=%s | guestId=%s | actorId=%s | error=%o',
+          KafkaTopics.invitation.deleteUserInvitations,
+          payload.userId,
+          actorId,
+          error,
+        );
+        throw error;
+      }
     });
   }
 }

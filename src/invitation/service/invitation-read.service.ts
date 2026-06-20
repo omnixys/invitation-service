@@ -50,15 +50,18 @@ export class InvitationReadService extends InvitationBaseService {
    * Throws NotFoundException if not found.
    */
   async findOne(id: string): Promise<InvitationPayload> {
+    this.logger.debug('Finding invitation for InvitationId=%s', id);
+
     const found = await this.prismaService.invitation.findUnique({
       where: { id },
     });
 
-    console.debug({ found });
-
     if (!found) {
+      this.logger.error('Invitation not found: %s', id);
       throw new NotFoundException('Invitation not found');
     }
+
+    this.logger.debug('Invitation found: InvitationId=%s', id);
 
     return found as InvitationPayload;
   }

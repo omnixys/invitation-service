@@ -42,7 +42,7 @@ export class AdminMutationResolver {
   ): Promise<InvitationPayload> {
     if (!user?.id) {
       // Kein authentifizierter Nutzer im Kontext
-      this.logger.debug('user= %o', user);
+      this.logger.warn('Unauthorized create invitation attempt');
       throw new UnauthorizedException('Not authenticated');
     }
 
@@ -63,7 +63,7 @@ export class AdminMutationResolver {
        * SECURITY
        */
       if (!user?.id) {
-        this.logger.warn('Unauthorized import attempt', { input });
+        this.logger.warn('Unauthorized import attempt');
         throw new UnauthorizedException('Not authenticated');
       }
 
@@ -97,7 +97,10 @@ export class AdminMutationResolver {
 
       this.logger.debug('Import completed', {
         actorId: user.id,
-        result,
+        duplicates: result.duplicates.length,
+        imported: result.imported,
+        skipped: result.skipped,
+        total: result.total,
       });
 
       return result;

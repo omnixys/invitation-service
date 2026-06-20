@@ -59,17 +59,42 @@ export class EventHandler {
     payload: EventIdsDTO,
     context: IKafkaEventContext,
   ): Promise<void> {
+    this.logger.debug(
+      'Kafka message received: topic=%s | eventIds=%o',
+      KafkaTopics.invitation.deleteEventInvitations,
+      payload.eventIds,
+    );
+
     return TraceRunner.run('[HANDLER] create Seats', async () => {
       const headers = context.headers;
       const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
 
       this.logger.debug(
-        'handleDeleteInvitationsByEventIds: %o | actorId=%s',
-        payload,
+        'Kafka processing started: topic=%s | eventIds=%o | actorId=%s',
+        KafkaTopics.invitation.deleteEventInvitations,
+        payload.eventIds,
         actorId,
       );
 
-      await this.invitationWriteService.deleteByEventIds(payload.eventIds);
+      try {
+        await this.invitationWriteService.deleteByEventIds(payload.eventIds);
+
+        this.logger.debug(
+          'Kafka processing completed: topic=%s | eventIds=%o | actorId=%s',
+          KafkaTopics.invitation.deleteEventInvitations,
+          payload.eventIds,
+          actorId,
+        );
+      } catch (error) {
+        this.logger.error(
+          'Kafka processing failed: topic=%s | eventIds=%o | actorId=%s | error=%o',
+          KafkaTopics.invitation.deleteEventInvitations,
+          payload.eventIds,
+          actorId,
+          error,
+        );
+        throw error;
+      }
     });
   }
 }

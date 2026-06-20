@@ -45,7 +45,7 @@ export class AdminWriteService extends InvitationBaseService {
    * Creates a new invitation. Guest profile is created later during RSVP/ticket flow.
    */
   async create(input: InvitationCreateInput, eventAdminId?: string): Promise<InvitationPayload> {
-    this.logger.debug('create: admin=%s input=%o', eventAdminId, input);
+    this.logger.debug('create: eventId=%s | actorId=%s', input.eventId, eventAdminId);
 
     if (!input.eventId) {
       throw new BadRequestException('eventId is required');
@@ -53,6 +53,8 @@ export class AdminWriteService extends InvitationBaseService {
     if (input.maxInvitees !== undefined && input.maxInvitees < 0) {
       throw new BadRequestException('maxInvitees must be >= 0');
     }
+
+    this.logger.debug('Creating invitation: eventId=%s | actorId=%s', input.eventId, eventAdminId);
 
     const created = await this.prismaService.invitation.create({
       data: {
@@ -83,6 +85,12 @@ export class AdminWriteService extends InvitationBaseService {
       },
     });
 
+    this.logger.debug(
+      'Invitation created: invitationId=%s | eventId=%s',
+      created.id,
+      created.eventId,
+    );
+
     return InvitationMapper.toPayload(created);
   }
 
@@ -105,28 +113,29 @@ export class AdminWriteService extends InvitationBaseService {
       const invitation = await this.ensureExists(id);
 
       if (!invitation.rsvpChoice && approve) {
-        this.logger.error('Guest has not submitted an RSVP yet.');
+        this.logger.error('Guest has not submitted an RSVP yet: invitationId=%s', id);
         throw new RsvpNotSubmittedException();
       }
 
       if (invitation.rsvpChoice !== RsvpChoice.YES && approve) {
-        this.logger.error('Guest has not accepted the RSVP.');
+        this.logger.error('Guest has not accepted the RSVP: invitationId=%s', id);
         throw new RsvpNotAcceptedException();
       }
 
       if (approve && invitation.status === InvitationStatus.APPROVED) {
-        this.logger.error('Invitation already approved.');
+        this.logger.error('Invitation already approved: invitationId=%s', id);
         throw new InvitationAlreadyApprovedException();
       }
 
       if (!approve && invitation.status === InvitationStatus.REJECTED) {
-        this.logger.error('Invitation already rejected.');
+        this.logger.error('Invitation already rejected: invitationId=%s', id);
         throw new InvitationAlreadyRejectedException();
       }
 
       // Fire Kafka event only if newly approved
       if (approve) {
         this.logger.debug('approve Invitation | actorId=%s', actorId);
+        this.logger.debug('Updating invitation approval: invitationId=%s', id);
 
         const updated = await this.prismaService.invitation.update({
           where: { id },
@@ -136,6 +145,8 @@ export class AdminWriteService extends InvitationBaseService {
             status: InvitationStatus.APPROVED,
           },
         });
+
+        this.logger.debug('Invitation approved: invitationId=%s | actorId=%s', id, actorId);
 
         if (!updated.guestProfileId) {
           const missing: string[] = [];
@@ -148,12 +159,21 @@ export class AdminWriteService extends InvitationBaseService {
           }
 
           if (missing.length) {
+            this.logger.error('Guest name is incomplete: invitationId=%s', id);
             throw new MissingGuestNameException(missing);
           }
 
           if (!updated.pendingContactId) {
+            this.logger.error('Pending contact not found: invitationId=%s', id);
             throw new MissingPendingContactException();
           }
+
+          this.logger.debug(
+            'Sending Kafka event: topic=%s | invitationId=%s | actorId=%s',
+            KafkaTopics.notification.confirmGuest,
+            id,
+            actorId,
+          );
 
           await this.producer.send({
             topic: KafkaTopics.notification.confirmGuest,
@@ -173,8 +193,15 @@ export class AdminWriteService extends InvitationBaseService {
               tenantId: 'omnixys',
             },
           });
+
+          this.logger.debug(
+            'Kafka event sent: topic=%s | invitationId=%s | actorId=%s',
+            KafkaTopics.notification.confirmGuest,
+            id,
+            actorId,
+          );
         } else {
-          this.logger.debug('Guest profile already exists – skip Kafka event.');
+          this.logger.debug('Guest profile already exists – skip Kafka event: invitationId=%s', id);
         }
 
         return InvitationMapper.toPayload(updated);
@@ -184,6 +211,8 @@ export class AdminWriteService extends InvitationBaseService {
         if (invitation.pendingContactId) {
           await this.cache.delete(ValkeyKey.pendingContact, invitation.pendingContactId);
         }
+
+        this.logger.debug('Updating invitation rejection: invitationId=%s', id);
 
         const updated = await this.prismaService.invitation.update({
           where: { id },
@@ -195,6 +224,8 @@ export class AdminWriteService extends InvitationBaseService {
           },
         });
 
+        this.logger.debug('Invitation rejected: invitationId=%s | actorId=%s', id, actorId);
+
         return InvitationMapper.toPayload(updated);
       }
     });
@@ -205,6 +236,8 @@ export class AdminWriteService extends InvitationBaseService {
    * This is a catch-all mutation for both guests and admins.
    */
   async update(id: string, input: InvitationUpdateInput): Promise<InvitationPayload> {
+    this.logger.debug('update: invitationId=%s', id);
+
     const invitation = await this.ensureExists(id);
 
     const data: Record<string, unknown> = {};
@@ -237,10 +270,14 @@ export class AdminWriteService extends InvitationBaseService {
       data.approvedAt = new Date();
     }
 
+    this.logger.debug('Updating invitation: invitationId=%s', id);
+
     const updated = await this.prismaService.invitation.update({
       where: { id },
       data,
     });
+
+    this.logger.debug('Invitation updated: invitationId=%s', id);
 
     return InvitationMapper.toPayload(updated);
   }
@@ -252,7 +289,9 @@ export class AdminWriteService extends InvitationBaseService {
     return TraceRunner.run('[SERVICE] delete', async () => {
       this.logger.debug('delete: invitationID=%s | actorId=%s', id, actorId);
       await this.ensureExists(id);
+      this.logger.debug('Deleting invitation: invitationID=%s', id);
       await this.prismaService.invitation.delete({ where: { id } });
+      this.logger.debug('Invitation deleted: invitationID=%s | actorId=%s', id, actorId);
       return true;
     });
   }
@@ -350,6 +389,12 @@ export class AdminWriteService extends InvitationBaseService {
        */
       const buffer = await this.storage.get({ key });
 
+      this.logger.debug('Import file loaded', {
+        actorId,
+        eventId,
+        uploadType,
+      });
+
       let rawRows: Array<Record<string, unknown>> = [];
       let headers: string[] = [];
 
@@ -425,6 +470,13 @@ export class AdminWriteService extends InvitationBaseService {
       });
 
       if (errors.length) {
+        this.logger.warn('Import validation failed', {
+          actorId,
+          eventId,
+          errors: errors.length,
+          total: rows.length,
+        });
+
         return {
           total: rows.length,
           imported: 0,
@@ -440,6 +492,13 @@ export class AdminWriteService extends InvitationBaseService {
       const existing = await this.prismaService.invitation.findMany({
         where: { eventId },
         select: { firstName: true, lastName: true },
+      });
+
+      this.logger.debug('Import duplicate check completed', {
+        actorId,
+        eventId,
+        existing: existing.length,
+        total: rows.length,
       });
 
       const existingSet = new Set(existing.map((e) => `${e.firstName}-${e.lastName}`));
@@ -475,6 +534,14 @@ export class AdminWriteService extends InvitationBaseService {
         existingSet.add(key);
         imported++;
       }
+
+      this.logger.debug('Import finished', {
+        actorId,
+        eventId,
+        imported,
+        skipped: rows.length - imported,
+        total: rows.length,
+      });
 
       return {
         total: rows.length,

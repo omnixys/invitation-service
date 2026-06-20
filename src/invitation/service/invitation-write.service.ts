@@ -39,6 +39,8 @@ export class InvitationWriteService extends InvitationBaseService {
       data: { guestProfileId: userId },
     });
 
+    this.logger.debug('Guest profile added: invitationId=%s, guestId=%s', invitationId, userId);
+
     // ❌ Redis PubSub removed
     //   Wenn du später WebSockets willst → Federation Gateway macht das!
 
@@ -61,6 +63,12 @@ export class InvitationWriteService extends InvitationBaseService {
       data: { guestProfileId },
     });
 
+    this.logger.debug(
+      'Guest profile updated: invitationId=%s, guestId=%s',
+      invitationId,
+      guestProfileId,
+    );
+
     return InvitationMapper.toPayload(updated);
   }
 
@@ -71,6 +79,7 @@ export class InvitationWriteService extends InvitationBaseService {
     this.logger.debug(`importMany: count=${records?.length ?? 0}`);
 
     if (!records?.length) {
+      this.logger.warn('No invitations provided → skipping import');
       return { inserted: 0 };
     }
 
@@ -89,7 +98,11 @@ export class InvitationWriteService extends InvitationBaseService {
       }),
     );
 
+    this.logger.debug('Importing invitations: count=%s', records.length);
+
     const result = await this.prismaService.$transaction(ops);
+
+    this.logger.debug('Invitations imported: count=%s', result.length);
 
     return { inserted: result.length };
   }
@@ -157,10 +170,16 @@ export class InvitationWriteService extends InvitationBaseService {
 
   async addGuestId({ userId, invitationId }: AddGuestIdToInvitationDTO): Promise<void> {
     this.logger.debug('addGuestId: guestId=%s, invitationId=%s', userId, invitationId);
-    await this.prismaService.invitation.updateMany({
+    const result = await this.prismaService.invitation.updateMany({
       where: { id: invitationId },
       data: { guestProfileId: userId },
     });
+
+    if (result.count === 0) {
+      this.logger.warn('Invitation not found → guestId not added: invitationId=%s', invitationId);
+    } else {
+      this.logger.debug('GuestId added: guestId=%s, invitationId=%s', userId, invitationId);
+    }
   }
 
   private async collectInvitationTree(rootIds: string[]): Promise<string[]> {

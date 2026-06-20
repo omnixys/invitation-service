@@ -59,9 +59,41 @@ export class TicketHandler {
     payload: AddGuestIdToInvitationDTO,
     _context: IKafkaEventContext,
   ): Promise<void> {
+    this.logger.debug(
+      'Kafka message received: topic=%s | invitationId=%s | guestId=%s',
+      KafkaTopics.invitation.addGuestId,
+      payload.invitationId,
+      payload.userId,
+    );
+
     return TraceRunner.run('[HANDLER] addGuestId', async () => {
-      this.logger.debug(`AuthenticationHandler: addGuestId= %o`, payload);
-      void this.invitationWriteService.addGuestId(payload);
+      this.logger.debug(
+        'Kafka processing started: topic=%s | invitationId=%s | guestId=%s',
+        KafkaTopics.invitation.addGuestId,
+        payload.invitationId,
+        payload.userId,
+      );
+
+      void this.invitationWriteService.addGuestId(payload).then(
+        () => {
+          this.logger.debug(
+            'Kafka processing completed: topic=%s | invitationId=%s | guestId=%s',
+            KafkaTopics.invitation.addGuestId,
+            payload.invitationId,
+            payload.userId,
+          );
+        },
+        (error: unknown) => {
+          this.logger.error(
+            'Kafka processing failed: topic=%s | invitationId=%s | guestId=%s | error=%o',
+            KafkaTopics.invitation.addGuestId,
+            payload.invitationId,
+            payload.userId,
+            error,
+          );
+          throw error;
+        },
+      );
     });
   }
 }

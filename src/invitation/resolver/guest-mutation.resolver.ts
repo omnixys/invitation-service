@@ -75,7 +75,11 @@ export class GuestMutationResolver {
     id: string,
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload> {
-    console.debug(user.username);
+    this.logger.debug(
+      'removePlusOneInvitation: invitationId=%s | actorId=%s',
+      id,
+      user.id,
+    );
     return this.guestService.deletePlusOne(id, user.id);
   }
 
