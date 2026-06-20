@@ -124,6 +124,7 @@ export class AdminMutationResolver {
         approve: input.approved,
         actorId: user.id,
         eventName: input.eventName,
+        eventEndsAt: input.eventEndsAt,
         seat: input.seat,
         seatId: input.seatId,
       });

@@ -95,6 +95,7 @@ export class AdminWriteService extends InvitationBaseService {
     approve,
     actorId,
     eventName,
+    eventEndsAt,
     seat,
     seatId,
   }: ApproveInvitationDTO): Promise<InvitationPayload> {
@@ -161,6 +162,7 @@ export class AdminWriteService extends InvitationBaseService {
               eventName,
               seat,
               seatId,
+              eventEndsAt,
             },
             meta: {
               service: 'invitation-service',
