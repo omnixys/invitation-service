@@ -8,6 +8,14 @@ import {
   RsvpChoice,
 } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import {
+  InvitationAccessDeniedException,
+  InvitationNotFoundException,
+  InvitationValidationException,
+  MissingContactMethodException,
+  MissingRsvpContactDetailsException,
+  RsvpAlreadyAcceptedException,
+} from '../errors/invitation-domain.error.js';
 import { RsvpDomain } from '../models/domain/rsvp.domain.js';
 import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
 import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
@@ -15,28 +23,21 @@ import { RSVPInput } from '../models/input/rsvp.input.js';
 import { UpdatePlusOneInput } from '../models/input/update-plus-one.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
+import { AdminWriteService } from './invitation-admin.write.service.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache';
+import { ContextAccessor, type ClientContext } from '@omnixys/context';
+import {
+  type CreatePendingUserDTO,
+  type EventMilestoneRecordedDTO,
+  type PhoneNumberDTO,
+  PhoneNumberType as SharedPhoneNumberType,
+} from '@omnixys/contracts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import {
-  CreatePendingUserDTO,
-  createTmpUsername,
-  getPrimaryPhoneNumber,
-  MissingContactMethodException,
-  MissingRsvpContactDetailsException,
-  n2u,
-  PhoneNumberDTO,
-  PhoneNumberType as SharedPhoneNumberType,
-} from '@omnixys/shared';
-import type { ClientContext } from '@omnixys/shared';
+import { createTmpUsername, getPrimaryPhoneNumber, n2u } from '@omnixys/shared';
 
 type InvitationWithPhones = Prisma.InvitationGetPayload<{
   include: { phoneNumbers: true };
@@ -59,6 +60,11 @@ function mapPhoneNumber(ph: PhoneNumber): PhoneNumberDTO {
   };
 }
 
+function currentTenantId(): string {
+  const context = ContextAccessor.get();
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? 'omnixys';
+}
+
 @Injectable()
 export class GuestWriteService extends InvitationBaseService {
   constructor(
@@ -66,6 +72,7 @@ export class GuestWriteService extends InvitationBaseService {
     logger: OmnixysLogger,
     private readonly cache: ValkeyService,
     private readonly producer: KafkaProducerService,
+    private readonly adminWrite: AdminWriteService,
   ) {
     super(logger, prisma);
   }
@@ -89,7 +96,7 @@ export class GuestWriteService extends InvitationBaseService {
        * Prevent double RSVP
        */
       if (invitation.rsvpChoice === RsvpChoice.YES || invitation.rsvpChoice === RsvpChoice.NO) {
-        throw new BadRequestException('Already RSVPed');
+        throw new RsvpAlreadyAcceptedException(id);
       }
 
       const now = new Date();
@@ -125,7 +132,7 @@ export class GuestWriteService extends InvitationBaseService {
       if (decision.newChoice === RsvpChoice.YES) {
         for (const p of allowedPlusOnes) {
           if (!p.firstName || !p.lastName) {
-            throw new BadRequestException('PlusOne must have firstName and lastName');
+            throw new InvitationValidationException('Plus-one firstName and lastName are required');
           }
         }
       }
@@ -217,7 +224,8 @@ export class GuestWriteService extends InvitationBaseService {
             email: replyInput.email,
             phoneNumbers: replyInput.phoneNumbers,
             eventId: invitation.eventId,
-            tenantId: 'omnixys',
+            eventEndsAt: replyInput.eventEndsAt,
+            tenantId: currentTenantId(),
             locale: clientInfo.locale,
             actorId: createTmpUsername(
               replyInput.firstName ?? invitation.firstName,
@@ -268,6 +276,23 @@ export class GuestWriteService extends InvitationBaseService {
         );
       }
 
+      if (decision.newChoice === RsvpChoice.YES && invitation.autoApproveOnAccept) {
+        const eventName = invitation.eventName;
+        const eventEndsAt = invitation.eventEndsAt;
+        const approvingActor = invitation.invitedByUserId;
+        if (!eventName || !eventEndsAt || !approvingActor) {
+          throw new InvitationValidationException('Automatic approval configuration is incomplete');
+        }
+        const approved = await this.adminWrite.approve({
+          id,
+          approve: true,
+          actorId: approvingActor,
+          eventName,
+          eventEndsAt,
+        });
+        return { ...approved, plusOnesTruncated: truncated };
+      }
+
       return {
         ...InvitationMapper.toPayload(result),
         plusOnesTruncated: truncated,
@@ -278,11 +303,17 @@ export class GuestWriteService extends InvitationBaseService {
   /**
    * Creates a plus-one invitation.
    */
-  async createPlusOne(
-    input: CreatePlusOneInput,
-    actorId: string,
-    clientInfo: ClientContext,
-  ): Promise<InvitationPayload> {
+  async createPlusOne({
+    input,
+    actorId,
+    clientInfo,
+    eventEndsAt,
+  }: {
+    input: CreatePlusOneInput;
+    actorId: string;
+    clientInfo: ClientContext;
+    eventEndsAt: Date;
+  }): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] createPlusOne', async () => {
       const { eventId, invitedByInvitationId, firstName, lastName, email, phoneNumbers } = input;
 
@@ -294,11 +325,11 @@ export class GuestWriteService extends InvitationBaseService {
       );
 
       if (!eventId || !invitedByInvitationId) {
-        throw new BadRequestException('Missing required fields');
+        throw new InvitationValidationException('Required invitation fields are missing');
       }
 
       if (!firstName || !lastName) {
-        throw new BadRequestException('PlusOne must have firstName and lastName');
+        throw new InvitationValidationException('Plus-one firstName and lastName are required');
       }
 
       /**
@@ -307,7 +338,7 @@ export class GuestWriteService extends InvitationBaseService {
       if (phoneNumbers?.length) {
         for (const ph of phoneNumbers) {
           if (!ph.number || !ph.countryCode || !ph.type) {
-            throw new BadRequestException('Invalid phone number');
+            throw new InvitationValidationException('Phone number is invalid');
           }
         }
       }
@@ -320,11 +351,14 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (!parent) {
-          throw new NotFoundException('Parent invitation not found');
+          throw new InvitationNotFoundException(invitedByInvitationId);
         }
 
         if (parent.eventId !== eventId) {
-          throw new BadRequestException('Event mismatch');
+          throw new InvitationValidationException('Invitation event does not match', {
+            eventId,
+            parentEventId: parent.eventId,
+          });
         }
 
         const updated = await tx.invitation.updateMany({
@@ -337,7 +371,9 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (updated.count !== 1) {
-          throw new BadRequestException('No Plus-Ones remaining');
+          throw new InvitationValidationException('No plus-one capacity remains', {
+            invitationId: invitedByInvitationId,
+          });
         }
 
         const child = await tx.invitation.create({
@@ -377,7 +413,8 @@ export class GuestWriteService extends InvitationBaseService {
           email: email ?? undefined,
           phoneNumbers,
           eventId,
-          tenantId: 'omnixys',
+          eventEndsAt,
+          tenantId: currentTenantId(),
           locale: clientInfo.locale,
           actorId,
         };
@@ -402,6 +439,8 @@ export class GuestWriteService extends InvitationBaseService {
         invitedByInvitationId,
       );
 
+      await this.publishInvitationCreated(result);
+
       return result;
     });
   }
@@ -422,17 +461,17 @@ export class GuestWriteService extends InvitationBaseService {
       this.logger.debug('updatePlusOne: invitationId=%s | actorId=%s', id, userId);
 
       if (!id) {
-        throw new BadRequestException('Missing plus-one id');
+        throw new InvitationValidationException('Plus-one invitation ID is required');
       }
 
       if (!firstName || !lastName) {
-        throw new BadRequestException('PlusOne must have firstName and lastName');
+        throw new InvitationValidationException('Plus-one firstName and lastName are required');
       }
 
       if (phoneNumbers?.length) {
         for (const phoneNumber of phoneNumbers) {
           if (!phoneNumber.number || !phoneNumber.countryCode || !phoneNumber.type) {
-            throw new BadRequestException('Invalid phone number');
+            throw new InvitationValidationException('Phone number is invalid');
           }
         }
       }
@@ -450,14 +489,17 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (!existing) {
-          throw new NotFoundException('Invitation not found');
+          throw new InvitationNotFoundException(id);
         }
 
         this.ensureIsPlusOne(existing);
 
         const parentInvitationId = existing.invitedByInvitationId;
         if (!parentInvitationId) {
-          throw new BadRequestException('Plus-one parent invitation not found');
+          throw new InvitationValidationException(
+            'Plus-one parent invitation reference is missing',
+            { invitationId: id },
+          );
         }
 
         await this.ensureUserCanManageParentInvitation(tx, parentInvitationId, userId);
@@ -514,14 +556,17 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (!child) {
-          throw new NotFoundException('Invitation not found');
+          throw new InvitationNotFoundException(id);
         }
 
         this.ensureIsPlusOne(child);
 
         const parentInvitationId = child.invitedByInvitationId;
         if (!parentInvitationId) {
-          throw new BadRequestException('Plus-one parent invitation not found');
+          throw new InvitationValidationException(
+            'Plus-one parent invitation reference is missing',
+            { invitationId: id },
+          );
         }
 
         const guestId = child.guestProfileId;
@@ -557,7 +602,7 @@ export class GuestWriteService extends InvitationBaseService {
               version: '1',
               type: 'EVENT',
               actorId,
-              tenantId: 'omnixys',
+              tenantId: currentTenantId(),
             },
           });
 
@@ -692,7 +737,8 @@ export class GuestWriteService extends InvitationBaseService {
         email: input.email,
         phoneNumbers: input.phoneNumbers,
         eventId: input.eventId,
-        tenantId: 'omnixys',
+        eventEndsAt: input.eventEndsAt,
+        tenantId: currentTenantId(),
         locale: clientInfo.locale,
         actorId: createTmpUsername(input.firstName, input.lastName),
 
@@ -728,6 +774,8 @@ export class GuestWriteService extends InvitationBaseService {
         input.eventId,
       );
 
+      await this.publishInvitationCreated(InvitationMapper.toPayload(updated));
+
       return InvitationMapper.toPayload(updated);
     });
   }
@@ -743,7 +791,7 @@ export class GuestWriteService extends InvitationBaseService {
         });
 
         if (!parent) {
-          throw new NotFoundException('Invitation not found');
+          throw new InvitationNotFoundException(parentId);
         }
 
         const children = await tx.invitation.findMany({
@@ -794,7 +842,7 @@ export class GuestWriteService extends InvitationBaseService {
               version: '1',
               type: 'EVENT',
               actorId,
-              tenantId: 'omnixys',
+              tenantId: currentTenantId(),
             },
           });
 
@@ -826,8 +874,34 @@ export class GuestWriteService extends InvitationBaseService {
 
   private ensureIsPlusOne(child: Invitation): void {
     if (!child.invitedByInvitationId) {
-      throw new BadRequestException('Not a plus-one');
+      throw new InvitationValidationException('Invitation is not a plus-one', {
+        invitationId: child.id,
+      });
     }
+  }
+
+  private async publishInvitationCreated(invitation: InvitationPayload): Promise<void> {
+    const context = ContextAccessor.get();
+    const payload: EventMilestoneRecordedDTO = {
+      eventId: invitation.eventId,
+      milestoneId: `${invitation.id}:created`,
+      type: 'INVITATION_CREATED',
+      label: 'Invitation created',
+      occurredAt: invitation.createdAt.toISOString(),
+      referenceId: invitation.id,
+    };
+    await this.producer.send({
+      topic: KafkaTopics.event.milestoneRecorded,
+      payload,
+      meta: {
+        service: 'invitation-service',
+        operation: 'Record Event Milestone',
+        version: '1',
+        type: 'EVENT',
+        actorId: context?.principal?.actorId ?? '',
+        tenantId: currentTenantId(),
+      },
+    });
   }
 
   /**
@@ -843,7 +917,7 @@ export class GuestWriteService extends InvitationBaseService {
     userId?: string,
   ): Promise<void> {
     if (!userId) {
-      throw new ForbiddenException('Missing authenticated user');
+      throw new InvitationAccessDeniedException(parentInvitationId, 'authentication-required');
     }
 
     const parent = await tx.invitation.findUnique({
@@ -858,14 +932,17 @@ export class GuestWriteService extends InvitationBaseService {
     });
 
     if (!parent) {
-      throw new NotFoundException('Parent invitation not found');
+      throw new InvitationNotFoundException(parentInvitationId);
     }
 
     const isOwner = parent.guestProfileId === userId;
     const isCreator = parent.invitedByUserId === userId;
 
     if (!isOwner && !isCreator) {
-      throw new ForbiddenException('You are not allowed to manage this plus-one');
+      throw new InvitationAccessDeniedException(
+        parentInvitationId,
+        'plus-one-management-forbidden',
+      );
     }
   }
 }

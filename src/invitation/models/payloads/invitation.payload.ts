@@ -35,6 +35,15 @@ export class InvitationPayload {
   @Field(() => ID)
   eventId!: string;
 
+  @Field({ nullable: true })
+  eventName?: string;
+
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  eventEndsAt?: Date;
+
+  @Field(() => Boolean)
+  autoApproveOnAccept!: boolean;
+
   @Field(() => ID, {
     nullable: true,
   })

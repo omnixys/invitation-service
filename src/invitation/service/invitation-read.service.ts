@@ -1,8 +1,9 @@
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 
@@ -58,12 +59,12 @@ export class InvitationReadService extends InvitationBaseService {
 
     if (!found) {
       this.logger.error('Invitation not found: %s', id);
-      throw new NotFoundException('Invitation not found');
+      throw new InvitationNotFoundException(id);
     }
 
     this.logger.debug('Invitation found: InvitationId=%s', id);
 
-    return found as InvitationPayload;
+    return InvitationMapper.toPayload(found);
   }
 
   /**

@@ -1,4 +1,4 @@
-import { InputType, Field, ID } from '@nestjs/graphql';
+import { InputType, Field, ID, GraphQLISODateTime } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
 
 @InputType()
@@ -7,6 +7,9 @@ export class PublicRsvpInput {
     description: 'Public event identifier (eventId or slug)',
   })
   eventId!: string;
+
+  @Field(() => GraphQLISODateTime)
+  eventEndsAt!: Date;
 
   @Field(() => String)
   firstName!: string;

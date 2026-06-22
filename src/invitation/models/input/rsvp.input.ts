@@ -1,6 +1,6 @@
 import { RsvpChoice } from '../../../prisma/generated/client.js';
 import { PublicPlusOneInput } from './public-rsvp.input.js';
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, GraphQLISODateTime, ID, InputType } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
 import { IsEmail, IsOptional, IsString } from 'class-validator';
 
@@ -48,6 +48,9 @@ export class AcceptRSVPInput {
     description: 'Optional list of additional guests (plus-ones)',
   })
   plusOnes?: PublicPlusOneInput[];
+
+  @Field(() => GraphQLISODateTime)
+  eventEndsAt!: Date;
 }
 
 @InputType({

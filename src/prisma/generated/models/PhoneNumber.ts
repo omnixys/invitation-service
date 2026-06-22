@@ -451,10 +451,6 @@ export type EnumPhoneNumberTypeFieldUpdateOperationsInput = {
   set?: $Enums.PhoneNumberType
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type PhoneNumberCreateWithoutInvitationInput = {
   id?: string
   number: string

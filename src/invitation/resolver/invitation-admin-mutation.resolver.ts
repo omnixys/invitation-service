@@ -1,3 +1,7 @@
+import {
+  InvitationAuthenticationRequiredException,
+  InvitationValidationException,
+} from '../errors/invitation-domain.error.js';
 import { ApproveInvitationInput } from '../models/input/approve.input.js';
 import { BulkApproveInvitationInput } from '../models/input/bulk-approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
@@ -8,8 +12,14 @@ import {
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
-import { UnauthorizedException, UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import {
+  Args,
+  GraphQLISODateTime,
+  ID,
+  Mutation,
+  Resolver,
+} from '@nestjs/graphql';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import {
@@ -43,7 +53,7 @@ export class AdminMutationResolver {
     if (!user?.id) {
       // Kein authentifizierter Nutzer im Kontext
       this.logger.warn('Unauthorized create invitation attempt');
-      throw new UnauthorizedException('Not authenticated');
+      throw new InvitationAuthenticationRequiredException();
     }
 
     return this.adminService.create(input, user?.id);
@@ -64,18 +74,20 @@ export class AdminMutationResolver {
        */
       if (!user?.id) {
         this.logger.warn('Unauthorized import attempt');
-        throw new UnauthorizedException('Not authenticated');
+        throw new InvitationAuthenticationRequiredException();
       }
 
       /**
        * VALIDATION
        */
       if (!input.eventId) {
-        throw new Error('eventId is required');
+        throw new InvitationValidationException('Event ID is required');
       }
 
       if (!input.key || !input.uploadType) {
-        throw new Error('key and uploadType are required');
+        throw new InvitationValidationException(
+          'Storage key and upload type are required',
+        );
       }
 
       this.logger.debug('Import invitations requested', {
@@ -119,7 +131,7 @@ export class AdminMutationResolver {
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[RESOLVER] approveInvitation', async () => {
       if (!user?.id) {
-        throw new UnauthorizedException('Not authenticated');
+        throw new InvitationAuthenticationRequiredException();
       }
 
       const result = await this.adminService.approve({
@@ -132,11 +144,6 @@ export class AdminMutationResolver {
         seatId: input.seatId,
       });
 
-      if (!result) {
-        throw new Error('Gast hat sich noch nicht entschieden!', {
-          cause: 456,
-        });
-      }
       return result;
     });
   }
@@ -162,15 +169,20 @@ export class AdminMutationResolver {
   async bulkApproveInvitations(
     @Args('input', { type: () => BulkApproveInvitationInput })
     input: BulkApproveInvitationInput,
+
+    @Args('eventEndsAt', { type: () => GraphQLISODateTime })
+    eventEndsAt: Date,
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload[]> {
     return TraceRunner.run('[RESOLVER] bulkApproveInvitations', async () => {
       if (!user?.id) {
-        throw new UnauthorizedException('Not authenticated');
+        throw new InvitationAuthenticationRequiredException();
       }
 
       if (!input.invitationIds?.length) {
-        throw new Error('invitationIds must not be empty');
+        throw new InvitationValidationException(
+          'Invitation IDs must not be empty',
+        );
       }
 
       this.logger.debug('Bulk approve requested', {
@@ -182,6 +194,7 @@ export class AdminMutationResolver {
         invitationIds: input.invitationIds,
         approved: input.approved,
         actorId: user.id,
+        eventEndsAt,
       });
     });
   }

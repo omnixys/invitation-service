@@ -1,13 +1,11 @@
-// TODO resolve eslint
-
 import type { Invitation } from '../../prisma/generated/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
+import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
 import type { OmnixysLogger, ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import { InvitationNotFoundException } from '@omnixys/shared';
 
 /**
- * @file Gemeinsame Basisklasse für Inventory-Read/Write-Services:
+ * Shared base class for invitation read/write services.
  *  - OTel-Span-Helfer
  *  - Hilfsfunktionen (z. B. Rollen auflösen)
  *

@@ -1,6 +1,5 @@
 import { Optional } from '@nestjs/common';
-import { Field, ID, InputType, GraphQLISODateTime, } from '@nestjs/graphql';
-
+import { Field, ID, InputType, GraphQLISODateTime } from '@nestjs/graphql';
 
 @InputType({
   description:
@@ -24,8 +23,8 @@ export class ApproveInvitationInput {
   })
   eventName!: string;
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  eventEndsAt?: Date
+  @Field(() => GraphQLISODateTime)
+  eventEndsAt!: Date;
 
   @Field(() => String, {
     description: 'Eventname of the invitation.',

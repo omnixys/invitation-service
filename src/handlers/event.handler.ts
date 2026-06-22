@@ -17,6 +17,7 @@
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
 import { Injectable } from '@nestjs/common';
+import { EventIdsDTO } from '@omnixys/contracts';
 import {
   KafkaEvent,
   KafkaEventHandler,
@@ -26,7 +27,6 @@ import {
 } from '@omnixys/kafka';
 import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import { EventIdsDTO } from '@omnixys/shared';
 
 /**
  * Kafka event handler responsible for useristrative commands such as
@@ -65,36 +65,39 @@ export class EventHandler {
       payload.eventIds,
     );
 
-    return TraceRunner.run('[HANDLER] create Seats', async () => {
-      const headers = context.headers;
-      const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
-
-      this.logger.debug(
-        'Kafka processing started: topic=%s | eventIds=%o | actorId=%s',
-        KafkaTopics.invitation.deleteEventInvitations,
-        payload.eventIds,
-        actorId,
-      );
-
-      try {
-        await this.invitationWriteService.deleteByEventIds(payload.eventIds);
+    return TraceRunner.run(
+      '[HANDLER] deleteInvitationsByEventIds',
+      async () => {
+        const headers = context.headers;
+        const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'unknown';
 
         this.logger.debug(
-          'Kafka processing completed: topic=%s | eventIds=%o | actorId=%s',
+          'Kafka processing started: topic=%s | eventIds=%o | actorId=%s',
           KafkaTopics.invitation.deleteEventInvitations,
           payload.eventIds,
           actorId,
         );
-      } catch (error) {
-        this.logger.error(
-          'Kafka processing failed: topic=%s | eventIds=%o | actorId=%s | error=%o',
-          KafkaTopics.invitation.deleteEventInvitations,
-          payload.eventIds,
-          actorId,
-          error,
-        );
-        throw error;
-      }
-    });
+
+        try {
+          await this.invitationWriteService.deleteByEventIds(payload.eventIds);
+
+          this.logger.debug(
+            'Kafka processing completed: topic=%s | eventIds=%o | actorId=%s',
+            KafkaTopics.invitation.deleteEventInvitations,
+            payload.eventIds,
+            actorId,
+          );
+        } catch (error) {
+          this.logger.error(
+            'Kafka processing failed: topic=%s | eventIds=%o | actorId=%s | error=%o',
+            KafkaTopics.invitation.deleteEventInvitations,
+            payload.eventIds,
+            actorId,
+            error,
+          );
+          throw error;
+        }
+      },
+    );
   }
 }

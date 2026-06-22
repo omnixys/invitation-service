@@ -2,6 +2,15 @@ import { InvitationStatus, InvitationType, RsvpChoice } from '../../prisma/gener
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { applyMapping } from '../../utils/apply-mapping.js';
 import { mapColumns } from '../../utils/column-mapper.js';
+import {
+  InvitationAlreadyApprovedException,
+  InvitationAlreadyRejectedException,
+  MissingGuestNameException,
+  MissingPendingContactException,
+  RsvpNotAcceptedException,
+  RsvpNotSubmittedException,
+  InvitationValidationException,
+} from '../errors/invitation-domain.error.js';
 import { ApproveInvitationDTO } from '../models/dto/approve.dto.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { ImportInvitationsResult } from '../models/input/import-invitation.input.js';
@@ -9,23 +18,22 @@ import { InvitationUpdateInput } from '../models/input/update-invitation.input.j
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ValkeyService, ValkeyKey } from '@omnixys/cache';
+import { ContextAccessor } from '@omnixys/context';
+import type { EventMilestoneRecordedDTO } from '@omnixys/contracts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
 import { TraceRunner } from '@omnixys/observability';
-import {
-  RsvpNotSubmittedException,
-  RsvpNotAcceptedException,
-  MissingGuestNameException,
-  InvitationAlreadyApprovedException,
-  InvitationAlreadyRejectedException,
-  MissingPendingContactException,
-  getPrimaryPhoneNumber,
-} from '@omnixys/shared';
+import { getPrimaryPhoneNumber } from '@omnixys/shared';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
+
+function currentTenantId(): string {
+  const context = ContextAccessor.get();
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? 'omnixys';
+}
 
 @Injectable()
 export class AdminWriteService extends InvitationBaseService {
@@ -48,10 +56,15 @@ export class AdminWriteService extends InvitationBaseService {
     this.logger.debug('create: eventId=%s | actorId=%s', input.eventId, eventAdminId);
 
     if (!input.eventId) {
-      throw new BadRequestException('eventId is required');
+      throw new InvitationValidationException('Event ID is required');
     }
     if (input.maxInvitees !== undefined && input.maxInvitees < 0) {
-      throw new BadRequestException('maxInvitees must be >= 0');
+      throw new InvitationValidationException('maxInvitees must be non-negative');
+    }
+    if (input.autoApproveOnAccept && (!input.eventName || !input.eventEndsAt || !eventAdminId)) {
+      throw new InvitationValidationException(
+        'Automatic approval requires eventName, eventEndsAt, and an event admin',
+      );
     }
 
     this.logger.debug('Creating invitation: eventId=%s | actorId=%s', input.eventId, eventAdminId);
@@ -60,6 +73,9 @@ export class AdminWriteService extends InvitationBaseService {
       data: {
         type: InvitationType.PRIVATE,
         eventId: input.eventId,
+        eventName: input.eventName,
+        eventEndsAt: input.eventEndsAt,
+        autoApproveOnAccept: input.autoApproveOnAccept ?? false,
         firstName: input.firstName ?? null,
         lastName: input.lastName ?? null,
         invitedByInvitationId: input.invitedByInvitationId ?? null,
@@ -91,6 +107,18 @@ export class AdminWriteService extends InvitationBaseService {
       created.eventId,
     );
 
+    await this.publishMilestone(
+      {
+        eventId: created.eventId,
+        milestoneId: `${created.id}:created`,
+        type: 'INVITATION_CREATED',
+        label: 'Invitation created',
+        occurredAt: created.createdAt.toISOString(),
+        referenceId: created.id,
+      },
+      eventAdminId,
+    );
+
     return InvitationMapper.toPayload(created);
   }
 
@@ -114,22 +142,22 @@ export class AdminWriteService extends InvitationBaseService {
 
       if (!invitation.rsvpChoice && approve) {
         this.logger.error('Guest has not submitted an RSVP yet: invitationId=%s', id);
-        throw new RsvpNotSubmittedException();
+        throw new RsvpNotSubmittedException(id);
       }
 
       if (invitation.rsvpChoice !== RsvpChoice.YES && approve) {
         this.logger.error('Guest has not accepted the RSVP: invitationId=%s', id);
-        throw new RsvpNotAcceptedException();
+        throw new RsvpNotAcceptedException(id);
       }
 
       if (approve && invitation.status === InvitationStatus.APPROVED) {
         this.logger.error('Invitation already approved: invitationId=%s', id);
-        throw new InvitationAlreadyApprovedException();
+        throw new InvitationAlreadyApprovedException(id);
       }
 
       if (!approve && invitation.status === InvitationStatus.REJECTED) {
         this.logger.error('Invitation already rejected: invitationId=%s', id);
-        throw new InvitationAlreadyRejectedException();
+        throw new InvitationAlreadyRejectedException(id);
       }
 
       // Fire Kafka event only if newly approved
@@ -148,6 +176,18 @@ export class AdminWriteService extends InvitationBaseService {
 
         this.logger.debug('Invitation approved: invitationId=%s | actorId=%s', id, actorId);
 
+        await this.publishMilestone(
+          {
+            eventId: updated.eventId,
+            milestoneId: `${updated.id}:approved`,
+            type: 'INVITATION_APPROVED',
+            label: 'Invitation approved',
+            occurredAt: updated.approvedAt?.toISOString() ?? new Date().toISOString(),
+            referenceId: updated.id,
+          },
+          actorId,
+        );
+
         if (!updated.guestProfileId) {
           const missing: string[] = [];
 
@@ -160,12 +200,12 @@ export class AdminWriteService extends InvitationBaseService {
 
           if (missing.length) {
             this.logger.error('Guest name is incomplete: invitationId=%s', id);
-            throw new MissingGuestNameException(missing);
+            throw new MissingGuestNameException(missing, id);
           }
 
           if (!updated.pendingContactId) {
             this.logger.error('Pending contact not found: invitationId=%s', id);
-            throw new MissingPendingContactException();
+            throw new MissingPendingContactException(id);
           }
 
           this.logger.debug(
@@ -190,7 +230,7 @@ export class AdminWriteService extends InvitationBaseService {
               version: '1',
               type: 'EVENT',
               actorId,
-              tenantId: 'omnixys',
+              tenantId: currentTenantId(),
             },
           });
 
@@ -231,6 +271,25 @@ export class AdminWriteService extends InvitationBaseService {
     });
   }
 
+  private async publishMilestone(
+    payload: EventMilestoneRecordedDTO,
+    actorId?: string,
+  ): Promise<void> {
+    const context = ContextAccessor.get();
+    await this.producer.send({
+      topic: KafkaTopics.event.milestoneRecorded,
+      payload,
+      meta: {
+        service: 'invitation-service',
+        operation: 'Record Event Milestone',
+        version: '1',
+        type: 'EVENT',
+        actorId: actorId ?? context?.principal?.actorId ?? '',
+        tenantId: currentTenantId(),
+      },
+    });
+  }
+
   /**
    * Updates RSVP, maxInvitees or approval.
    * This is a catch-all mutation for both guests and admins.
@@ -258,7 +317,7 @@ export class AdminWriteService extends InvitationBaseService {
     // Admin maxInvitees update --------------------------------
     if (typeof input.maxInvitees === 'number') {
       if (input.maxInvitees < 0) {
-        throw new BadRequestException('maxInvitees must be >= 0');
+        throw new InvitationValidationException('maxInvitees must be non-negative');
       }
       data.maxInvitees = input.maxInvitees;
     }
@@ -313,9 +372,10 @@ export class AdminWriteService extends InvitationBaseService {
     }>;
     approved: boolean;
     actorId: string;
+    eventEndsAt: Date;
   }): Promise<InvitationPayload[]> {
     return TraceRunner.run('[SERVICE] bulkApprove', async () => {
-      const { invitationIds, approved, actorId } = params;
+      const { invitationIds, approved, actorId, eventEndsAt } = params;
 
       this.logger.debug('Bulk approve start', {
         actorId,
@@ -341,6 +401,7 @@ export class AdminWriteService extends InvitationBaseService {
             approve: approved,
             actorId,
             eventName,
+            eventEndsAt,
             seat: seat ?? 'debug',
             seatId,
           });
@@ -424,7 +485,7 @@ export class AdminWriteService extends InvitationBaseService {
 
         const sheet = workbook.worksheets[0];
         if (!sheet) {
-          throw new Error('Excel file has no sheets');
+          throw new InvitationValidationException('Excel file has no sheets');
         }
 
         sheet.getRow(1).eachCell((cell) => {

@@ -24,6 +24,7 @@ import { InvitationModule } from './invitation/invitation.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { Module } from '@nestjs/common';
 import { ValkeyModule } from '@omnixys/cache';
+import { ContextModule } from '@omnixys/context';
 import { OmnixysGraphQLModule } from '@omnixys/graphql';
 import { KafkaModule } from '@omnixys/kafka';
 import { LoggerModule } from '@omnixys/logger';
@@ -47,19 +48,21 @@ const {
   STORAGE_ACCESS_KEY_ID,
   STORAGE_SECRET_ACCESS_KEY,
   STORAGE_BUCKET,
-  STORAGE_PUBLIC_URL,
+  // STORAGE_PUBLIC_URL,
   STORAGE_FORCE_PATH_STYLE,
 } = env;
 
 @Module({
   imports: [
+    ContextModule.forRoot(),
+
     StorageModule.forRoot({
       region: STORAGE_REGION,
       endpoint: STORAGE_ENDPOINT,
       accessKeyId: STORAGE_ACCESS_KEY_ID,
       secretAccessKey: STORAGE_SECRET_ACCESS_KEY,
       bucket: STORAGE_BUCKET,
-      publicUrl: STORAGE_PUBLIC_URL,
+      // publicUrl: STORAGE_PUBLIC_URL,
       forcePathStyle: STORAGE_FORCE_PATH_STYLE,
       linkTTL: 60,
     }),
@@ -102,7 +105,7 @@ const {
       rateLimit: {
         enabled: true,
         defaultLimit: 100,
-        defaultWindowMs: 600,
+        defaultWindowMs: 60_000,
         imports: [ValkeyAdapterModule],
       },
     }),
@@ -124,6 +127,7 @@ const {
 
     LoggerModule.forRoot({
       serviceName: SERVICE,
+      registerGlobalInterceptor: true,
 
       kafka: {
         enabled: true,

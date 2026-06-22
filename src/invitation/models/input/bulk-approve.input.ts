@@ -34,8 +34,8 @@ export class ApproveInvitationDataInput {
   })
   eventName!: string;
 
-  @Field(() => GraphQLISODateTime, {nullable: true})
-  eventEndAt?: Date
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  eventEndAt?: Date;
 
   @Field(() => String, {
     description: 'Eventname of the invitation.',

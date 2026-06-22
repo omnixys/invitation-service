@@ -5,7 +5,10 @@ import {
   InvitationStatus,
   RsvpChoice,
 } from '../../../prisma/generated/client.js';
-import { RsvpAlreadyAcceptedException } from '@omnixys/shared';
+import {
+  InvitationValidationException,
+  RsvpAlreadyAcceptedException,
+} from '../../errors/invitation-domain.error.js';
 
 export interface RSVPDecision {
   newChoice: RsvpChoice;
@@ -26,7 +29,9 @@ export class RsvpDomain {
       if (newChoice === RsvpChoice.YES) {
         throw new RsvpAlreadyAcceptedException();
       } else if (newChoice === RsvpChoice.NO) {
-        throw new Error('Already declined');
+        throw new InvitationValidationException(
+          'Invitation was already declined',
+        );
       }
     }
 

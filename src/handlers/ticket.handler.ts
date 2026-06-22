@@ -18,6 +18,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
+import { AddGuestIdToInvitationDTO } from '@omnixys/contracts';
 import {
   IKafkaEventContext,
   KafkaEvent,
@@ -26,7 +27,6 @@ import {
 } from '@omnixys/kafka';
 import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 
 /**
  * Kafka event handler responsible for useristrative commands such as
@@ -74,26 +74,24 @@ export class TicketHandler {
         payload.userId,
       );
 
-      void this.invitationWriteService.addGuestId(payload).then(
-        () => {
-          this.logger.debug(
-            'Kafka processing completed: topic=%s | invitationId=%s | guestId=%s',
-            KafkaTopics.invitation.addGuestId,
-            payload.invitationId,
-            payload.userId,
-          );
-        },
-        (error: unknown) => {
-          this.logger.error(
-            'Kafka processing failed: topic=%s | invitationId=%s | guestId=%s | error=%o',
-            KafkaTopics.invitation.addGuestId,
-            payload.invitationId,
-            payload.userId,
-            error,
-          );
-          throw error;
-        },
-      );
+      try {
+        await this.invitationWriteService.addGuestId(payload);
+        this.logger.debug(
+          'Kafka processing completed: topic=%s | invitationId=%s | guestId=%s',
+          KafkaTopics.invitation.addGuestId,
+          payload.invitationId,
+          payload.userId,
+        );
+      } catch (error: unknown) {
+        this.logger.error(
+          'Kafka processing failed: topic=%s | invitationId=%s | guestId=%s | error=%o',
+          KafkaTopics.invitation.addGuestId,
+          payload.invitationId,
+          payload.userId,
+          error,
+        );
+        throw error;
+      }
     });
   }
 }

@@ -17,6 +17,7 @@
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
 import { Injectable } from '@nestjs/common';
+import { UserIdDTO } from '@omnixys/contracts';
 import {
   IKafkaEventContext,
   KAFKA_HEADERS,
@@ -26,7 +27,6 @@ import {
 } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import { UserIdDTO } from '@omnixys/shared';
 
 /**
  * Central Kafka Authentication Handler.
@@ -69,7 +69,7 @@ export class AuthenticationHandler {
 
     return TraceRunner.run('[HANDLER] Delete Invitation', async () => {
       const headers = context.headers;
-      const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'Unkown';
+      const actorId = headers[KAFKA_HEADERS.ACTOR_ID] ?? 'unknown';
 
       this.logger.debug(
         'Kafka processing started: topic=%s | guestId=%s | actorId=%s',

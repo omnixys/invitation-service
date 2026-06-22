@@ -8,8 +8,14 @@ import {
   GuestWriteService,
 } from '../service/guest-write.service.js';
 import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
-import { ClientInfo } from '@omnixys/context';
+import {
+  Args,
+  GraphQLISODateTime,
+  ID,
+  Mutation,
+  Resolver,
+} from '@nestjs/graphql';
+import { ClientInfo, type ClientContext } from '@omnixys/context';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import {
@@ -17,7 +23,6 @@ import {
   CurrentUser,
   CurrentUserData,
 } from '@omnixys/security';
-import type { ClientContext } from '@omnixys/shared';
 
 @Resolver(() => InvitationPayload)
 export class GuestMutationResolver {
@@ -34,11 +39,18 @@ export class GuestMutationResolver {
   async createPlusOnesInvitation(
     @Args('input')
     input: CreatePlusOneInput,
+    @Args('eventEndsAt', { type: () => GraphQLISODateTime })
+    eventEndsAt: Date,
     @CurrentUser() user: CurrentUserData,
     @ClientInfo() clientInfo: ClientContext,
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[RESOLVER] createPlusOnesInvitation', async () =>
-      this.guestService.createPlusOne(input, user.id, clientInfo),
+      this.guestService.createPlusOne({
+        input,
+        actorId: user.id,
+        clientInfo,
+        eventEndsAt,
+      }),
     );
   }
 

@@ -1,19 +1,16 @@
 // path: src/invitation/controller/invitation-upload.controller.ts
 
-import {
-  BadRequestException,
-  Controller,
-  Post,
-  Req,
-  UseGuards,
-  Inject,
-  Body,
-} from '@nestjs/common';
+import { Body, Controller, Inject, Post, Req, UseGuards } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { FastifyRequest } from 'fastify';
 
 import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
 
+import {
+  InvitationHttpAuthenticationException,
+  InvitationHttpException,
+  InvitationHttpValidationException,
+} from '../errors/invitation-http.error.js';
 import {
   InvitationPreviewService,
   type InvitationPreviewResult,
@@ -82,27 +79,32 @@ export class InvitationUploadController {
   ): Promise<UploadResult> {
     return TraceRunner.run('[CONTROLLER] upload', async () => {
       if (!user?.id) {
-        throw new BadRequestException('Not authenticated');
+        throw new InvitationHttpAuthenticationException();
       }
 
       if (!req.isMultipart()) {
-        throw new BadRequestException('Expected multipart/form-data');
+        throw new InvitationHttpValidationException('Expected multipart/form-data');
       }
 
       const part = await req.file();
 
       if (!part) {
-        throw new BadRequestException('No file uploaded');
+        throw new InvitationHttpValidationException('No file uploaded');
       }
 
       if (!ALLOWED_MIME.has(part.mimetype)) {
-        throw new BadRequestException('Only CSV or Excel allowed');
+        throw new InvitationHttpValidationException('Only CSV or Excel is allowed', {
+          mimetype: part.mimetype,
+        });
       }
 
       const buffer = await part.toBuffer();
 
       if (buffer.length > MAX_FILE_SIZE) {
-        throw new BadRequestException('File too large');
+        throw new InvitationHttpValidationException('File is too large', {
+          maximumBytes: MAX_FILE_SIZE,
+          actualBytes: buffer.length,
+        });
       }
 
       const ext = part.filename.split('.').pop()?.toLowerCase();
@@ -143,14 +145,16 @@ export class InvitationUploadController {
   ): Promise<InvitationPreviewResult> {
     return TraceRunner.run('[CONTROLLER] preview', async () => {
       if (!user?.id) {
-        throw new BadRequestException('Not authenticated');
+        throw new InvitationHttpAuthenticationException();
       }
 
       /**
        * 🔒 Input validation (defensive)
        */
       if (!dto.key || !dto.type || !dto.eventId) {
-        throw new BadRequestException('Missing required fields');
+        throw new InvitationHttpValidationException(
+          'Storage key, file type, and event ID are required',
+        );
       }
 
       this.logger.debug('Preview requested %o', {
@@ -180,7 +184,12 @@ export class InvitationUploadController {
           error,
         });
 
-        throw new BadRequestException('Preview failed');
+        throw new InvitationHttpException(
+          'INVITATION_PREVIEW_FAILED',
+          'Invitation import preview failed',
+          400,
+          { key: dto.key },
+        );
       }
     });
   }

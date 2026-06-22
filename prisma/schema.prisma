@@ -20,10 +20,13 @@ model Invitation {
   firstName String @map("first_name")
   lastName  String @map("last_name")
 
-  eventId        String  @map("event_id") @db.Uuid
-  guestProfileId String? @map("guest_profile_id") @db.Uuid
-  email          String? @map("email")
-  phoneNumber    String? @map("phone_number")
+  eventId             String    @map("event_id") @db.Uuid
+  eventName           String?   @map("event_name")
+  eventEndsAt         DateTime? @map("event_ends_at")
+  autoApproveOnAccept Boolean   @default(false) @map("auto_approve_on_accept")
+  guestProfileId      String?   @map("guest_profile_id") @db.Uuid
+  email               String?   @map("email")
+  phoneNumber         String?   @map("phone_number")
 
   status InvitationStatus @default(PENDING) @map("status")
 

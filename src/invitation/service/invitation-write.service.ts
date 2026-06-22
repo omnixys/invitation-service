@@ -1,13 +1,14 @@
 import { InvitationStatus, InvitationType } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
+import { AddGuestIdToInvitationDTO } from '@omnixys/contracts';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import { AddGuestIdToInvitationDTO } from '@omnixys/shared';
 
 // ✔ Deine lokale Trigger-Konstante (NICHT abhängig von Redis)
 export const TRIGGER = {
@@ -176,7 +177,7 @@ export class InvitationWriteService extends InvitationBaseService {
     });
 
     if (result.count === 0) {
-      this.logger.warn('Invitation not found → guestId not added: invitationId=%s', invitationId);
+      throw new InvitationNotFoundException(invitationId);
     } else {
       this.logger.debug('GuestId added: guestId=%s, invitationId=%s', userId, invitationId);
     }

@@ -17,13 +17,17 @@
 
 import { env } from '../config/env.js';
 import { KafkaIndicator } from './kafka.indicator.js';
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import {
   HealthCheckService,
   HttpHealthIndicator,
   HealthCheck,
   HealthCheckResult,
+  type HealthIndicatorFunction,
+  type HealthIndicatorResult,
 } from '@nestjs/terminus';
+import { ValkeyService } from '@omnixys/cache';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
 
 const { KEYCLOAK_HEALTH_URL, TEMPO_HEALTH_URL, PROMETHEUS_HEALTH_URL } = env;
 @Controller('health')
@@ -31,11 +35,21 @@ export class HealthController {
   readonly #health: HealthCheckService;
   readonly #http: HttpHealthIndicator;
   readonly #kafka: KafkaIndicator;
+  readonly #cache: ValkeyService;
+  readonly #storage: FileStorage;
 
-  constructor(health: HealthCheckService, http: HttpHealthIndicator, kafka: KafkaIndicator) {
+  constructor(
+    health: HealthCheckService,
+    http: HttpHealthIndicator,
+    kafka: KafkaIndicator,
+    cache: ValkeyService,
+    @Inject(FILE_STORAGE) storage: FileStorage,
+  ) {
     this.#health = health;
     this.#http = http;
     this.#kafka = kafka;
+    this.#cache = cache;
+    this.#storage = storage;
   }
 
   @Get('liveness')
@@ -47,12 +61,45 @@ export class HealthController {
   @Get('readiness')
   @HealthCheck()
   readiness(): Promise<HealthCheckResult> {
-    return this.#health.check([
-      () => Promise.resolve({ app: { status: 'up' } }),
+    const checks: HealthIndicatorFunction[] = [
+      () => Promise.resolve({ app: { status: 'up' as const } }),
       () => this.#kafka.isHealthy(),
-      () => this.#http.pingCheck('keycloak', KEYCLOAK_HEALTH_URL),
-      () => this.#http.pingCheck('tempo', TEMPO_HEALTH_URL),
-      () => this.#http.pingCheck('prometheus', PROMETHEUS_HEALTH_URL),
-    ]);
+      () => this.cacheHealth(),
+      () => this.storageHealth(),
+    ];
+    if (KEYCLOAK_HEALTH_URL) {
+      checks.push(() => this.#http.pingCheck('keycloak', KEYCLOAK_HEALTH_URL));
+    }
+    if (TEMPO_HEALTH_URL) {
+      checks.push(() => this.#http.pingCheck('tempo', TEMPO_HEALTH_URL));
+    }
+    if (PROMETHEUS_HEALTH_URL) {
+      checks.push(() => this.#http.pingCheck('prometheus', PROMETHEUS_HEALTH_URL));
+    }
+    return this.#health.check(checks);
+  }
+
+  private async cacheHealth(): Promise<HealthIndicatorResult> {
+    const health = await this.#cache.health();
+    return {
+      cache: {
+        status: health.healthy ? 'up' : 'down',
+        healthy: health.healthy,
+        latencyMs: health.latencyMs,
+        error: health.error,
+      },
+    };
+  }
+
+  private async storageHealth(): Promise<HealthIndicatorResult> {
+    const health = await this.#storage.health();
+    return {
+      storage: {
+        status: health.healthy ? 'up' : 'down',
+        healthy: health.healthy,
+        latencyMs: health.latencyMs,
+        error: health.error,
+      },
+    };
   }
 }

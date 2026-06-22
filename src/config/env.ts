@@ -18,8 +18,6 @@
 import 'dotenv/config';
 import process from 'node:process';
 
-const warned = new Set<string>();
-
 type EnvValue = string | number | boolean;
 
 interface GetEnvOptions<T extends EnvValue = string> {
@@ -45,13 +43,6 @@ function getEnv(
   const raw = process.env[key];
 
   if (!raw) {
-    if (!warned.has(key) && process.env.NODE_ENV !== 'production') {
-      console.warn(
-        `[ENV] Missing "${key}" → using fallback: ${fallback ?? 'undefined'}`,
-      );
-      warned.add(key);
-    }
-
     if (options?.required && process.env.NODE_ENV === 'production') {
       throw new Error(`[ENV] Missing required env: ${key}`);
     }
@@ -117,7 +108,9 @@ export const env = {
     transform: toBool,
   }),
 
-  COOKIE_SECRET: getEnv('COOKIE_SECRET', 'omnixys-default-secret'),
+  COOKIE_SECRET: getEnv('COOKIE_SECRET', 'omnixys-development-secret', {
+    required: true,
+  }),
 
   PC_TTL_SEC: getEnv('PC_TTL_SEC', String(60 * 60 * 24 * 30), {
     transform: toNumber,
@@ -140,13 +133,3 @@ export const env = {
     transform: toBool,
   }),
 } as const;
-
-// /**
-//  * Debug output:
-//  * Print all environment variables in non-production environments.
-//  */
-// if (process.env.NODE_ENV !== 'production') {
-//   console.log('================= ENVIRONMENT VARIABLES =================');
-//   console.log(JSON.stringify(env, null, 2));
-//   console.log('==========================================================');
-// }
