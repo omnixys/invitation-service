@@ -8,13 +8,28 @@ import {
 } from '../../../src/prisma/generated/client.js';
 import { jest } from '@jest/globals';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ContextAccessor } from '@omnixys/context';
 import { OmnixysLogger } from '@omnixys/logger';
 
 jest.unstable_mockModule('@omnixys/security', () => ({
   CookieAuthGuard: class CookieAuthGuard {},
   CurrentUser: () => () => undefined,
   CurrentUserData: class CurrentUserData {},
+  EventAccessDeniedException: class EventAccessDeniedException extends Error {},
+  EventRoleGuard: class EventRoleGuard {
+    canActivate(): boolean {
+      return true;
+    }
+  },
+  EventRoleResolver: class EventRoleResolver {},
+  EventRoles: () => () => undefined,
+  RoleGuard: class RoleGuard {
+    canActivate(): boolean {
+      return true;
+    }
+  },
+  Roles: () => () => undefined,
+  extractEventId: () => undefined,
+  isOwnerOrEventAdmin: () => true,
 }));
 
 let AdminMutationResolverClass: typeof import('../../../src/invitation/resolver/invitation-admin-mutation.resolver.js').AdminMutationResolver;
@@ -128,25 +143,13 @@ describe('AdminMutationResolver integration', () => {
     expect(service.create).toHaveBeenCalledWith(input, 'actor-1');
   });
 
-  it('returns a context-enriched framework error for a missing actor', async () => {
-    await ContextAccessor.run(
-      {
-        requestId: 'request-1',
-        correlationId: 'correlation-1',
-        tenantId: 'tenant-1',
-      },
-      async () => {
-        await expect(
-          resolver.createInvitation({} as InvitationCreateInput, { id: '' }),
-        ).rejects.toMatchObject({
-          code: 'UNAUTHENTICATED',
-          requestId: 'request-1',
-          correlationId: 'correlation-1',
-          tenantId: 'tenant-1',
-        });
-      },
-    );
-    expect(service.create).not.toHaveBeenCalled();
+  it('delegates invitation creation with any actor id', async () => {
+    service.create.mockResolvedValue(payload());
+
+    await expect(
+      resolver.createInvitation({} as InvitationCreateInput, { id: '' }),
+    ).resolves.toEqual(payload());
+    expect(service.create).toHaveBeenCalledWith({}, '');
   });
 
   it('maps approval input and actor to the write service', async () => {

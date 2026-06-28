@@ -18,6 +18,9 @@ export class ApproveInvitationInput {
   })
   approved!: boolean;
 
+  @Field(() => ID)
+  eventId!: string;
+
   @Field(() => String, {
     description: 'Seat to assign when approving the invitation.',
   })

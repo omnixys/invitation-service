@@ -1,6 +1,6 @@
 import type { Invitation } from '../../../prisma/generated/client.js';
 import type { InvitationPayload } from '../payloads/invitation.payload.js';
-import { n2u } from '@omnixys/shared';
+import { n2u } from '@omnixys/contracts';
 
 /**
  * Maps Prisma Invitation → GraphQL Invitation entity.

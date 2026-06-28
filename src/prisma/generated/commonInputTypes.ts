@@ -297,6 +297,23 @@ export type EnumPhoneNumberTypeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumPhoneNumberTypeFilter<$PrismaModel>
 }
 
+export type EnumEventRoleTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.EventRoleType | Prisma.EnumEventRoleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEventRoleTypeFilter<$PrismaModel> | $Enums.EventRoleType
+}
+
+export type EnumEventRoleTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.EventRoleType | Prisma.EnumEventRoleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEventRoleTypeWithAggregatesFilter<$PrismaModel> | $Enums.EventRoleType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumEventRoleTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumEventRoleTypeFilter<$PrismaModel>
+}
+
 export type NestedUuidFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -587,6 +604,23 @@ export type NestedEnumPhoneNumberTypeWithAggregatesFilter<$PrismaModel = never> 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPhoneNumberTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPhoneNumberTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumEventRoleTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.EventRoleType | Prisma.EnumEventRoleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEventRoleTypeFilter<$PrismaModel> | $Enums.EventRoleType
+}
+
+export type NestedEnumEventRoleTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.EventRoleType | Prisma.EnumEventRoleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EventRoleType[] | Prisma.ListEnumEventRoleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEventRoleTypeWithAggregatesFilter<$PrismaModel> | $Enums.EventRoleType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumEventRoleTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumEventRoleTypeFilter<$PrismaModel>
 }
 
 

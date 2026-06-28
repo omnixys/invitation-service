@@ -27,3 +27,8 @@ export type Invitation = Prisma.InvitationModel
  * 
  */
 export type PhoneNumber = Prisma.PhoneNumberModel
+/**
+ * Model EventRoleProjection
+ * 
+ */
+export type EventRoleProjection = Prisma.EventRoleProjectionModel

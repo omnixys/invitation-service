@@ -1,7 +1,7 @@
 import type { PhoneNumber } from '../../../prisma/generated/client.js';
 import type { PhoneNumberType } from '@omnixys/contracts';
+import { n2u } from '@omnixys/contracts';
 import type { PhoneNumberPayload } from '@omnixys/graphql';
-import { n2u } from '@omnixys/shared';
 
 export class PhoneNumberMapper {
   static toPayload(entity: PhoneNumber): PhoneNumberPayload {

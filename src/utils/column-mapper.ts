@@ -8,11 +8,7 @@
  */
 
 export type CanonicalField =
-  | 'firstName'
-  | 'lastName'
-  | 'phone'
-  | 'email'
-  | 'maxPlusOnes';
+  'firstName' | 'lastName' | 'phone' | 'email' | 'maxPlusOnes';
 
 const ALIASES: Record<CanonicalField, string[]> = {
   firstName: ['firstname', 'first name', 'vorname', 'givenname'],

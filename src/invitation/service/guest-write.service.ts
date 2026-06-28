@@ -2,8 +2,8 @@ import {
   Invitation,
   InvitationStatus,
   InvitationType,
-  Prisma,
   PhoneNumber,
+  Prisma,
   PhoneNumberType as PrismaPhoneNumberType,
   RsvpChoice,
 } from '../../prisma/generated/client.js';
@@ -29,15 +29,17 @@ import { Injectable } from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache';
 import { ContextAccessor, type ClientContext } from '@omnixys/context';
 import {
+  createTmpUsername,
+  getPrimaryPhoneNumber,
+  n2u,
+  PhoneNumberType as SharedPhoneNumberType,
   type CreatePendingUserDTO,
   type EventMilestoneRecordedDTO,
   type PhoneNumberDTO,
-  PhoneNumberType as SharedPhoneNumberType,
 } from '@omnixys/contracts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
-import { createTmpUsername, getPrimaryPhoneNumber, n2u } from '@omnixys/shared';
 
 type InvitationWithPhones = Prisma.InvitationGetPayload<{
   include: { phoneNumbers: true };

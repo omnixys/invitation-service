@@ -52,7 +52,8 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Invitation: 'Invitation',
-  PhoneNumber: 'PhoneNumber'
+  PhoneNumber: 'PhoneNumber',
+  EventRoleProjection: 'EventRoleProjection'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -112,6 +113,17 @@ export const PhoneNumberScalarFieldEnum = {
 } as const
 
 export type PhoneNumberScalarFieldEnum = (typeof PhoneNumberScalarFieldEnum)[keyof typeof PhoneNumberScalarFieldEnum]
+
+
+export const EventRoleProjectionScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  userId: 'userId',
+  role: 'role',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EventRoleProjectionScalarFieldEnum = (typeof EventRoleProjectionScalarFieldEnum)[keyof typeof EventRoleProjectionScalarFieldEnum]
 
 
 export const SortOrder = {

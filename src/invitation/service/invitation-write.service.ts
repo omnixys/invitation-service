@@ -148,6 +148,7 @@ export class InvitationWriteService extends InvitationBaseService {
       );
     });
   }
+
   async deleteByEventIds(eventIds: string[]): Promise<void> {
     return TraceRunner.run('[SERVICE] Delete Event Invitation', async () => {
       this.logger.debug('deleteByEventIds: eventIds=%o', eventIds);

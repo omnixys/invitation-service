@@ -1,7 +1,4 @@
-import {
-  InvitationAuthenticationRequiredException,
-  InvitationValidationException,
-} from '../errors/invitation-domain.error.js';
+import { InvitationValidationException } from '../errors/invitation-domain.error.js';
 import { ApproveInvitationInput } from '../models/input/approve.input.js';
 import { BulkApproveInvitationInput } from '../models/input/bulk-approve.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
@@ -20,12 +17,17 @@ import {
   Mutation,
   Resolver,
 } from '@nestjs/graphql';
+import { EventRoleType, RealmRoleType } from '@omnixys/contracts';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import {
   CookieAuthGuard,
   CurrentUser,
   CurrentUserData,
+  EventRoleGuard,
+  EventRoles,
+  RoleGuard,
+  Roles,
 } from '@omnixys/security';
 
 export enum UploadType {
@@ -43,23 +45,21 @@ export class AdminMutationResolver {
     this.logger = this.loggerService.log(this.constructor.name);
   }
 
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @Roles(RealmRoleType.USER)
+  @EventRoles(EventRoleType.ADMIN)
   @Mutation(() => InvitationPayload)
   async createInvitation(
     @Args('input')
     input: InvitationCreateInput,
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload> {
-    if (!user?.id) {
-      // Kein authentifizierter Nutzer im Kontext
-      this.logger.warn('Unauthorized create invitation attempt');
-      throw new InvitationAuthenticationRequiredException();
-    }
-
-    return this.adminService.create(input, user?.id);
+    return this.adminService.create(input, user.id);
   }
 
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @Roles(RealmRoleType.USER)
+  @EventRoles(EventRoleType.ADMIN)
   @Mutation(() => ImportInvitationsResult, {
     description: 'Imports invitations from CSV/XLSX stored in object storage',
   })
@@ -69,17 +69,6 @@ export class AdminMutationResolver {
     @CurrentUser() user: CurrentUserData,
   ): Promise<ImportInvitationsResult> {
     return TraceRunner.run('[RESOLVER] importInvitations', async () => {
-      /**
-       * SECURITY
-       */
-      if (!user?.id) {
-        this.logger.warn('Unauthorized import attempt');
-        throw new InvitationAuthenticationRequiredException();
-      }
-
-      /**
-       * VALIDATION
-       */
       if (!input.eventId) {
         throw new InvitationValidationException('Event ID is required');
       }
@@ -97,9 +86,6 @@ export class AdminMutationResolver {
         uploadType: input.uploadType,
       });
 
-      /**
-       * SERVICE
-       */
       const result = await this.adminService.importInvitations(
         input.eventId,
         input.key,
@@ -119,7 +105,9 @@ export class AdminMutationResolver {
     });
   }
 
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @Roles(RealmRoleType.USER)
+  @EventRoles(EventRoleType.ADMIN)
   @Mutation(() => InvitationPayload)
   async approveInvitation(
     @Args('input', {
@@ -130,10 +118,6 @@ export class AdminMutationResolver {
     user: CurrentUserData,
   ): Promise<InvitationPayload> {
     return TraceRunner.run('[RESOLVER] approveInvitation', async () => {
-      if (!user?.id) {
-        throw new InvitationAuthenticationRequiredException();
-      }
-
       const result = await this.adminService.approve({
         id: input.invitationId,
         approve: input.approved,
@@ -148,7 +132,9 @@ export class AdminMutationResolver {
     });
   }
 
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @Roles(RealmRoleType.USER)
+  @EventRoles(EventRoleType.ADMIN)
   @Mutation(() => SuccessPayload)
   async removeInvitation(
     @Args('id', {
@@ -164,7 +150,9 @@ export class AdminMutationResolver {
     };
   }
 
-  @UseGuards(CookieAuthGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @Roles(RealmRoleType.USER)
+  @EventRoles(EventRoleType.ADMIN)
   @Mutation(() => [InvitationPayload])
   async bulkApproveInvitations(
     @Args('input', { type: () => BulkApproveInvitationInput })
@@ -175,10 +163,6 @@ export class AdminMutationResolver {
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload[]> {
     return TraceRunner.run('[RESOLVER] bulkApproveInvitations', async () => {
-      if (!user?.id) {
-        throw new InvitationAuthenticationRequiredException();
-      }
-
       if (!input.invitationIds?.length) {
         throw new InvitationValidationException(
           'Invitation IDs must not be empty',

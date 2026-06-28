@@ -1,3 +1,4 @@
+import { EventAuthModule } from '../event-auth/event-auth.module.js';
 import { InvitationUploadController } from './controller/upload.controller.js';
 import { GuestMutationResolver } from './resolver/guest-mutation.resolver.js';
 import { AdminMutationResolver } from './resolver/invitation-admin-mutation.resolver.js';
@@ -13,7 +14,7 @@ import { PhoneNumberLoader } from './utils/phone-number.loader.js';
 import { Module } from '@nestjs/common';
 
 @Module({
-  imports: [],
+  imports: [EventAuthModule],
   controllers: [InvitationUploadController],
   providers: [
     InvitationQueryResolver,
