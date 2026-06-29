@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.2](https://github.com/omnixys/invitation-service/compare/v2.0.1...v2.0.2) (2026-06-29)
+
+### Media
+
+* **Media:** update dependency ([](https://github.com/omnixys/invitation-service/commit/506bfc0930d62795a09dd4c90d4eb363988ef6eb))
+
 ## [2.0.1](https://github.com/omnixys/invitation-service/compare/v2.0.0...v2.0.1) (2026-06-29)
 
 ### Kafka
