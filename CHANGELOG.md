@@ -3,6 +3,24 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.0](https://github.com/omnixys/invitation-service/compare/v1.0.4...v2.0.0) (2026-06-28)
+
+### Approve
+
+* **Approve:** add input attribute  'eventEndsAt' for approval ([](https://github.com/omnixys/invitation-service/commit/c888918d983e0149c304f647f4ce2ad89e222473))
+
+### Dependencies
+
+* **Dependencies:** update Dependecies ([](https://github.com/omnixys/invitation-service/commit/646c5e5cf823afd4e680a23929ca34795dc9f5b5))
+
+### Invitation
+
+* **Invitation:** harden approval context and lifecycle ([](https://github.com/omnixys/invitation-service/commit/03fcbe353f0869be108ba8b0ff58954ab6d0bcce))
+
+### Log
+
+* **Log:** add logs ([](https://github.com/omnixys/invitation-service/commit/3956546e97e6471c09b084f5fc5f5ee492c67913))
+
 ## [1.0.4](https://github.com/omnixys/invitation-service/compare/v1.0.3...v1.0.4) (2026-05-25)
 
 ### Docker
