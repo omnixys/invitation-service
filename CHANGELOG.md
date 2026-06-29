@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.1](https://github.com/omnixys/invitation-service/compare/v2.0.0...v2.0.1) (2026-06-29)
+
+### Kafka
+
+* **Kafka:** update kafka dependency ([](https://github.com/omnixys/invitation-service/commit/79bc354016793ac82bc132ecd113d51eabf6cccf))
+
+### Other
+
+* **Other:** Merge branch 'main' of https://github.com/omnixys/invitation-service ([](https://github.com/omnixys/invitation-service/commit/b24b3a47be91621d5e14d9691d200f293c5ca806))
+
 ## [2.0.0](https://github.com/omnixys/invitation-service/compare/v1.0.4...v2.0.0) (2026-06-28)
 
 ### Approve
