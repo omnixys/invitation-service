@@ -17,7 +17,9 @@
 
 import { env } from '../config/env.js';
 import { KafkaIndicator } from './kafka.indicator.js';
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, 
+  // Inject
+ } from '@nestjs/common';
 import {
   HealthCheckService,
   HttpHealthIndicator,
@@ -27,7 +29,7 @@ import {
   type HealthIndicatorResult,
 } from '@nestjs/terminus';
 import { ValkeyService } from '@omnixys/cache';
-import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
+// import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
 
 const { KEYCLOAK_HEALTH_URL, TEMPO_HEALTH_URL, PROMETHEUS_HEALTH_URL } = env;
 @Controller('health')
@@ -36,20 +38,20 @@ export class HealthController {
   readonly #http: HttpHealthIndicator;
   readonly #kafka: KafkaIndicator;
   readonly #cache: ValkeyService;
-  readonly #storage: FileStorage;
+  // readonly #storage: FileStorage;
 
   constructor(
     health: HealthCheckService,
     http: HttpHealthIndicator,
     kafka: KafkaIndicator,
     cache: ValkeyService,
-    @Inject(FILE_STORAGE) storage: FileStorage,
+    // @Inject(FILE_STORAGE) storage: FileStorage,
   ) {
     this.#health = health;
     this.#http = http;
     this.#kafka = kafka;
     this.#cache = cache;
-    this.#storage = storage;
+    // this.#storage = storage;
   }
 
   @Get('liveness')
@@ -65,7 +67,7 @@ export class HealthController {
       () => Promise.resolve({ app: { status: 'up' as const } }),
       () => this.#kafka.isHealthy(),
       () => this.cacheHealth(),
-      () => this.storageHealth(),
+      // () => this.storageHealth(),
     ];
     if (KEYCLOAK_HEALTH_URL) {
       checks.push(() => this.#http.pingCheck('keycloak', KEYCLOAK_HEALTH_URL));
@@ -91,15 +93,15 @@ export class HealthController {
     };
   }
 
-  private async storageHealth(): Promise<HealthIndicatorResult> {
-    const health = await this.#storage.health();
-    return {
-      storage: {
-        status: health.healthy ? 'up' : 'down',
-        healthy: health.healthy,
-        latencyMs: health.latencyMs,
-        error: health.error,
-      },
-    };
-  }
+  // private async storageHealth(): Promise<HealthIndicatorResult> {
+  //   const health = await this.#storage.health();
+  //   return {
+  //     storage: {
+  //       status: health.healthy ? 'up' : 'down',
+  //       healthy: health.healthy,
+  //       latencyMs: health.latencyMs,
+  //       error: health.error,
+  //     },
+  //   };
+  // }
 }
