@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.3](https://github.com/omnixys/invitation-service/compare/v2.0.2...v2.0.3) (2026-06-29)
+
+### Media
+
+* **Media:** remove healthCheck ([](https://github.com/omnixys/invitation-service/commit/5e632c385906f4e6eca2e4222016ae4dc8fd08cb))
+
 ## [2.0.2](https://github.com/omnixys/invitation-service/compare/v2.0.1...v2.0.2) (2026-06-29)
 
 ### Media
