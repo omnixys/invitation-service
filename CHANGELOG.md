@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.1.0](https://github.com/omnixys/invitation-service/compare/v2.0.3...v2.1.0) (2026-07-02)
+
+### Deps
+
+* **Deps:** update dependencys ([](https://github.com/omnixys/invitation-service/commit/ba042761e078726b851a1f2aba9951ef8f91e9b9))
+
 ## [2.0.3](https://github.com/omnixys/invitation-service/compare/v2.0.2...v2.0.3) (2026-06-29)
 
 ### Media
