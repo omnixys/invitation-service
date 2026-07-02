@@ -49,6 +49,9 @@ function invitation(overrides = {}) {
     maxInvitees: 0,
     invitedByInvitationId: null,
     invitedByUserId: '00000000-0000-4000-8000-000000000001',
+    selectedInvitedBy: [],
+    guestNote: null,
+    plusOneAgeCategory: null,
     phoneNumbers: [],
     ...overrides,
   };
@@ -166,6 +169,15 @@ test('accepted RSVP applies configured automatic approval', async () => {
         firstName: existing.firstName,
         lastName: existing.lastName,
         email: existing.email,
+        phoneNumbers: [
+          {
+            type: 'MOBILE',
+            number: '+4915112345678',
+            countryCode: '+49',
+            isPrimary: true,
+            label: null,
+          },
+        ],
         eventEndsAt: existing.eventEndsAt,
       },
     },
@@ -183,6 +195,7 @@ test('accepted RSVP applies configured automatic approval', async () => {
   assert.equal(approvalCalls.length, 1);
   assert.equal(approvalCalls[0].id, existing.id);
   assert.equal(approvalCalls[0].actorId, existing.invitedByUserId);
+  assert.equal(approvalCalls[0].activeEventId, existing.eventId);
   assert.equal(result.status, InvitationStatus.APPROVED);
 });
 

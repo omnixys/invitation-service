@@ -1,4 +1,4 @@
-import { Field, GraphQLISODateTime, ID, InputType, Int } from '@nestjs/graphql';
+import { Field, ID, InputType, Int } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
 
 @InputType({
@@ -10,15 +10,6 @@ export class InvitationCreateInput {
     description: 'ID of the event this invitation belongs to.',
   })
   eventId!: string;
-
-  @Field({ nullable: true })
-  eventName?: string;
-
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  eventEndsAt?: Date;
-
-  @Field(() => Boolean, { defaultValue: false })
-  autoApproveOnAccept?: boolean;
 
   @Field(() => Int, {
     defaultValue: 0,

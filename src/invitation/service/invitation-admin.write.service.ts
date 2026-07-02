@@ -19,7 +19,7 @@ import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { ValkeyKey, ValkeyService } from '@omnixys/cache';
+import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache';
 import { ContextAccessor } from '@omnixys/context';
 import type { EventMilestoneRecordedDTO } from '@omnixys/contracts';
 import { getPrimaryPhoneNumber } from '@omnixys/contracts';
@@ -42,6 +42,7 @@ export class AdminWriteService extends InvitationBaseService {
     loggerService: OmnixysLogger,
     private readonly producer: KafkaProducerService,
     private readonly cache: ValkeyService,
+    private readonly delayedJob: DelayedJobService,
 
     @Inject(FILE_STORAGE)
     private readonly storage: FileStorage,
@@ -61,10 +62,13 @@ export class AdminWriteService extends InvitationBaseService {
     if (input.maxInvitees !== undefined && input.maxInvitees < 0) {
       throw new InvitationValidationException('maxInvitees must be non-negative');
     }
-    if (input.autoApproveOnAccept && (!input.eventName || !input.eventEndsAt || !eventAdminId)) {
-      throw new InvitationValidationException(
-        'Automatic approval requires eventName, eventEndsAt, and an event admin',
-      );
+
+    const settings = await this.prismaService.eventSettingsProjection.findUnique({
+      where: { eventId: input.eventId },
+    });
+
+    if (!settings) {
+      this.logger.warn('Event settings not found for eventId=%s — using defaults', input.eventId);
     }
 
     this.logger.debug('Creating invitation: eventId=%s | actorId=%s', input.eventId, eventAdminId);
@@ -73,9 +77,9 @@ export class AdminWriteService extends InvitationBaseService {
       data: {
         type: InvitationType.PRIVATE,
         eventId: input.eventId,
-        eventName: input.eventName,
-        eventEndsAt: input.eventEndsAt,
-        autoApproveOnAccept: input.autoApproveOnAccept ?? false,
+        eventName: settings?.name ?? null,
+        eventEndsAt: settings?.endsAt ?? null,
+        autoApproveOnAccept: settings?.approvalMode === 'AUTOMATIC',
         firstName: input.firstName ?? null,
         lastName: input.lastName ?? null,
         invitedByInvitationId: input.invitedByInvitationId ?? null,
@@ -130,15 +134,14 @@ export class AdminWriteService extends InvitationBaseService {
     id,
     approve,
     actorId,
-    eventName,
-    eventEndsAt,
-    seat,
     seatId,
+    activeEventId,
   }: ApproveInvitationDTO): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] approve', async () => {
       this.logger.debug('approve: input=%o', { id, approve });
 
       const invitation = await this.ensureExists(id);
+      this.assertInvitationMatchesActiveEvent(invitation.eventId, activeEventId, id);
 
       if (!invitation.rsvpChoice && approve) {
         this.logger.error('Guest has not submitted an RSVP yet: invitationId=%s', id);
@@ -208,38 +211,59 @@ export class AdminWriteService extends InvitationBaseService {
             throw new MissingPendingContactException(id);
           }
 
-          this.logger.debug(
-            'Sending Kafka event: topic=%s | invitationId=%s | actorId=%s',
-            KafkaTopics.notification.confirmGuest,
-            id,
-            actorId,
-          );
-
-          await this.producer.send({
-            topic: KafkaTopics.notification.confirmGuest,
-            payload: {
-              token: updated.pendingContactId,
-              eventName,
-              seat,
-              seatId,
-              eventEndsAt,
-            },
-            meta: {
-              service: 'invitation-service',
-              operation: 'Send confirm guest notification',
-              version: '1',
-              type: 'EVENT',
-              actorId,
-              tenantId: currentTenantId(),
-            },
+          const eventSettings = await this.prismaService.eventSettingsProjection.findUnique({
+            where: { eventId: updated.eventId },
+            select: { ticketReleaseAt: true },
           });
 
-          this.logger.debug(
-            'Kafka event sent: topic=%s | invitationId=%s | actorId=%s',
-            KafkaTopics.notification.confirmGuest,
-            id,
-            actorId,
-          );
+          const ticketReleaseAt = eventSettings?.ticketReleaseAt;
+          const now = new Date();
+
+          if (ticketReleaseAt && ticketReleaseAt.getTime() > now.getTime()) {
+            const delayMs = ticketReleaseAt.getTime() - now.getTime();
+
+            await this.delayedJob.schedule({
+              type: DelayedJobKeys.ticket.generate,
+              payload: {
+                invitationId: id,
+                eventId: updated.eventId,
+                seatId: seatId ?? null,
+                actorId,
+              },
+              delayMs,
+            });
+
+            this.logger.debug(
+              'Delayed ticket generation scheduled: invitationId=%s | delayMs=%d',
+              id,
+              delayMs,
+            );
+          } else {
+            await this.producer.send({
+              topic: KafkaTopics.notification.confirmGuest,
+              payload: {
+                token: updated.pendingContactId,
+                eventName: updated.eventName ?? '',
+                seatId,
+                eventEndsAt: updated.eventEndsAt ?? new Date(),
+              },
+              meta: {
+                service: 'invitation-service',
+                operation: 'Send confirm guest notification',
+                version: '1',
+                type: 'EVENT',
+                actorId,
+                tenantId: currentTenantId(),
+              },
+            });
+
+            this.logger.debug(
+              'Kafka event sent: topic=%s | invitationId=%s | actorId=%s',
+              KafkaTopics.notification.confirmGuest,
+              id,
+              actorId,
+            );
+          }
         } else {
           this.logger.debug('Guest profile already exists – skip Kafka event: invitationId=%s', id);
         }
@@ -269,6 +293,26 @@ export class AdminWriteService extends InvitationBaseService {
         return InvitationMapper.toPayload(updated);
       }
     });
+  }
+
+  private assertInvitationMatchesActiveEvent(
+    invitationEventId: string,
+    activeEventId: string | undefined,
+    invitationId: string,
+  ): void {
+    if (!activeEventId) {
+      throw new InvitationValidationException('Active event context is required', {
+        invitationId,
+      });
+    }
+
+    if (invitationEventId !== activeEventId) {
+      throw new InvitationValidationException('Invitation does not belong to active event', {
+        invitationId,
+        invitationEventId,
+        activeEventId,
+      });
+    }
   }
 
   private async publishMilestone(
@@ -344,10 +388,11 @@ export class AdminWriteService extends InvitationBaseService {
   /**
    * Deletes an invitation after rejecting it (cleanup PII + revoke approval).
    */
-  async delete(id: string, actorId: string): Promise<boolean> {
+  async delete(id: string, actorId: string, activeEventId?: string): Promise<boolean> {
     return TraceRunner.run('[SERVICE] delete', async () => {
       this.logger.debug('delete: invitationID=%s | actorId=%s', id, actorId);
-      await this.ensureExists(id);
+      const invitation = await this.ensureExists(id);
+      this.assertInvitationMatchesActiveEvent(invitation.eventId, activeEventId, id);
       this.logger.debug('Deleting invitation: invitationID=%s', id);
       await this.prismaService.invitation.delete({ where: { id } });
       this.logger.debug('Invitation deleted: invitationID=%s | actorId=%s', id, actorId);
@@ -366,16 +411,14 @@ export class AdminWriteService extends InvitationBaseService {
   async bulkApprove(params: {
     invitationIds: Array<{
       invitationId: string;
-      eventName: string;
-      seat: string;
       seatId?: string;
     }>;
     approved: boolean;
     actorId: string;
-    eventEndsAt: Date;
+    activeEventId?: string;
   }): Promise<InvitationPayload[]> {
     return TraceRunner.run('[SERVICE] bulkApprove', async () => {
-      const { invitationIds, approved, actorId, eventEndsAt } = params;
+      const { invitationIds, approved, actorId, activeEventId } = params;
 
       this.logger.debug('Bulk approve start', {
         actorId,
@@ -393,17 +436,15 @@ export class AdminWriteService extends InvitationBaseService {
        * - Easier error tracking per invitation
        */
       for (const item of invitationIds) {
-        const { invitationId, eventName, seat, seatId } = item;
+        const { invitationId, seatId } = item;
 
         try {
           const result = await this.approve({
             id: invitationId,
             approve: approved,
             actorId,
-            eventName,
-            eventEndsAt,
-            seat: seat ?? 'debug',
             seatId,
+            activeEventId,
           });
 
           results.push(result);

@@ -18,13 +18,29 @@
 import { InvitationModule } from '../invitation/invitation.module.js';
 import { AuthenticationHandler } from './authentication.handler.js';
 import { EventRoleHandler } from './event-role.handler.js';
+import { EventSettingsHandler } from './event-settings.handler.js';
 import { EventHandler } from './event.handler.js';
+import { TicketGenerationHandler } from './ticket-generation.handler.js';
 import { TicketHandler } from './ticket.handler.js';
 import { Module } from '@nestjs/common';
 
 @Module({
   imports: [InvitationModule],
-  providers: [TicketHandler, AuthenticationHandler, EventHandler, EventRoleHandler],
-  exports: [TicketHandler, AuthenticationHandler, EventHandler, EventRoleHandler],
+  providers: [
+    TicketHandler,
+    AuthenticationHandler,
+    EventHandler,
+    EventRoleHandler,
+    EventSettingsHandler,
+    TicketGenerationHandler,
+  ],
+  exports: [
+    TicketHandler,
+    AuthenticationHandler,
+    EventHandler,
+    EventRoleHandler,
+    EventSettingsHandler,
+    TicketGenerationHandler,
+  ],
 })
 export class HandlerModule {}

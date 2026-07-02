@@ -11,4 +11,5 @@
 export type * from './models/Invitation.js'
 export type * from './models/PhoneNumber.js'
 export type * from './models/EventRoleProjection.js'
+export type * from './models/EventSettingsProjection.js'
 export type * from './commonInputTypes.js'

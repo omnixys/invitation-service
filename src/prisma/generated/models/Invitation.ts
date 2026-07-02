@@ -46,6 +46,8 @@ export type InvitationMinAggregateOutputType = {
   guestProfileId: string | null
   email: string | null
   phoneNumber: string | null
+  guestNote: string | null
+  plusOneAgeCategory: $Enums.PlusOneAgeCategory | null
   status: $Enums.InvitationStatus | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -71,6 +73,8 @@ export type InvitationMaxAggregateOutputType = {
   guestProfileId: string | null
   email: string | null
   phoneNumber: string | null
+  guestNote: string | null
+  plusOneAgeCategory: $Enums.PlusOneAgeCategory | null
   status: $Enums.InvitationStatus | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -96,6 +100,9 @@ export type InvitationCountAggregateOutputType = {
   guestProfileId: number
   email: number
   phoneNumber: number
+  selectedInvitedBy: number
+  guestNote: number
+  plusOneAgeCategory: number
   status: number
   createdAt: number
   updatedAt: number
@@ -131,6 +138,8 @@ export type InvitationMinAggregateInputType = {
   guestProfileId?: true
   email?: true
   phoneNumber?: true
+  guestNote?: true
+  plusOneAgeCategory?: true
   status?: true
   createdAt?: true
   updatedAt?: true
@@ -156,6 +165,8 @@ export type InvitationMaxAggregateInputType = {
   guestProfileId?: true
   email?: true
   phoneNumber?: true
+  guestNote?: true
+  plusOneAgeCategory?: true
   status?: true
   createdAt?: true
   updatedAt?: true
@@ -181,6 +192,9 @@ export type InvitationCountAggregateInputType = {
   guestProfileId?: true
   email?: true
   phoneNumber?: true
+  selectedInvitedBy?: true
+  guestNote?: true
+  plusOneAgeCategory?: true
   status?: true
   createdAt?: true
   updatedAt?: true
@@ -293,6 +307,9 @@ export type InvitationGroupByOutputType = {
   guestProfileId: string | null
   email: string | null
   phoneNumber: string | null
+  selectedInvitedBy: string[]
+  guestNote: string | null
+  plusOneAgeCategory: $Enums.PlusOneAgeCategory | null
   status: $Enums.InvitationStatus
   createdAt: Date
   updatedAt: Date | null
@@ -341,6 +358,9 @@ export type InvitationWhereInput = {
   guestProfileId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   email?: Prisma.StringNullableFilter<"Invitation"> | string | null
   phoneNumber?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  selectedInvitedBy?: Prisma.StringNullableListFilter<"Invitation">
+  guestNote?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  plusOneAgeCategory?: Prisma.EnumPlusOneAgeCategoryNullableFilter<"Invitation"> | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
@@ -369,6 +389,9 @@ export type InvitationOrderByWithRelationInput = {
   guestProfileId?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   phoneNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedInvitedBy?: Prisma.SortOrder
+  guestNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  plusOneAgeCategory?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -401,6 +424,9 @@ export type InvitationWhereUniqueInput = Prisma.AtLeast<{
   guestProfileId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   email?: Prisma.StringNullableFilter<"Invitation"> | string | null
   phoneNumber?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  selectedInvitedBy?: Prisma.StringNullableListFilter<"Invitation">
+  guestNote?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  plusOneAgeCategory?: Prisma.EnumPlusOneAgeCategoryNullableFilter<"Invitation"> | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
@@ -428,6 +454,9 @@ export type InvitationOrderByWithAggregationInput = {
   guestProfileId?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   phoneNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedInvitedBy?: Prisma.SortOrder
+  guestNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  plusOneAgeCategory?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -461,6 +490,9 @@ export type InvitationScalarWhereWithAggregatesInput = {
   guestProfileId?: Prisma.UuidNullableWithAggregatesFilter<"Invitation"> | string | null
   email?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
   phoneNumber?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
+  selectedInvitedBy?: Prisma.StringNullableListFilter<"Invitation">
+  guestNote?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
+  plusOneAgeCategory?: Prisma.EnumPlusOneAgeCategoryNullableWithAggregatesFilter<"Invitation"> | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusWithAggregatesFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
@@ -486,6 +518,9 @@ export type InvitationCreateInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -513,6 +548,9 @@ export type InvitationUncheckedCreateInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -540,6 +578,9 @@ export type InvitationUpdateInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -567,6 +608,9 @@ export type InvitationUncheckedUpdateInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -594,6 +638,9 @@ export type InvitationCreateManyInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -619,6 +666,9 @@ export type InvitationUpdateManyMutationInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -643,6 +693,9 @@ export type InvitationUncheckedUpdateManyInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -654,6 +707,14 @@ export type InvitationUncheckedUpdateManyInput = {
   maxInvitees?: Prisma.IntFieldUpdateOperationsInput | number
   invitedByInvitationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   invitedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
 }
 
 export type InvitationNullableScalarRelationFilter = {
@@ -683,6 +744,9 @@ export type InvitationCountOrderByAggregateInput = {
   guestProfileId?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
+  selectedInvitedBy?: Prisma.SortOrder
+  guestNote?: Prisma.SortOrder
+  plusOneAgeCategory?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -712,6 +776,8 @@ export type InvitationMaxOrderByAggregateInput = {
   guestProfileId?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
+  guestNote?: Prisma.SortOrder
+  plusOneAgeCategory?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -737,6 +803,8 @@ export type InvitationMinOrderByAggregateInput = {
   guestProfileId?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
+  guestNote?: Prisma.SortOrder
+  plusOneAgeCategory?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -757,6 +825,10 @@ export type InvitationSumOrderByAggregateInput = {
 export type InvitationScalarRelationFilter = {
   is?: Prisma.InvitationWhereInput
   isNot?: Prisma.InvitationWhereInput
+}
+
+export type InvitationCreateselectedInvitedByInput = {
+  set: string[]
 }
 
 export type InvitationCreateNestedOneWithoutPlusOnesInput = {
@@ -797,6 +869,15 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
+}
+
+export type InvitationUpdateselectedInvitedByInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput = {
+  set?: $Enums.PlusOneAgeCategory | null
 }
 
 export type EnumInvitationStatusFieldUpdateOperationsInput = {
@@ -883,6 +964,9 @@ export type InvitationCreateWithoutPlusOnesInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -909,6 +993,9 @@ export type InvitationUncheckedCreateWithoutPlusOnesInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -940,6 +1027,9 @@ export type InvitationCreateWithoutInvitedByInvitationInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -966,6 +1056,9 @@ export type InvitationUncheckedCreateWithoutInvitedByInvitationInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -1013,6 +1106,9 @@ export type InvitationUpdateWithoutPlusOnesInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1039,6 +1135,9 @@ export type InvitationUncheckedUpdateWithoutPlusOnesInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1084,6 +1183,9 @@ export type InvitationScalarWhereInput = {
   guestProfileId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   email?: Prisma.StringNullableFilter<"Invitation"> | string | null
   phoneNumber?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  selectedInvitedBy?: Prisma.StringNullableListFilter<"Invitation">
+  guestNote?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  plusOneAgeCategory?: Prisma.EnumPlusOneAgeCategoryNullableFilter<"Invitation"> | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
@@ -1109,6 +1211,9 @@ export type InvitationCreateWithoutPhoneNumbersInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -1135,6 +1240,9 @@ export type InvitationUncheckedCreateWithoutPhoneNumbersInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -1177,6 +1285,9 @@ export type InvitationUpdateWithoutPhoneNumbersInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1203,6 +1314,9 @@ export type InvitationUncheckedUpdateWithoutPhoneNumbersInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1229,6 +1343,9 @@ export type InvitationCreateManyInvitedByInvitationInput = {
   guestProfileId?: string | null
   email?: string | null
   phoneNumber?: string | null
+  selectedInvitedBy?: Prisma.InvitationCreateselectedInvitedByInput | string[]
+  guestNote?: string | null
+  plusOneAgeCategory?: $Enums.PlusOneAgeCategory | null
   status?: $Enums.InvitationStatus
   createdAt?: Date | string
   updatedAt?: Date | string | null
@@ -1253,6 +1370,9 @@ export type InvitationUpdateWithoutInvitedByInvitationInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1279,6 +1399,9 @@ export type InvitationUncheckedUpdateWithoutInvitedByInvitationInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1305,6 +1428,9 @@ export type InvitationUncheckedUpdateManyWithoutInvitedByInvitationInput = {
   guestProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedInvitedBy?: Prisma.InvitationUpdateselectedInvitedByInput | string[]
+  guestNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plusOneAgeCategory?: Prisma.NullableEnumPlusOneAgeCategoryFieldUpdateOperationsInput | $Enums.PlusOneAgeCategory | null
   status?: Prisma.EnumInvitationStatusFieldUpdateOperationsInput | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1369,6 +1495,9 @@ export type InvitationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   guestProfileId?: boolean
   email?: boolean
   phoneNumber?: boolean
+  selectedInvitedBy?: boolean
+  guestNote?: boolean
+  plusOneAgeCategory?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1398,6 +1527,9 @@ export type InvitationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   guestProfileId?: boolean
   email?: boolean
   phoneNumber?: boolean
+  selectedInvitedBy?: boolean
+  guestNote?: boolean
+  plusOneAgeCategory?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1424,6 +1556,9 @@ export type InvitationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   guestProfileId?: boolean
   email?: boolean
   phoneNumber?: boolean
+  selectedInvitedBy?: boolean
+  guestNote?: boolean
+  plusOneAgeCategory?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1450,6 +1585,9 @@ export type InvitationSelectScalar = {
   guestProfileId?: boolean
   email?: boolean
   phoneNumber?: boolean
+  selectedInvitedBy?: boolean
+  guestNote?: boolean
+  plusOneAgeCategory?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1463,7 +1601,7 @@ export type InvitationSelectScalar = {
   invitedByUserId?: boolean
 }
 
-export type InvitationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "type" | "firstName" | "lastName" | "eventId" | "eventName" | "eventEndsAt" | "autoApproveOnAccept" | "guestProfileId" | "email" | "phoneNumber" | "status" | "createdAt" | "updatedAt" | "pendingContactId" | "rsvpChoice" | "rsvpAt" | "approvedAt" | "approvedByUserId" | "maxInvitees" | "invitedByInvitationId" | "invitedByUserId", ExtArgs["result"]["invitation"]>
+export type InvitationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "type" | "firstName" | "lastName" | "eventId" | "eventName" | "eventEndsAt" | "autoApproveOnAccept" | "guestProfileId" | "email" | "phoneNumber" | "selectedInvitedBy" | "guestNote" | "plusOneAgeCategory" | "status" | "createdAt" | "updatedAt" | "pendingContactId" | "rsvpChoice" | "rsvpAt" | "approvedAt" | "approvedByUserId" | "maxInvitees" | "invitedByInvitationId" | "invitedByUserId", ExtArgs["result"]["invitation"]>
 export type InvitationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invitedByInvitation?: boolean | Prisma.Invitation$invitedByInvitationArgs<ExtArgs>
   plusOnes?: boolean | Prisma.Invitation$plusOnesArgs<ExtArgs>
@@ -1496,6 +1634,9 @@ export type $InvitationPayload<ExtArgs extends runtime.Types.Extensions.Internal
     guestProfileId: string | null
     email: string | null
     phoneNumber: string | null
+    selectedInvitedBy: string[]
+    guestNote: string | null
+    plusOneAgeCategory: $Enums.PlusOneAgeCategory | null
     status: $Enums.InvitationStatus
     createdAt: Date
     updatedAt: Date | null
@@ -1944,6 +2085,9 @@ export interface InvitationFieldRefs {
   readonly guestProfileId: Prisma.FieldRef<"Invitation", 'String'>
   readonly email: Prisma.FieldRef<"Invitation", 'String'>
   readonly phoneNumber: Prisma.FieldRef<"Invitation", 'String'>
+  readonly selectedInvitedBy: Prisma.FieldRef<"Invitation", 'String[]'>
+  readonly guestNote: Prisma.FieldRef<"Invitation", 'String'>
+  readonly plusOneAgeCategory: Prisma.FieldRef<"Invitation", 'PlusOneAgeCategory'>
   readonly status: Prisma.FieldRef<"Invitation", 'InvitationStatus'>
   readonly createdAt: Prisma.FieldRef<"Invitation", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Invitation", 'DateTime'>

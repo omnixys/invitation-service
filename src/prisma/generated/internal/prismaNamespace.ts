@@ -386,7 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Invitation: 'Invitation',
   PhoneNumber: 'PhoneNumber',
-  EventRoleProjection: 'EventRoleProjection'
+  EventRoleProjection: 'EventRoleProjection',
+  EventSettingsProjection: 'EventSettingsProjection'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "invitation" | "phoneNumber" | "eventRoleProjection"
+    modelProps: "invitation" | "phoneNumber" | "eventRoleProjection" | "eventSettingsProjection"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +629,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    EventSettingsProjection: {
+      payload: Prisma.$EventSettingsProjectionPayload<ExtArgs>
+      fields: Prisma.EventSettingsProjectionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.EventSettingsProjectionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.EventSettingsProjectionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>
+        }
+        findFirst: {
+          args: Prisma.EventSettingsProjectionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.EventSettingsProjectionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>
+        }
+        findMany: {
+          args: Prisma.EventSettingsProjectionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>[]
+        }
+        create: {
+          args: Prisma.EventSettingsProjectionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>
+        }
+        createMany: {
+          args: Prisma.EventSettingsProjectionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.EventSettingsProjectionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>[]
+        }
+        delete: {
+          args: Prisma.EventSettingsProjectionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>
+        }
+        update: {
+          args: Prisma.EventSettingsProjectionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>
+        }
+        deleteMany: {
+          args: Prisma.EventSettingsProjectionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.EventSettingsProjectionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.EventSettingsProjectionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>[]
+        }
+        upsert: {
+          args: Prisma.EventSettingsProjectionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventSettingsProjectionPayload>
+        }
+        aggregate: {
+          args: Prisma.EventSettingsProjectionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEventSettingsProjection>
+        }
+        groupBy: {
+          args: Prisma.EventSettingsProjectionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EventSettingsProjectionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.EventSettingsProjectionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EventSettingsProjectionCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -679,6 +754,9 @@ export const InvitationScalarFieldEnum = {
   guestProfileId: 'guestProfileId',
   email: 'email',
   phoneNumber: 'phoneNumber',
+  selectedInvitedBy: 'selectedInvitedBy',
+  guestNote: 'guestNote',
+  plusOneAgeCategory: 'plusOneAgeCategory',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -719,6 +797,22 @@ export const EventRoleProjectionScalarFieldEnum = {
 } as const
 
 export type EventRoleProjectionScalarFieldEnum = (typeof EventRoleProjectionScalarFieldEnum)[keyof typeof EventRoleProjectionScalarFieldEnum]
+
+
+export const EventSettingsProjectionScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  name: 'name',
+  endsAt: 'endsAt',
+  approvalMode: 'approvalMode',
+  allowPublicRsvp: 'allowPublicRsvp',
+  rsvpDeadline: 'rsvpDeadline',
+  maxSeats: 'maxSeats',
+  ticketReleaseAt: 'ticketReleaseAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EventSettingsProjectionScalarFieldEnum = (typeof EventSettingsProjectionScalarFieldEnum)[keyof typeof EventSettingsProjectionScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -797,6 +891,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
  * Reference to a field of type 'Boolean'
  */
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'PlusOneAgeCategory'
+ */
+export type EnumPlusOneAgeCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlusOneAgeCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'PlusOneAgeCategory[]'
+ */
+export type ListEnumPlusOneAgeCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlusOneAgeCategory[]'>
     
 
 
@@ -996,6 +1104,7 @@ export type GlobalOmitConfig = {
   invitation?: Prisma.InvitationOmit
   phoneNumber?: Prisma.PhoneNumberOmit
   eventRoleProjection?: Prisma.EventRoleProjectionOmit
+  eventSettingsProjection?: Prisma.EventSettingsProjectionOmit
 }
 
 /* Types for Logging */

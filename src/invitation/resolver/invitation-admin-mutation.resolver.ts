@@ -10,18 +10,13 @@ import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
 import { UseGuards } from '@nestjs/common';
-import {
-  Args,
-  GraphQLISODateTime,
-  ID,
-  Mutation,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { EventRoleType, RealmRoleType } from '@omnixys/contracts';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import {
   CookieAuthGuard,
+  CurrentEventId,
   CurrentUser,
   CurrentUserData,
   EventRoleGuard,
@@ -114,6 +109,7 @@ export class AdminMutationResolver {
       type: () => ApproveInvitationInput,
     })
     input: ApproveInvitationInput,
+    @CurrentEventId() activeEventId: string | undefined,
     @CurrentUser()
     user: CurrentUserData,
   ): Promise<InvitationPayload> {
@@ -122,10 +118,8 @@ export class AdminMutationResolver {
         id: input.invitationId,
         approve: input.approved,
         actorId: user.id,
-        eventName: input.eventName,
-        eventEndsAt: input.eventEndsAt,
-        seat: input.seat,
         seatId: input.seatId,
+        activeEventId: activeEventId ?? input.eventId,
       });
 
       return result;
@@ -141,9 +135,10 @@ export class AdminMutationResolver {
       type: () => ID,
     })
     id: string,
+    @CurrentEventId() activeEventId: string | undefined,
     @CurrentUser() user: CurrentUserData,
   ): Promise<SuccessPayload> {
-    const ok = await this.adminService.delete(id, user.id);
+    const ok = await this.adminService.delete(id, user.id, activeEventId);
     return {
       ok,
       message: `Einladung '${id}' Gelöscht`,
@@ -158,8 +153,7 @@ export class AdminMutationResolver {
     @Args('input', { type: () => BulkApproveInvitationInput })
     input: BulkApproveInvitationInput,
 
-    @Args('eventEndsAt', { type: () => GraphQLISODateTime })
-    eventEndsAt: Date,
+    @CurrentEventId() activeEventId: string | undefined,
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload[]> {
     return TraceRunner.run('[RESOLVER] bulkApproveInvitations', async () => {
@@ -178,7 +172,7 @@ export class AdminMutationResolver {
         invitationIds: input.invitationIds,
         approved: input.approved,
         actorId: user.id,
-        eventEndsAt,
+        activeEventId,
       });
     });
   }

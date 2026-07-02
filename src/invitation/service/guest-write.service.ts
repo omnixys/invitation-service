@@ -62,6 +62,15 @@ function mapPhoneNumber(ph: PhoneNumber): PhoneNumberDTO {
   };
 }
 
+function hasValidPhoneNumber(phoneNumbers?: Array<{ number?: string | null }> | null): boolean {
+  return phoneNumbers?.some((phoneNumber) => (phoneNumber.number ?? '').trim().length > 0) ?? false;
+}
+
+function normalizeOptionalText(value?: string | null): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
 function currentTenantId(): string {
   const context = ContextAccessor.get();
   return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? 'omnixys';
@@ -114,7 +123,7 @@ export class GuestWriteService extends InvitationBaseService {
           throw new MissingRsvpContactDetailsException();
         }
 
-        if (!replyInput.email && !replyInput.phoneNumbers?.length) {
+        if (!hasValidPhoneNumber(replyInput.phoneNumbers)) {
           throw new MissingContactMethodException();
         }
       }
@@ -135,6 +144,10 @@ export class GuestWriteService extends InvitationBaseService {
         for (const p of allowedPlusOnes) {
           if (!p.firstName || !p.lastName) {
             throw new InvitationValidationException('Plus-one firstName and lastName are required');
+          }
+
+          if (!p.plusOneAgeCategory) {
+            throw new InvitationValidationException('Plus-one age category is required');
           }
         }
       }
@@ -158,6 +171,7 @@ export class GuestWriteService extends InvitationBaseService {
             lastName: replyInput?.lastName ?? invitation.lastName,
             phoneNumber: getPrimaryPhoneNumber(replyInput?.phoneNumbers) ?? invitation.phoneNumber,
             email: replyInput?.email ?? invitation.email,
+            guestNote: normalizeOptionalText(replyInput?.guestNote),
           },
         });
 
@@ -181,6 +195,7 @@ export class GuestWriteService extends InvitationBaseService {
                 rsvpAt: now,
 
                 invitedByInvitationId: invitation.id,
+                plusOneAgeCategory: p.plusOneAgeCategory,
                 phoneNumber: getPrimaryPhoneNumber(p?.phoneNumbers),
 
                 /**
@@ -225,8 +240,9 @@ export class GuestWriteService extends InvitationBaseService {
             invitationId: invitation.id,
             email: replyInput.email,
             phoneNumbers: replyInput.phoneNumbers,
+            guestNote: normalizeOptionalText(replyInput.guestNote) ?? undefined,
             eventId: invitation.eventId,
-            eventEndsAt: replyInput.eventEndsAt,
+            eventEndsAt: invitation.eventEndsAt ?? new Date(),
             tenantId: currentTenantId(),
             locale: clientInfo.locale,
             actorId: createTmpUsername(
@@ -243,6 +259,7 @@ export class GuestWriteService extends InvitationBaseService {
               lastName: p.lastName,
               email: n2u(p.email),
               phoneNumbers: p.phoneNumbers.map(mapPhoneNumber),
+              plusOneAgeCategory: n2u(p.plusOneAgeCategory),
             })),
           };
 
@@ -279,18 +296,15 @@ export class GuestWriteService extends InvitationBaseService {
       }
 
       if (decision.newChoice === RsvpChoice.YES && invitation.autoApproveOnAccept) {
-        const eventName = invitation.eventName;
-        const eventEndsAt = invitation.eventEndsAt;
         const approvingActor = invitation.invitedByUserId;
-        if (!eventName || !eventEndsAt || !approvingActor) {
+        if (!approvingActor) {
           throw new InvitationValidationException('Automatic approval configuration is incomplete');
         }
         const approved = await this.adminWrite.approve({
           id,
           approve: true,
           actorId: approvingActor,
-          eventName,
-          eventEndsAt,
+          activeEventId: invitation.eventId,
         });
         return { ...approved, plusOnesTruncated: truncated };
       }
@@ -309,15 +323,21 @@ export class GuestWriteService extends InvitationBaseService {
     input,
     actorId,
     clientInfo,
-    eventEndsAt,
   }: {
     input: CreatePlusOneInput;
     actorId: string;
     clientInfo: ClientContext;
-    eventEndsAt: Date;
   }): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] createPlusOne', async () => {
-      const { eventId, invitedByInvitationId, firstName, lastName, email, phoneNumbers } = input;
+      const {
+        eventId,
+        invitedByInvitationId,
+        firstName,
+        lastName,
+        email,
+        phoneNumbers,
+        plusOneAgeCategory,
+      } = input;
 
       this.logger.debug(
         'createPlusOne: eventId=%s | invitationId=%s | actorId=%s',
@@ -332,6 +352,10 @@ export class GuestWriteService extends InvitationBaseService {
 
       if (!firstName || !lastName) {
         throw new InvitationValidationException('Plus-one firstName and lastName are required');
+      }
+
+      if (!plusOneAgeCategory) {
+        throw new InvitationValidationException('Plus-one age category is required');
       }
 
       /**
@@ -388,6 +412,7 @@ export class GuestWriteService extends InvitationBaseService {
             firstName,
             lastName,
             email: email ?? null,
+            plusOneAgeCategory,
 
             status: InvitationStatus.PENDING,
             maxInvitees: 0,
@@ -414,8 +439,9 @@ export class GuestWriteService extends InvitationBaseService {
           invitationId: child.id,
           email: email ?? undefined,
           phoneNumbers,
+          plusOneAgeCategory,
           eventId,
-          eventEndsAt,
+          eventEndsAt: parent.eventEndsAt ?? new Date(),
           tenantId: currentTenantId(),
           locale: clientInfo.locale,
           actorId,
@@ -458,7 +484,7 @@ export class GuestWriteService extends InvitationBaseService {
    */
   async updatePlusOne(input: UpdatePlusOneInput, userId: string): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] updatePlusOne', async () => {
-      const { id, firstName, lastName, email, phoneNumbers } = input;
+      const { id, firstName, lastName, email, phoneNumbers, plusOneAgeCategory } = input;
 
       this.logger.debug('updatePlusOne: invitationId=%s | actorId=%s', id, userId);
 
@@ -468,6 +494,10 @@ export class GuestWriteService extends InvitationBaseService {
 
       if (!firstName || !lastName) {
         throw new InvitationValidationException('Plus-one firstName and lastName are required');
+      }
+
+      if (!plusOneAgeCategory) {
+        throw new InvitationValidationException('Plus-one age category is required');
       }
 
       if (phoneNumbers?.length) {
@@ -520,6 +550,7 @@ export class GuestWriteService extends InvitationBaseService {
             firstName,
             lastName,
             email: email ?? null,
+            plusOneAgeCategory,
             phoneNumber: getPrimaryPhoneNumber(phoneNumbers) ?? null,
             phoneNumbers: phoneNumbers?.length
               ? {
@@ -641,6 +672,31 @@ export class GuestWriteService extends InvitationBaseService {
         input.plusOnes?.length ?? 0,
       );
 
+      if (!hasValidPhoneNumber(input.phoneNumbers)) {
+        throw new MissingContactMethodException();
+      }
+
+      for (const plusOne of input.plusOnes ?? []) {
+        if (!plusOne.firstName || !plusOne.lastName) {
+          throw new InvitationValidationException('Plus-one firstName and lastName are required');
+        }
+
+        if (!plusOne.plusOneAgeCategory) {
+          throw new InvitationValidationException('Plus-one age category is required');
+        }
+      }
+
+      const guestNote =
+        normalizeOptionalText(input.guestNote) ?? normalizeOptionalText(input.message);
+      const selectedInvitedBy =
+        input.selectedInvitedBy
+          ?.map((value) => value.trim())
+          .filter((value, index, all) => value && all.indexOf(value) === index) ?? [];
+
+      const settings = await this.prismaService.eventSettingsProjection.findUnique({
+        where: { eventId: input.eventId },
+      });
+
       /**
        * 1. Create main invitation
        */
@@ -648,6 +704,9 @@ export class GuestWriteService extends InvitationBaseService {
         data: {
           type: InvitationType.PUBLIC,
           eventId: input.eventId,
+          eventName: settings?.name ?? null,
+          eventEndsAt: settings?.endsAt ?? null,
+          autoApproveOnAccept: settings?.approvalMode === 'AUTOMATIC',
           firstName: input.firstName,
           lastName: input.lastName,
           email: input.email,
@@ -655,6 +714,8 @@ export class GuestWriteService extends InvitationBaseService {
           rsvpChoice: RsvpChoice.YES,
           rsvpAt: new Date(),
           maxInvitees: input.plusOnes?.length ?? 0,
+          selectedInvitedBy,
+          guestNote,
 
           phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
           phoneNumbers: input.phoneNumbers?.length
@@ -699,8 +760,9 @@ export class GuestWriteService extends InvitationBaseService {
             rsvpAt: new Date(),
             invitedByInvitationId: invitee.id,
             email: p.email,
+            plusOneAgeCategory: p.plusOneAgeCategory,
 
-            phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
+            phoneNumber: getPrimaryPhoneNumber(p.phoneNumbers),
             phoneNumbers: p.phoneNumbers?.length
               ? {
                   createMany: {
@@ -738,8 +800,10 @@ export class GuestWriteService extends InvitationBaseService {
         invitationId: invitee.id,
         email: input.email,
         phoneNumbers: input.phoneNumbers,
+        selectedInvitedBy,
+        guestNote: guestNote ?? undefined,
         eventId: input.eventId,
-        eventEndsAt: input.eventEndsAt,
+        eventEndsAt: invitee.eventEndsAt ?? new Date(),
         tenantId: currentTenantId(),
         locale: clientInfo.locale,
         actorId: createTmpUsername(input.firstName, input.lastName),
@@ -749,6 +813,7 @@ export class GuestWriteService extends InvitationBaseService {
           firstName: p.firstName,
           lastName: p.lastName,
           email: n2u(p.email),
+          plusOneAgeCategory: n2u(p.plusOneAgeCategory),
           phoneNumbers: p.phoneNumbers.map((ph) => ({
             type: ph.type as SharedPhoneNumberType,
             countryCode: ph.countryCode,

@@ -17,9 +17,11 @@
 
 import { env } from '../config/env.js';
 import { KafkaIndicator } from './kafka.indicator.js';
-import { Controller, Get, 
+import {
+  Controller,
+  Get,
   // Inject
- } from '@nestjs/common';
+} from '@nestjs/common';
 import {
   HealthCheckService,
   HttpHealthIndicator,

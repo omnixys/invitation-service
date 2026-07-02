@@ -32,3 +32,11 @@ export type PhoneNumber = Prisma.PhoneNumberModel
  * 
  */
 export type EventRoleProjection = Prisma.EventRoleProjectionModel
+/**
+ * Model EventSettingsProjection
+ * ----------------------------------------------------------------------
+ * EventSettingsProjection – local cache of event settings synced via Kafka
+ * Fields are scoped to what the Invitation Service actually needs.
+ * ----------------------------------------------------------------------
+ */
+export type EventSettingsProjection = Prisma.EventSettingsProjectionModel

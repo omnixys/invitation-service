@@ -20,13 +20,16 @@ model Invitation {
   firstName String @map("first_name")
   lastName  String @map("last_name")
 
-  eventId             String    @map("event_id") @db.Uuid
-  eventName           String?   @map("event_name")
-  eventEndsAt         DateTime? @map("event_ends_at")
-  autoApproveOnAccept Boolean   @default(false) @map("auto_approve_on_accept")
-  guestProfileId      String?   @map("guest_profile_id") @db.Uuid
-  email               String?   @map("email")
-  phoneNumber         String?   @map("phone_number")
+  eventId             String              @map("event_id") @db.Uuid
+  eventName           String?             @map("event_name")
+  eventEndsAt         DateTime?           @map("event_ends_at")
+  autoApproveOnAccept Boolean             @default(false) @map("auto_approve_on_accept")
+  guestProfileId      String?             @map("guest_profile_id") @db.Uuid
+  email               String?             @map("email")
+  phoneNumber         String?             @map("phone_number")
+  selectedInvitedBy   String[]            @default([]) @map("selected_invited_by")
+  guestNote           String?             @map("guest_note")
+  plusOneAgeCategory  PlusOneAgeCategory? @map("plus_one_age_category")
 
   status InvitationStatus @default(PENDING) @map("status")
 
@@ -79,15 +82,34 @@ model PhoneNumber {
 }
 
 model EventRoleProjection {
-  id      String         @id @default(uuid()) @map("id") @db.Uuid
-  eventId String         @map("event_id") @db.Uuid
-  userId  String         @map("user_id") @db.Uuid
-  role    EventRoleType  @map("role")
-  updatedAt DateTime?    @updatedAt @map("updated_at")
+  id        String        @id @default(uuid()) @map("id") @db.Uuid
+  eventId   String        @map("event_id") @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  role      EventRoleType @map("role")
+  updatedAt DateTime?     @updatedAt @map("updated_at")
 
   @@unique([eventId, userId], name: "uq_event_role_projection")
   @@index([eventId], name: "idx_event_role_projection_event")
   @@map("event_role_projection")
+}
+
+/// ----------------------------------------------------------------------
+/// EventSettingsProjection – local cache of event settings synced via Kafka
+/// Fields are scoped to what the Invitation Service actually needs.
+/// ----------------------------------------------------------------------
+model EventSettingsProjection {
+  id              String    @id @default(uuid()) @map("id") @db.Uuid
+  eventId         String    @unique @map("event_id") @db.Uuid
+  name            String?   @map("name")
+  endsAt          DateTime? @map("ends_at")
+  approvalMode    String?   @map("approval_mode")
+  allowPublicRsvp Boolean   @default(false) @map("allow_public_rsvp")
+  rsvpDeadline    DateTime? @map("rsvp_deadline")
+  maxSeats        Int?      @map("max_seats")
+  ticketReleaseAt DateTime? @map("ticket_release_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  @@map("event_settings_projection")
 }
 
 enum EventRoleType {
@@ -140,4 +162,11 @@ enum RsvpChoice {
   MAYBE
 
   @@map("rsvp_choice")
+}
+
+enum PlusOneAgeCategory {
+  OVER_SIX
+  UNDER_SIX
+
+  @@map("plus_one_age_category")
 }

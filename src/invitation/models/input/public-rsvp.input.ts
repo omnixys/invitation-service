@@ -1,5 +1,8 @@
-import { InputType, Field, ID, GraphQLISODateTime } from '@nestjs/graphql';
+import { PlusOneAgeCategory } from '../../../prisma/generated/client.js';
+import { InputType, Field, ID, registerEnumType } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
+
+registerEnumType(PlusOneAgeCategory, { name: 'PlusOneAgeCategory' });
 
 @InputType()
 export class PublicRsvpInput {
@@ -8,19 +11,14 @@ export class PublicRsvpInput {
   })
   eventId!: string;
 
-  @Field(() => GraphQLISODateTime)
-  eventEndsAt!: Date;
-
   @Field(() => String)
   firstName!: string;
 
   @Field(() => String)
   lastName!: string;
 
-  @Field(() => [PhoneNumberInput], {
-    nullable: true,
-  })
-  phoneNumbers?: PhoneNumberInput[];
+  @Field(() => [PhoneNumberInput])
+  phoneNumbers!: PhoneNumberInput[];
 
   @Field(() => String, {
     nullable: true,
@@ -32,6 +30,18 @@ export class PublicRsvpInput {
     description: 'Optional RSVP message from guest',
   })
   message?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Optional note from guest',
+  })
+  guestNote?: string;
+
+  @Field(() => [String], {
+    nullable: true,
+    description: 'Configured inviter/source options selected by the guest',
+  })
+  selectedInvitedBy?: string[];
 
   @Field(() => [PublicPlusOneInput], {
     nullable: true,
@@ -50,6 +60,9 @@ export class PublicPlusOneInput {
 
   @Field(() => String, { nullable: true })
   email?: string;
+
+  @Field(() => PlusOneAgeCategory)
+  plusOneAgeCategory!: PlusOneAgeCategory;
 
   @Field(() => [PhoneNumberInput], { nullable: true })
   phoneNumbers?: PhoneNumberInput[];

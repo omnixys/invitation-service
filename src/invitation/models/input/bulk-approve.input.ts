@@ -1,5 +1,5 @@
 import { Optional } from '@nestjs/common';
-import { Field, ID, InputType, GraphQLISODateTime } from '@nestjs/graphql';
+import { Field, ID, InputType } from '@nestjs/graphql';
 
 /**
  * Input for bulk approving multiple invitations.
@@ -29,21 +29,8 @@ export class ApproveInvitationDataInput {
   })
   invitationId!: string;
 
-  @Field(() => String, {
-    description: 'Seat to assign when approving the invitation.',
-  })
-  eventName!: string;
-
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  eventEndAt?: Date;
-
-  @Field(() => String, {
-    description: 'Eventname of the invitation.',
-  })
-  seat!: string;
-
   @Field(() => ID, {
-    description: 'Eventname of the invitation.',
+    description: 'ID of the seat to assign when approving the invitation.',
     nullable: true,
   })
   @Optional()

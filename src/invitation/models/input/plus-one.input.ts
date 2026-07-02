@@ -1,3 +1,4 @@
+import { PlusOneAgeCategory } from '../../../prisma/generated/client.js';
 import { Field, ID, InputType } from '@nestjs/graphql';
 import { PhoneNumberInput } from '@omnixys/graphql';
 
@@ -17,6 +18,9 @@ export class CreatePlusOneInput {
 
   @Field(() => String, { nullable: true })
   email?: string;
+
+  @Field(() => PlusOneAgeCategory)
+  plusOneAgeCategory!: PlusOneAgeCategory;
 
   @Field(() => [PhoneNumberInput], {
     nullable: true,

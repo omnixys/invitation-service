@@ -1,6 +1,7 @@
 import {
   InvitationStatus,
   InvitationType,
+  PlusOneAgeCategory,
   RsvpChoice,
 } from '../../../prisma/generated/client.js';
 import {
@@ -15,6 +16,7 @@ import { registerEnum } from '@omnixys/graphql';
 registerEnum('InvitationStatus', InvitationStatus);
 registerEnum('RsvpChoice', RsvpChoice);
 registerEnum('InvitationType', InvitationType);
+registerEnum('PlusOneAgeCategory', PlusOneAgeCategory);
 
 @ObjectType({
   description: 'GraphQL Invitation entity matching the Prisma model exactly.',
@@ -56,6 +58,15 @@ export class InvitationPayload {
 
   @Field(() => String, { nullable: true })
   phoneNumber?: string;
+
+  @Field(() => [String])
+  selectedInvitedBy!: string[];
+
+  @Field(() => String, { nullable: true })
+  guestNote?: string;
+
+  @Field(() => PlusOneAgeCategory, { nullable: true })
+  plusOneAgeCategory?: PlusOneAgeCategory;
 
   @Field(() => InvitationStatus)
   status!: InvitationStatus;

@@ -65,3 +65,11 @@ export const RsvpChoice = {
 } as const
 
 export type RsvpChoice = (typeof RsvpChoice)[keyof typeof RsvpChoice]
+
+
+export const PlusOneAgeCategory = {
+  OVER_SIX: 'OVER_SIX',
+  UNDER_SIX: 'UNDER_SIX'
+} as const
+
+export type PlusOneAgeCategory = (typeof PlusOneAgeCategory)[keyof typeof PlusOneAgeCategory]

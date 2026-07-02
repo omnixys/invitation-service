@@ -31,6 +31,9 @@ export class InvitationMapper {
       invitedByUserId: n2u(invitation.invitedByUserId),
       email: n2u(invitation.email),
       phoneNumber: n2u(invitation.phoneNumber),
+      selectedInvitedBy: invitation.selectedInvitedBy ?? [],
+      guestNote: n2u(invitation.guestNote),
+      plusOneAgeCategory: n2u(invitation.plusOneAgeCategory),
     };
   }
 

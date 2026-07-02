@@ -53,7 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Invitation: 'Invitation',
   PhoneNumber: 'PhoneNumber',
-  EventRoleProjection: 'EventRoleProjection'
+  EventRoleProjection: 'EventRoleProjection',
+  EventSettingsProjection: 'EventSettingsProjection'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -84,6 +85,9 @@ export const InvitationScalarFieldEnum = {
   guestProfileId: 'guestProfileId',
   email: 'email',
   phoneNumber: 'phoneNumber',
+  selectedInvitedBy: 'selectedInvitedBy',
+  guestNote: 'guestNote',
+  plusOneAgeCategory: 'plusOneAgeCategory',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -124,6 +128,22 @@ export const EventRoleProjectionScalarFieldEnum = {
 } as const
 
 export type EventRoleProjectionScalarFieldEnum = (typeof EventRoleProjectionScalarFieldEnum)[keyof typeof EventRoleProjectionScalarFieldEnum]
+
+
+export const EventSettingsProjectionScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  name: 'name',
+  endsAt: 'endsAt',
+  approvalMode: 'approvalMode',
+  allowPublicRsvp: 'allowPublicRsvp',
+  rsvpDeadline: 'rsvpDeadline',
+  maxSeats: 'maxSeats',
+  ticketReleaseAt: 'ticketReleaseAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EventSettingsProjectionScalarFieldEnum = (typeof EventSettingsProjectionScalarFieldEnum)[keyof typeof EventSettingsProjectionScalarFieldEnum]
 
 
 export const SortOrder = {

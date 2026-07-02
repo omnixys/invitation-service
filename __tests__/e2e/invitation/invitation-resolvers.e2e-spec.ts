@@ -12,6 +12,7 @@ import { OmnixysLogger } from '@omnixys/logger';
 
 jest.unstable_mockModule('@omnixys/security', () => ({
   CookieAuthGuard: class CookieAuthGuard {},
+  CurrentEventId: () => () => undefined,
   CurrentUser: () => () => undefined,
   CurrentUserData: class CurrentUserData {},
   EventAccessDeniedException: class EventAccessDeniedException extends Error {},
@@ -72,6 +73,9 @@ function payload(
     status: InvitationStatus.PENDING,
     createdAt: new Date('2026-06-22T10:00:00.000Z'),
     maxInvitees: 0,
+    selectedInvitedBy: [],
+    guestNote: undefined,
+    plusOneAgeCategory: undefined,
     ...overrides,
   };
 }
@@ -166,6 +170,7 @@ describe('AdminMutationResolver integration', () => {
           eventEndsAt,
           seat: 'A-1',
         },
+        'event-1',
         { id: 'admin-1' },
       ),
     ).resolves.toBe(result);
@@ -177,6 +182,53 @@ describe('AdminMutationResolver integration', () => {
       eventEndsAt,
       seat: 'A-1',
       seatId: undefined,
+      activeEventId: 'event-1',
+    });
+  });
+
+  it('passes active event context to delete and bulk approval', async () => {
+    service.delete.mockResolvedValue(true);
+    service.bulkApprove.mockResolvedValue([payload({ status: InvitationStatus.APPROVED })]);
+    const eventEndsAt = new Date('2030-01-01T00:00:00.000Z');
+
+    await expect(
+      resolver.removeInvitation('invitation-1', 'event-1', { id: 'admin-1' }),
+    ).resolves.toEqual({
+      ok: true,
+      message: "Einladung 'invitation-1' Gelöscht",
+    });
+
+    await expect(
+      resolver.bulkApproveInvitations(
+        {
+          approved: true,
+          invitationIds: [
+            {
+              invitationId: 'invitation-1',
+              eventName: 'Platform Launch',
+              seat: 'A-1',
+            },
+          ],
+        },
+        eventEndsAt,
+        'event-1',
+        { id: 'admin-1' },
+      ),
+    ).resolves.toHaveLength(1);
+
+    expect(service.delete).toHaveBeenCalledWith('invitation-1', 'admin-1', 'event-1');
+    expect(service.bulkApprove).toHaveBeenCalledWith({
+      invitationIds: [
+        {
+          invitationId: 'invitation-1',
+          eventName: 'Platform Launch',
+          seat: 'A-1',
+        },
+      ],
+      approved: true,
+      actorId: 'admin-1',
+      eventEndsAt,
+      activeEventId: 'event-1',
     });
   });
 });
