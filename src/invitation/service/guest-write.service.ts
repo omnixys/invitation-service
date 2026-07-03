@@ -35,6 +35,7 @@ import {
   PhoneNumberType as SharedPhoneNumberType,
   type CreatePendingUserDTO,
   type EventMilestoneRecordedDTO,
+  type InvitationSeatingInfoUpdatedDTO,
   type PhoneNumberDTO,
 } from '@omnixys/contracts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
@@ -761,6 +762,7 @@ export class GuestWriteService extends InvitationBaseService {
             invitedByInvitationId: invitee.id,
             email: p.email,
             plusOneAgeCategory: p.plusOneAgeCategory,
+            selectedInvitedBy,
 
             phoneNumber: getPrimaryPhoneNumber(p.phoneNumbers),
             phoneNumbers: p.phoneNumbers?.length
@@ -842,6 +844,22 @@ export class GuestWriteService extends InvitationBaseService {
       );
 
       await this.publishInvitationCreated(InvitationMapper.toPayload(updated));
+
+      await this.publishSeatingInfoUpdated({
+        eventId: input.eventId,
+        invitationId: invitee.id,
+        guestId: updated.guestProfileId ?? '',
+        selectedInvitedBy,
+      });
+
+      for (const plusOne of plusOneInvitations) {
+        await this.publishSeatingInfoUpdated({
+          eventId: input.eventId,
+          invitationId: plusOne.id,
+          guestId: plusOne.guestProfileId ?? '',
+          selectedInvitedBy,
+        });
+      }
 
       return InvitationMapper.toPayload(updated);
     });
@@ -963,6 +981,24 @@ export class GuestWriteService extends InvitationBaseService {
       meta: {
         service: 'invitation-service',
         operation: 'Record Event Milestone',
+        version: '1',
+        type: 'EVENT',
+        actorId: context?.principal?.actorId ?? '',
+        tenantId: currentTenantId(),
+      },
+    });
+  }
+
+  private async publishSeatingInfoUpdated(
+    dto: InvitationSeatingInfoUpdatedDTO,
+  ): Promise<void> {
+    const context = ContextAccessor.get();
+    await this.producer.send({
+      topic: KafkaTopics.invitation.seatingInfoUpdated,
+      payload: dto,
+      meta: {
+        service: 'invitation-service',
+        operation: 'Invitation Seating Info Updated',
         version: '1',
         type: 'EVENT',
         actorId: context?.principal?.actorId ?? '',
