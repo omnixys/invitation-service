@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.0.0](https://github.com/omnixys/invitation-service/compare/v2.1.0...v3.0.0) (2026-07-16)
+
+### New
+
+* **New:** new service ([](https://github.com/omnixys/invitation-service/commit/e5e3f1b3f28f2fc1341fdb1322316acdb7d5f1f1))
+
+### Topic
+
+* **Topic:** add new topic ([](https://github.com/omnixys/invitation-service/commit/19eb814f3d7c7ab9beebba8f0e39b2b8e8779014))
+
 ## [2.1.0](https://github.com/omnixys/invitation-service/compare/v2.0.3...v2.1.0) (2026-07-02)
 
 ### Deps
