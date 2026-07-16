@@ -54,6 +54,7 @@ export const ModelName = {
   Invitation: 'Invitation',
   PhoneNumber: 'PhoneNumber',
   EventRoleProjection: 'EventRoleProjection',
+  EventAccessProjection: 'EventAccessProjection',
   EventSettingsProjection: 'EventSettingsProjection'
 } as const
 
@@ -130,6 +131,19 @@ export const EventRoleProjectionScalarFieldEnum = {
 export type EventRoleProjectionScalarFieldEnum = (typeof EventRoleProjectionScalarFieldEnum)[keyof typeof EventRoleProjectionScalarFieldEnum]
 
 
+export const EventAccessProjectionScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  userId: 'userId',
+  permissions: 'permissions',
+  roles: 'roles',
+  occurredAt: 'occurredAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EventAccessProjectionScalarFieldEnum = (typeof EventAccessProjectionScalarFieldEnum)[keyof typeof EventAccessProjectionScalarFieldEnum]
+
+
 export const EventSettingsProjectionScalarFieldEnum = {
   id: 'id',
   eventId: 'eventId',
@@ -137,8 +151,10 @@ export const EventSettingsProjectionScalarFieldEnum = {
   endsAt: 'endsAt',
   approvalMode: 'approvalMode',
   allowPublicRsvp: 'allowPublicRsvp',
+  requireApprovalForPlusOnes: 'requireApprovalForPlusOnes',
   rsvpDeadline: 'rsvpDeadline',
   maxSeats: 'maxSeats',
+  scheduleTicketRelease: 'scheduleTicketRelease',
   ticketReleaseAt: 'ticketReleaseAt',
   updatedAt: 'updatedAt'
 } as const
@@ -152,6 +168,14 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -168,4 +192,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

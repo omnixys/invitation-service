@@ -33,6 +33,11 @@ export type PhoneNumber = Prisma.PhoneNumberModel
  */
 export type EventRoleProjection = Prisma.EventRoleProjectionModel
 /**
+ * Model EventAccessProjection
+ * 
+ */
+export type EventAccessProjection = Prisma.EventAccessProjectionModel
+/**
  * Model EventSettingsProjection
  * ----------------------------------------------------------------------
  * EventSettingsProjection – local cache of event settings synced via Kafka

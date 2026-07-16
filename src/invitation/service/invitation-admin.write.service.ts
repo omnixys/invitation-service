@@ -17,6 +17,7 @@ import { ImportInvitationsResult } from '../models/input/import-invitation.input
 import { InvitationUpdateInput } from '../models/input/update-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
+import { shouldAutoApproveInvitation, shouldAutoApprovePlusOnes } from '../utils/approval-mode.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache';
@@ -79,7 +80,10 @@ export class AdminWriteService extends InvitationBaseService {
         eventId: input.eventId,
         eventName: settings?.name ?? null,
         eventEndsAt: settings?.endsAt ?? null,
-        autoApproveOnAccept: settings?.approvalMode === 'AUTOMATIC',
+        autoApproveOnAccept: shouldAutoApproveInvitation(
+          settings?.approvalMode,
+          InvitationType.PRIVATE,
+        ),
         firstName: input.firstName ?? null,
         lastName: input.lastName ?? null,
         invitedByInvitationId: input.invitedByInvitationId ?? null,
@@ -168,12 +172,22 @@ export class AdminWriteService extends InvitationBaseService {
         this.logger.debug('approve Invitation | actorId=%s', actorId);
         this.logger.debug('Updating invitation approval: invitationId=%s', id);
 
+        const approvedAt = new Date();
         const updated = await this.prismaService.invitation.update({
           where: { id },
           data: {
             approvedByUserId: actorId ?? null,
-            approvedAt: new Date(),
+            approvedAt,
             status: InvitationStatus.APPROVED,
+          },
+        });
+
+        const eventSettings = await this.prismaService.eventSettingsProjection.findUnique({
+          where: { eventId: updated.eventId },
+          select: {
+            requireApprovalForPlusOnes: true,
+            scheduleTicketRelease: true,
+            ticketReleaseAt: true,
           },
         });
 
@@ -190,6 +204,54 @@ export class AdminWriteService extends InvitationBaseService {
           },
           actorId,
         );
+
+        if (
+          shouldAutoApprovePlusOnes(eventSettings?.requireApprovalForPlusOnes) &&
+          !updated.invitedByInvitationId
+        ) {
+          const plusOnes = await this.prismaService.invitation.findMany({
+            where: {
+              eventId: updated.eventId,
+              invitedByInvitationId: updated.id,
+              rsvpChoice: RsvpChoice.YES,
+              status: { in: [InvitationStatus.ACCEPTED, InvitationStatus.PENDING] },
+            },
+            select: { id: true },
+          });
+
+          if (plusOnes.length > 0) {
+            const plusOneIds = plusOnes.map((plusOne) => plusOne.id);
+
+            await this.prismaService.invitation.updateMany({
+              where: { id: { in: plusOneIds } },
+              data: {
+                approvedByUserId: actorId ?? null,
+                approvedAt,
+                status: InvitationStatus.APPROVED,
+              },
+            });
+
+            for (const plusOneId of plusOneIds) {
+              await this.publishMilestone(
+                {
+                  eventId: updated.eventId,
+                  milestoneId: `${plusOneId}:approved`,
+                  type: 'INVITATION_APPROVED',
+                  label: 'Invitation approved',
+                  occurredAt: approvedAt.toISOString(),
+                  referenceId: plusOneId,
+                },
+                actorId,
+              );
+            }
+
+            this.logger.debug(
+              'Plus-one invitations auto-approved: invitationId=%s | count=%d',
+              id,
+              plusOneIds.length,
+            );
+          }
+        }
 
         if (!updated.guestProfileId) {
           const missing: string[] = [];
@@ -211,15 +273,14 @@ export class AdminWriteService extends InvitationBaseService {
             throw new MissingPendingContactException(id);
           }
 
-          const eventSettings = await this.prismaService.eventSettingsProjection.findUnique({
-            where: { eventId: updated.eventId },
-            select: { ticketReleaseAt: true },
-          });
-
           const ticketReleaseAt = eventSettings?.ticketReleaseAt;
           const now = new Date();
 
-          if (ticketReleaseAt && ticketReleaseAt.getTime() > now.getTime()) {
+          if (
+            eventSettings?.scheduleTicketRelease === true &&
+            ticketReleaseAt &&
+            ticketReleaseAt.getTime() > now.getTime()
+          ) {
             const delayMs = ticketReleaseAt.getTime() - now.getTime();
 
             await this.delayedJob.schedule({

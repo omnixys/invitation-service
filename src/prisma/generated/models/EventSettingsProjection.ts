@@ -44,8 +44,10 @@ export type EventSettingsProjectionMinAggregateOutputType = {
   endsAt: Date | null
   approvalMode: string | null
   allowPublicRsvp: boolean | null
+  requireApprovalForPlusOnes: boolean | null
   rsvpDeadline: Date | null
   maxSeats: number | null
+  scheduleTicketRelease: boolean | null
   ticketReleaseAt: Date | null
   updatedAt: Date | null
 }
@@ -57,8 +59,10 @@ export type EventSettingsProjectionMaxAggregateOutputType = {
   endsAt: Date | null
   approvalMode: string | null
   allowPublicRsvp: boolean | null
+  requireApprovalForPlusOnes: boolean | null
   rsvpDeadline: Date | null
   maxSeats: number | null
+  scheduleTicketRelease: boolean | null
   ticketReleaseAt: Date | null
   updatedAt: Date | null
 }
@@ -70,8 +74,10 @@ export type EventSettingsProjectionCountAggregateOutputType = {
   endsAt: number
   approvalMode: number
   allowPublicRsvp: number
+  requireApprovalForPlusOnes: number
   rsvpDeadline: number
   maxSeats: number
+  scheduleTicketRelease: number
   ticketReleaseAt: number
   updatedAt: number
   _all: number
@@ -93,8 +99,10 @@ export type EventSettingsProjectionMinAggregateInputType = {
   endsAt?: true
   approvalMode?: true
   allowPublicRsvp?: true
+  requireApprovalForPlusOnes?: true
   rsvpDeadline?: true
   maxSeats?: true
+  scheduleTicketRelease?: true
   ticketReleaseAt?: true
   updatedAt?: true
 }
@@ -106,8 +114,10 @@ export type EventSettingsProjectionMaxAggregateInputType = {
   endsAt?: true
   approvalMode?: true
   allowPublicRsvp?: true
+  requireApprovalForPlusOnes?: true
   rsvpDeadline?: true
   maxSeats?: true
+  scheduleTicketRelease?: true
   ticketReleaseAt?: true
   updatedAt?: true
 }
@@ -119,8 +129,10 @@ export type EventSettingsProjectionCountAggregateInputType = {
   endsAt?: true
   approvalMode?: true
   allowPublicRsvp?: true
+  requireApprovalForPlusOnes?: true
   rsvpDeadline?: true
   maxSeats?: true
+  scheduleTicketRelease?: true
   ticketReleaseAt?: true
   updatedAt?: true
   _all?: true
@@ -219,8 +231,10 @@ export type EventSettingsProjectionGroupByOutputType = {
   endsAt: Date | null
   approvalMode: string | null
   allowPublicRsvp: boolean
+  requireApprovalForPlusOnes: boolean
   rsvpDeadline: Date | null
   maxSeats: number | null
+  scheduleTicketRelease: boolean
   ticketReleaseAt: Date | null
   updatedAt: Date | null
   _count: EventSettingsProjectionCountAggregateOutputType | null
@@ -255,8 +269,10 @@ export type EventSettingsProjectionWhereInput = {
   endsAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   approvalMode?: Prisma.StringNullableFilter<"EventSettingsProjection"> | string | null
   allowPublicRsvp?: Prisma.BoolFilter<"EventSettingsProjection"> | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolFilter<"EventSettingsProjection"> | boolean
   rsvpDeadline?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   maxSeats?: Prisma.IntNullableFilter<"EventSettingsProjection"> | number | null
+  scheduleTicketRelease?: Prisma.BoolFilter<"EventSettingsProjection"> | boolean
   ticketReleaseAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
 }
@@ -268,8 +284,10 @@ export type EventSettingsProjectionOrderByWithRelationInput = {
   endsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   approvalMode?: Prisma.SortOrderInput | Prisma.SortOrder
   allowPublicRsvp?: Prisma.SortOrder
+  requireApprovalForPlusOnes?: Prisma.SortOrder
   rsvpDeadline?: Prisma.SortOrderInput | Prisma.SortOrder
   maxSeats?: Prisma.SortOrderInput | Prisma.SortOrder
+  scheduleTicketRelease?: Prisma.SortOrder
   ticketReleaseAt?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
 }
@@ -284,8 +302,10 @@ export type EventSettingsProjectionWhereUniqueInput = Prisma.AtLeast<{
   endsAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   approvalMode?: Prisma.StringNullableFilter<"EventSettingsProjection"> | string | null
   allowPublicRsvp?: Prisma.BoolFilter<"EventSettingsProjection"> | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolFilter<"EventSettingsProjection"> | boolean
   rsvpDeadline?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   maxSeats?: Prisma.IntNullableFilter<"EventSettingsProjection"> | number | null
+  scheduleTicketRelease?: Prisma.BoolFilter<"EventSettingsProjection"> | boolean
   ticketReleaseAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
 }, "id" | "eventId">
@@ -297,8 +317,10 @@ export type EventSettingsProjectionOrderByWithAggregationInput = {
   endsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   approvalMode?: Prisma.SortOrderInput | Prisma.SortOrder
   allowPublicRsvp?: Prisma.SortOrder
+  requireApprovalForPlusOnes?: Prisma.SortOrder
   rsvpDeadline?: Prisma.SortOrderInput | Prisma.SortOrder
   maxSeats?: Prisma.SortOrderInput | Prisma.SortOrder
+  scheduleTicketRelease?: Prisma.SortOrder
   ticketReleaseAt?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.EventSettingsProjectionCountOrderByAggregateInput
@@ -318,8 +340,10 @@ export type EventSettingsProjectionScalarWhereWithAggregatesInput = {
   endsAt?: Prisma.DateTimeNullableWithAggregatesFilter<"EventSettingsProjection"> | Date | string | null
   approvalMode?: Prisma.StringNullableWithAggregatesFilter<"EventSettingsProjection"> | string | null
   allowPublicRsvp?: Prisma.BoolWithAggregatesFilter<"EventSettingsProjection"> | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolWithAggregatesFilter<"EventSettingsProjection"> | boolean
   rsvpDeadline?: Prisma.DateTimeNullableWithAggregatesFilter<"EventSettingsProjection"> | Date | string | null
   maxSeats?: Prisma.IntNullableWithAggregatesFilter<"EventSettingsProjection"> | number | null
+  scheduleTicketRelease?: Prisma.BoolWithAggregatesFilter<"EventSettingsProjection"> | boolean
   ticketReleaseAt?: Prisma.DateTimeNullableWithAggregatesFilter<"EventSettingsProjection"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"EventSettingsProjection"> | Date | string | null
 }
@@ -331,8 +355,10 @@ export type EventSettingsProjectionCreateInput = {
   endsAt?: Date | string | null
   approvalMode?: string | null
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: Date | string | null
   maxSeats?: number | null
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: Date | string | null
   updatedAt?: Date | string | null
 }
@@ -344,8 +370,10 @@ export type EventSettingsProjectionUncheckedCreateInput = {
   endsAt?: Date | string | null
   approvalMode?: string | null
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: Date | string | null
   maxSeats?: number | null
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: Date | string | null
   updatedAt?: Date | string | null
 }
@@ -357,8 +385,10 @@ export type EventSettingsProjectionUpdateInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allowPublicRsvp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rsvpDeadline?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maxSeats?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  scheduleTicketRelease?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ticketReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -370,8 +400,10 @@ export type EventSettingsProjectionUncheckedUpdateInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allowPublicRsvp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rsvpDeadline?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maxSeats?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  scheduleTicketRelease?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ticketReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -383,8 +415,10 @@ export type EventSettingsProjectionCreateManyInput = {
   endsAt?: Date | string | null
   approvalMode?: string | null
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: Date | string | null
   maxSeats?: number | null
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: Date | string | null
   updatedAt?: Date | string | null
 }
@@ -396,8 +430,10 @@ export type EventSettingsProjectionUpdateManyMutationInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allowPublicRsvp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rsvpDeadline?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maxSeats?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  scheduleTicketRelease?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ticketReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -409,8 +445,10 @@ export type EventSettingsProjectionUncheckedUpdateManyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allowPublicRsvp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requireApprovalForPlusOnes?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rsvpDeadline?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maxSeats?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  scheduleTicketRelease?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ticketReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -422,8 +460,10 @@ export type EventSettingsProjectionCountOrderByAggregateInput = {
   endsAt?: Prisma.SortOrder
   approvalMode?: Prisma.SortOrder
   allowPublicRsvp?: Prisma.SortOrder
+  requireApprovalForPlusOnes?: Prisma.SortOrder
   rsvpDeadline?: Prisma.SortOrder
   maxSeats?: Prisma.SortOrder
+  scheduleTicketRelease?: Prisma.SortOrder
   ticketReleaseAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -439,8 +479,10 @@ export type EventSettingsProjectionMaxOrderByAggregateInput = {
   endsAt?: Prisma.SortOrder
   approvalMode?: Prisma.SortOrder
   allowPublicRsvp?: Prisma.SortOrder
+  requireApprovalForPlusOnes?: Prisma.SortOrder
   rsvpDeadline?: Prisma.SortOrder
   maxSeats?: Prisma.SortOrder
+  scheduleTicketRelease?: Prisma.SortOrder
   ticketReleaseAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -452,8 +494,10 @@ export type EventSettingsProjectionMinOrderByAggregateInput = {
   endsAt?: Prisma.SortOrder
   approvalMode?: Prisma.SortOrder
   allowPublicRsvp?: Prisma.SortOrder
+  requireApprovalForPlusOnes?: Prisma.SortOrder
   rsvpDeadline?: Prisma.SortOrder
   maxSeats?: Prisma.SortOrder
+  scheduleTicketRelease?: Prisma.SortOrder
   ticketReleaseAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -479,8 +523,10 @@ export type EventSettingsProjectionSelect<ExtArgs extends runtime.Types.Extensio
   endsAt?: boolean
   approvalMode?: boolean
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: boolean
   maxSeats?: boolean
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["eventSettingsProjection"]>
@@ -492,8 +538,10 @@ export type EventSettingsProjectionSelectCreateManyAndReturn<ExtArgs extends run
   endsAt?: boolean
   approvalMode?: boolean
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: boolean
   maxSeats?: boolean
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["eventSettingsProjection"]>
@@ -505,8 +553,10 @@ export type EventSettingsProjectionSelectUpdateManyAndReturn<ExtArgs extends run
   endsAt?: boolean
   approvalMode?: boolean
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: boolean
   maxSeats?: boolean
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["eventSettingsProjection"]>
@@ -518,13 +568,15 @@ export type EventSettingsProjectionSelectScalar = {
   endsAt?: boolean
   approvalMode?: boolean
   allowPublicRsvp?: boolean
+  requireApprovalForPlusOnes?: boolean
   rsvpDeadline?: boolean
   maxSeats?: boolean
+  scheduleTicketRelease?: boolean
   ticketReleaseAt?: boolean
   updatedAt?: boolean
 }
 
-export type EventSettingsProjectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "name" | "endsAt" | "approvalMode" | "allowPublicRsvp" | "rsvpDeadline" | "maxSeats" | "ticketReleaseAt" | "updatedAt", ExtArgs["result"]["eventSettingsProjection"]>
+export type EventSettingsProjectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "name" | "endsAt" | "approvalMode" | "allowPublicRsvp" | "requireApprovalForPlusOnes" | "rsvpDeadline" | "maxSeats" | "scheduleTicketRelease" | "ticketReleaseAt" | "updatedAt", ExtArgs["result"]["eventSettingsProjection"]>
 
 export type $EventSettingsProjectionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "EventSettingsProjection"
@@ -536,8 +588,10 @@ export type $EventSettingsProjectionPayload<ExtArgs extends runtime.Types.Extens
     endsAt: Date | null
     approvalMode: string | null
     allowPublicRsvp: boolean
+    requireApprovalForPlusOnes: boolean
     rsvpDeadline: Date | null
     maxSeats: number | null
+    scheduleTicketRelease: boolean
     ticketReleaseAt: Date | null
     updatedAt: Date | null
   }, ExtArgs["result"]["eventSettingsProjection"]>
@@ -969,8 +1023,10 @@ export interface EventSettingsProjectionFieldRefs {
   readonly endsAt: Prisma.FieldRef<"EventSettingsProjection", 'DateTime'>
   readonly approvalMode: Prisma.FieldRef<"EventSettingsProjection", 'String'>
   readonly allowPublicRsvp: Prisma.FieldRef<"EventSettingsProjection", 'Boolean'>
+  readonly requireApprovalForPlusOnes: Prisma.FieldRef<"EventSettingsProjection", 'Boolean'>
   readonly rsvpDeadline: Prisma.FieldRef<"EventSettingsProjection", 'DateTime'>
   readonly maxSeats: Prisma.FieldRef<"EventSettingsProjection", 'Int'>
+  readonly scheduleTicketRelease: Prisma.FieldRef<"EventSettingsProjection", 'Boolean'>
   readonly ticketReleaseAt: Prisma.FieldRef<"EventSettingsProjection", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"EventSettingsProjection", 'DateTime'>
 }

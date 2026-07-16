@@ -23,6 +23,7 @@ import { RSVPInput } from '../models/input/rsvp.input.js';
 import { UpdatePlusOneInput } from '../models/input/update-plus-one.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
+import { shouldAutoApproveInvitation, shouldAutoApprovePlusOnes } from '../utils/approval-mode.js';
 import { AdminWriteService } from './invitation-admin.write.service.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
@@ -69,7 +70,7 @@ function hasValidPhoneNumber(phoneNumbers?: Array<{ number?: string | null }> | 
 
 function normalizeOptionalText(value?: string | null): string | null {
   const normalized = value?.trim();
-  return normalized ? normalized : null;
+  return normalized ?? null;
 }
 
 function currentTenantId(): string {
@@ -103,6 +104,13 @@ export class GuestWriteService extends InvitationBaseService {
       this.logger.debug(`reply: id=${id} choice=${choice}`);
 
       const invitation = await this.ensureExists(id);
+      const settings = await this.prismaService.eventSettingsProjection.findUnique({
+        where: { eventId: invitation.eventId },
+        select: { approvalMode: true },
+      });
+      const autoApproveOnAccept =
+        invitation.autoApproveOnAccept ||
+        shouldAutoApproveInvitation(settings?.approvalMode, invitation.type);
 
       /**
        * Prevent double RSVP
@@ -129,7 +137,10 @@ export class GuestWriteService extends InvitationBaseService {
         }
       }
 
+      const selectedInvitedBy = replyInput?.selectedInvitedBy;
+
       const inputPlusOnes = replyInput?.plusOnes ?? [];
+      let createdPlusOnes: InvitationWithPhones[] = [];
 
       const maxInvitees = invitation.maxInvitees ?? 0;
       /**
@@ -173,14 +184,13 @@ export class GuestWriteService extends InvitationBaseService {
             phoneNumber: getPrimaryPhoneNumber(replyInput?.phoneNumbers) ?? invitation.phoneNumber,
             email: replyInput?.email ?? invitation.email,
             guestNote: normalizeOptionalText(replyInput?.guestNote),
+            selectedInvitedBy: selectedInvitedBy ?? invitation.selectedInvitedBy,
           },
         });
 
         /**
          * 2. Create plusOnes ONLY if YES
          */
-        const createdPlusOnes: InvitationWithPhones[] = [];
-
         if (decision.newChoice === RsvpChoice.YES && inputPlusOnes.length > 0) {
           for (const p of allowedPlusOnes) {
             const created = await tx.invitation.create({
@@ -198,6 +208,7 @@ export class GuestWriteService extends InvitationBaseService {
                 invitedByInvitationId: invitation.id,
                 plusOneAgeCategory: p.plusOneAgeCategory,
                 phoneNumber: getPrimaryPhoneNumber(p?.phoneNumbers),
+                selectedInvitedBy: selectedInvitedBy ?? invitation.selectedInvitedBy,
 
                 /**
                  * Nested phone numbers
@@ -221,7 +232,7 @@ export class GuestWriteService extends InvitationBaseService {
               },
             });
 
-            createdPlusOnes.push(created);
+            createdPlusOnes = [...createdPlusOnes, created];
           }
         }
 
@@ -239,7 +250,7 @@ export class GuestWriteService extends InvitationBaseService {
             firstName: replyInput.firstName ?? invitation.firstName,
             lastName: replyInput.lastName ?? invitation.lastName,
             invitationId: invitation.id,
-            email: replyInput.email,
+            email: n2u(replyInput.email ?? null),
             phoneNumbers: replyInput.phoneNumbers,
             guestNote: normalizeOptionalText(replyInput.guestNote) ?? undefined,
             eventId: invitation.eventId,
@@ -296,7 +307,23 @@ export class GuestWriteService extends InvitationBaseService {
         );
       }
 
-      if (decision.newChoice === RsvpChoice.YES && invitation.autoApproveOnAccept) {
+      await this.publishSeatingInfoUpdated({
+        eventId: invitation.eventId,
+        invitationId: id,
+        guestId: result.guestProfileId ?? '',
+        selectedInvitedBy: selectedInvitedBy ?? invitation.selectedInvitedBy,
+      });
+
+      for (const plusOne of createdPlusOnes) {
+        await this.publishSeatingInfoUpdated({
+          eventId: invitation.eventId,
+          invitationId: plusOne.id,
+          guestId: plusOne.guestProfileId ?? '',
+          selectedInvitedBy: selectedInvitedBy ?? invitation.selectedInvitedBy,
+        });
+      }
+
+      if (decision.newChoice === RsvpChoice.YES && autoApproveOnAccept) {
         const approvingActor = invitation.invitedByUserId;
         if (!approvingActor) {
           throw new InvitationValidationException('Automatic approval configuration is incomplete');
@@ -372,7 +399,7 @@ export class GuestWriteService extends InvitationBaseService {
 
       this.logger.debug('Creating Plus One: invitationId=%s', invitedByInvitationId);
 
-      const result = await this.prismaService.$transaction(async (tx) => {
+      const { payload: result, autoApprove } = await this.prismaService.$transaction(async (tx) => {
         const parent = await tx.invitation.findUnique({
           where: { id: invitedByInvitationId },
         });
@@ -387,6 +414,8 @@ export class GuestWriteService extends InvitationBaseService {
             parentEventId: parent.eventId,
           });
         }
+
+        await this.ensureUserCanManageParentInvitation(tx, invitedByInvitationId, actorId);
 
         const updated = await tx.invitation.updateMany({
           where: {
@@ -403,6 +432,15 @@ export class GuestWriteService extends InvitationBaseService {
           });
         }
 
+        const settings = await tx.eventSettingsProjection.findUnique({
+          where: { eventId },
+          select: { requireApprovalForPlusOnes: true },
+        });
+        const now = new Date();
+        const autoApprove =
+          parent.status === InvitationStatus.APPROVED &&
+          shouldAutoApprovePlusOnes(settings?.requireApprovalForPlusOnes);
+
         const child = await tx.invitation.create({
           data: {
             type: InvitationType.PRIVATE,
@@ -415,7 +453,9 @@ export class GuestWriteService extends InvitationBaseService {
             email: email ?? null,
             plusOneAgeCategory,
 
-            status: InvitationStatus.PENDING,
+            status: autoApprove ? InvitationStatus.ACCEPTED : InvitationStatus.PENDING,
+            rsvpChoice: autoApprove ? RsvpChoice.YES : undefined,
+            rsvpAt: autoApprove ? now : undefined,
             maxInvitees: 0,
             phoneNumber: getPrimaryPhoneNumber(phoneNumbers),
             phoneNumbers: phoneNumbers?.length
@@ -454,12 +494,15 @@ export class GuestWriteService extends InvitationBaseService {
           60 * 60 * 24,
         );
 
-        await tx.invitation.update({
+        const updatedChild = await tx.invitation.update({
           where: { id: child.id },
           data: { pendingContactId },
         });
 
-        return InvitationMapper.toPayload(child);
+        return {
+          payload: InvitationMapper.toPayload(updatedChild),
+          autoApprove,
+        };
       });
 
       this.logger.debug(
@@ -469,6 +512,15 @@ export class GuestWriteService extends InvitationBaseService {
       );
 
       await this.publishInvitationCreated(result);
+
+      if (autoApprove) {
+        return this.adminWrite.approve({
+          id: result.id,
+          approve: true,
+          actorId,
+          activeEventId: eventId,
+        });
+      }
 
       return result;
     });
@@ -603,6 +655,8 @@ export class GuestWriteService extends InvitationBaseService {
           );
         }
 
+        await this.ensureUserCanManageParentInvitation(tx, parentInvitationId, actorId);
+
         const guestId = child.guestProfileId;
         if (child.pendingContactId) {
           await this.cache.delete(ValkeyKey.pendingContact, child.pendingContactId);
@@ -707,7 +761,10 @@ export class GuestWriteService extends InvitationBaseService {
           eventId: input.eventId,
           eventName: settings?.name ?? null,
           eventEndsAt: settings?.endsAt ?? null,
-          autoApproveOnAccept: settings?.approvalMode === 'AUTOMATIC',
+          autoApproveOnAccept: shouldAutoApproveInvitation(
+            settings?.approvalMode,
+            InvitationType.PUBLIC,
+          ),
           firstName: input.firstName,
           lastName: input.lastName,
           email: input.email,
@@ -800,7 +857,7 @@ export class GuestWriteService extends InvitationBaseService {
         firstName: input.firstName,
         lastName: input.lastName,
         invitationId: invitee.id,
-        email: input.email,
+        email: n2u(input.email ?? null),
         phoneNumbers: input.phoneNumbers,
         selectedInvitedBy,
         guestNote: guestNote ?? undefined,
@@ -861,6 +918,15 @@ export class GuestWriteService extends InvitationBaseService {
         });
       }
 
+      if (updated.autoApproveOnAccept) {
+        return this.adminWrite.approve({
+          id: updated.id,
+          approve: true,
+          actorId: createTmpUsername(input.firstName, input.lastName),
+          activeEventId: input.eventId,
+        });
+      }
+
       return InvitationMapper.toPayload(updated);
     });
   }
@@ -878,6 +944,8 @@ export class GuestWriteService extends InvitationBaseService {
         if (!parent) {
           throw new InvitationNotFoundException(parentId);
         }
+
+        await this.ensureUserCanManageParentInvitation(tx, parentId, actorId);
 
         const children = await tx.invitation.findMany({
           where: { invitedByInvitationId: parentId, eventId: parent.eventId },
@@ -989,9 +1057,7 @@ export class GuestWriteService extends InvitationBaseService {
     });
   }
 
-  private async publishSeatingInfoUpdated(
-    dto: InvitationSeatingInfoUpdatedDTO,
-  ): Promise<void> {
+  private async publishSeatingInfoUpdated(dto: InvitationSeatingInfoUpdatedDTO): Promise<void> {
     const context = ContextAccessor.get();
     await this.producer.send({
       topic: KafkaTopics.invitation.seatingInfoUpdated,

@@ -11,7 +11,7 @@ import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
-import { EventRoleType, RealmRoleType } from '@omnixys/contracts';
+import { EventPermissionKey, RealmRoleType } from '@omnixys/contracts';
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 import {
@@ -19,8 +19,8 @@ import {
   CurrentEventId,
   CurrentUser,
   CurrentUserData,
-  EventRoleGuard,
-  EventRoles,
+  EventPermissionGuard,
+  EventPermissions,
   RoleGuard,
   Roles,
 } from '@omnixys/security';
@@ -40,9 +40,9 @@ export class AdminMutationResolver {
     this.logger = this.loggerService.log(this.constructor.name);
   }
 
-  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
   @Roles(RealmRoleType.USER)
-  @EventRoles(EventRoleType.ADMIN)
+  @EventPermissions(EventPermissionKey.ManageInvitations)
   @Mutation(() => InvitationPayload)
   async createInvitation(
     @Args('input')
@@ -52,9 +52,9 @@ export class AdminMutationResolver {
     return this.adminService.create(input, user.id);
   }
 
-  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
   @Roles(RealmRoleType.USER)
-  @EventRoles(EventRoleType.ADMIN)
+  @EventPermissions(EventPermissionKey.ManageInvitations)
   @Mutation(() => ImportInvitationsResult, {
     description: 'Imports invitations from CSV/XLSX stored in object storage',
   })
@@ -100,9 +100,9 @@ export class AdminMutationResolver {
     });
   }
 
-  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
   @Roles(RealmRoleType.USER)
-  @EventRoles(EventRoleType.ADMIN)
+  @EventPermissions(EventPermissionKey.ApproveGuests)
   @Mutation(() => InvitationPayload)
   async approveInvitation(
     @Args('input', {
@@ -126,9 +126,9 @@ export class AdminMutationResolver {
     });
   }
 
-  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
   @Roles(RealmRoleType.USER)
-  @EventRoles(EventRoleType.ADMIN)
+  @EventPermissions(EventPermissionKey.ManageInvitations)
   @Mutation(() => SuccessPayload)
   async removeInvitation(
     @Args('id', {
@@ -145,9 +145,9 @@ export class AdminMutationResolver {
     };
   }
 
-  @UseGuards(CookieAuthGuard, RoleGuard, EventRoleGuard)
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
   @Roles(RealmRoleType.USER)
-  @EventRoles(EventRoleType.ADMIN)
+  @EventPermissions(EventPermissionKey.ApproveGuests)
   @Mutation(() => [InvitationPayload])
   async bulkApproveInvitations(
     @Args('input', { type: () => BulkApproveInvitationInput })

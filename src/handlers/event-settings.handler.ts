@@ -27,6 +27,11 @@ import {
 import { OmnixysLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 
+interface EventSettingsApprovalPayload {
+  requireApprovalForPlusOnes?: boolean;
+  scheduleTicketRelease?: boolean;
+}
+
 @KafkaEventHandler('event')
 @Injectable()
 export class EventSettingsHandler {
@@ -51,10 +56,12 @@ export class EventSettingsHandler {
         endsAt,
         approvalMode,
         allowPublicRsvp,
+        requireApprovalForPlusOnes,
+        scheduleTicketRelease,
         rsvpDeadline,
         maxSeats,
         ticketReleaseAt,
-      } = payload;
+      } = payload as EventCreatedDTO & EventSettingsApprovalPayload;
 
       await this.prisma.eventSettingsProjection.upsert({
         where: { eventId },
@@ -64,6 +71,8 @@ export class EventSettingsHandler {
           endsAt: endsAt ? new Date(endsAt) : null,
           approvalMode,
           allowPublicRsvp,
+          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
+          scheduleTicketRelease: scheduleTicketRelease ?? false,
           rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
           maxSeats,
           ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
@@ -73,6 +82,8 @@ export class EventSettingsHandler {
           endsAt: endsAt ? new Date(endsAt) : null,
           approvalMode,
           allowPublicRsvp,
+          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
+          scheduleTicketRelease: scheduleTicketRelease ?? false,
           rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
           maxSeats,
           ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
@@ -93,11 +104,13 @@ export class EventSettingsHandler {
         endsAt,
         approvalMode,
         allowPublicRsvp,
+        requireApprovalForPlusOnes,
+        scheduleTicketRelease,
         rsvpDeadline,
         maxSeats,
         ticketReleaseAt,
         occurredAt,
-      } = payload;
+      } = payload as EventUpdatedDTO & EventSettingsApprovalPayload;
 
       const existing = await this.prisma.eventSettingsProjection.findUnique({
         where: { eventId },
@@ -120,6 +133,8 @@ export class EventSettingsHandler {
           endsAt: endsAt ? new Date(endsAt) : null,
           approvalMode: approvalMode ?? null,
           allowPublicRsvp: allowPublicRsvp ?? false,
+          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
+          scheduleTicketRelease: scheduleTicketRelease ?? false,
           rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
           maxSeats: maxSeats ?? null,
           ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
@@ -134,6 +149,8 @@ export class EventSettingsHandler {
               : undefined,
           approvalMode: approvalMode ?? undefined,
           allowPublicRsvp: allowPublicRsvp ?? undefined,
+          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? undefined,
+          scheduleTicketRelease: scheduleTicketRelease ?? undefined,
           rsvpDeadline:
             rsvpDeadline !== undefined
               ? rsvpDeadline

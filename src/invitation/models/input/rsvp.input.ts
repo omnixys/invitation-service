@@ -54,6 +54,12 @@ export class AcceptRSVPInput {
   @IsOptional()
   @IsString()
   guestNote?: string;
+
+  @Field(() => [String], {
+    nullable: true,
+    description: 'Configured inviter/source options selected by the guest',
+  })
+  selectedInvitedBy?: string[];
 }
 
 @InputType({
