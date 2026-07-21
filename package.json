@@ -20,7 +20,7 @@
   "private": false,
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=25.8.2",
+    "node": ">=24.10.0",
     "pnpm": ">=10.33.0"
   },
   "scripts": {
@@ -93,10 +93,7 @@
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "fastify": "5.8.5",
-    "jose": "^6.2.3",
-    "kafkajs": "^2.2.4",
     "papaparse": "^5.5.4",
-    "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
@@ -112,8 +109,6 @@
     "@semantic-release/github": "^12.0.8",
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.1",
-    "@swc/cli": "^0.6.0",
-    "@swc/core": "^1.15.43",
     "@tsconfig/node23": "^23.0.4",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.20.0",
