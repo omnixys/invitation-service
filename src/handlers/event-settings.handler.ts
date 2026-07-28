@@ -24,7 +24,7 @@ import {
   KafkaTopics,
   type IKafkaEventContext,
 } from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
+import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
 
 interface EventSettingsApprovalPayload {
@@ -35,7 +35,7 @@ interface EventSettingsApprovalPayload {
 @KafkaEventHandler('event')
 @Injectable()
 export class EventSettingsHandler {
-  private readonly logger;
+  private readonly logger: ScopedLogger;
 
   constructor(
     private readonly omnixysLogger: OmnixysLogger,
@@ -94,7 +94,10 @@ export class EventSettingsHandler {
         });
         this.logger.info('event_created_settings_upserted', { eventId });
       } catch (error) {
-        this.logger.exception(error, 'event_created_settings_failed', { eventId });
+        this.logger.error('event_created_settings_failed', {
+          eventId,
+          error,
+        });
         throw error;
       }
     });
@@ -179,7 +182,10 @@ export class EventSettingsHandler {
         });
         this.logger.info('event_updated_settings_upserted', { eventId });
       } catch (error) {
-        this.logger.exception(error, 'event_updated_settings_failed', { eventId });
+        this.logger.error('event_updated_settings_failed', {
+          eventId,
+          error,
+        });
         throw error;
       }
     });
