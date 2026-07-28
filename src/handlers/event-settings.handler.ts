@@ -63,32 +63,40 @@ export class EventSettingsHandler {
         ticketReleaseAt,
       } = payload as EventCreatedDTO & EventSettingsApprovalPayload;
 
-      await this.prisma.eventSettingsProjection.upsert({
-        where: { eventId },
-        create: {
-          eventId,
-          name,
-          endsAt: endsAt ? new Date(endsAt) : null,
-          approvalMode,
-          allowPublicRsvp,
-          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
-          scheduleTicketRelease: scheduleTicketRelease ?? false,
-          rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
-          maxSeats,
-          ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
-        },
-        update: {
-          name,
-          endsAt: endsAt ? new Date(endsAt) : null,
-          approvalMode,
-          allowPublicRsvp,
-          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
-          scheduleTicketRelease: scheduleTicketRelease ?? false,
-          rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
-          maxSeats,
-          ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
-        },
-      });
+      this.logger.info('event_created_received', { eventId, name });
+
+      try {
+        await this.prisma.eventSettingsProjection.upsert({
+          where: { eventId },
+          create: {
+            eventId,
+            name,
+            endsAt: endsAt ? new Date(endsAt) : null,
+            approvalMode,
+            allowPublicRsvp,
+            requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
+            scheduleTicketRelease: scheduleTicketRelease ?? false,
+            rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
+            maxSeats,
+            ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
+          },
+          update: {
+            name,
+            endsAt: endsAt ? new Date(endsAt) : null,
+            approvalMode,
+            allowPublicRsvp,
+            requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
+            scheduleTicketRelease: scheduleTicketRelease ?? false,
+            rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
+            maxSeats,
+            ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
+          },
+        });
+        this.logger.info('event_created_settings_upserted', { eventId });
+      } catch (error) {
+        this.logger.exception(error, 'event_created_settings_failed', { eventId });
+        throw error;
+      }
     });
   }
 
@@ -112,6 +120,8 @@ export class EventSettingsHandler {
         occurredAt,
       } = payload as EventUpdatedDTO & EventSettingsApprovalPayload;
 
+      this.logger.info('event_updated_received', { eventId, name });
+
       const existing = await this.prisma.eventSettingsProjection.findUnique({
         where: { eventId },
         select: { updatedAt: true },
@@ -125,47 +135,53 @@ export class EventSettingsHandler {
         return;
       }
 
-      await this.prisma.eventSettingsProjection.upsert({
-        where: { eventId },
-        create: {
-          eventId,
-          name: name ?? null,
-          endsAt: endsAt ? new Date(endsAt) : null,
-          approvalMode: approvalMode ?? null,
-          allowPublicRsvp: allowPublicRsvp ?? false,
-          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
-          scheduleTicketRelease: scheduleTicketRelease ?? false,
-          rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
-          maxSeats: maxSeats ?? null,
-          ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
-        },
-        update: {
-          name: name ?? undefined,
-          endsAt:
-            endsAt !== undefined
-              ? endsAt
-                ? new Date(endsAt)
-                : null
-              : undefined,
-          approvalMode: approvalMode ?? undefined,
-          allowPublicRsvp: allowPublicRsvp ?? undefined,
-          requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? undefined,
-          scheduleTicketRelease: scheduleTicketRelease ?? undefined,
-          rsvpDeadline:
-            rsvpDeadline !== undefined
-              ? rsvpDeadline
-                ? new Date(rsvpDeadline)
-                : null
-              : undefined,
-          maxSeats: maxSeats ?? undefined,
-          ticketReleaseAt:
-            ticketReleaseAt !== undefined
-              ? ticketReleaseAt
-                ? new Date(ticketReleaseAt)
-                : null
-              : undefined,
-        },
-      });
+      try {
+        await this.prisma.eventSettingsProjection.upsert({
+          where: { eventId },
+          create: {
+            eventId,
+            name: name ?? null,
+            endsAt: endsAt ? new Date(endsAt) : null,
+            approvalMode: approvalMode ?? null,
+            allowPublicRsvp: allowPublicRsvp ?? false,
+            requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
+            scheduleTicketRelease: scheduleTicketRelease ?? false,
+            rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
+            maxSeats: maxSeats ?? null,
+            ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
+          },
+          update: {
+            name: name ?? undefined,
+            endsAt:
+              endsAt !== undefined
+                ? endsAt
+                  ? new Date(endsAt)
+                  : null
+                : undefined,
+            approvalMode: approvalMode ?? undefined,
+            allowPublicRsvp: allowPublicRsvp ?? undefined,
+            requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? undefined,
+            scheduleTicketRelease: scheduleTicketRelease ?? undefined,
+            rsvpDeadline:
+              rsvpDeadline !== undefined
+                ? rsvpDeadline
+                  ? new Date(rsvpDeadline)
+                  : null
+                : undefined,
+            maxSeats: maxSeats ?? undefined,
+            ticketReleaseAt:
+              ticketReleaseAt !== undefined
+                ? ticketReleaseAt
+                  ? new Date(ticketReleaseAt)
+                  : null
+                : undefined,
+          },
+        });
+        this.logger.info('event_updated_settings_upserted', { eventId });
+      } catch (error) {
+        this.logger.exception(error, 'event_updated_settings_failed', { eventId });
+        throw error;
+      }
     });
   }
 }
