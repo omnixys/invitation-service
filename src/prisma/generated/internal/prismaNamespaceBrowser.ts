@@ -148,6 +148,7 @@ export type EventAccessProjectionScalarFieldEnum = (typeof EventAccessProjection
 export const EventSettingsProjectionScalarFieldEnum = {
   id: 'id',
   eventId: 'eventId',
+  tenantId: 'tenantId',
   name: 'name',
   endsAt: 'endsAt',
   approvalMode: 'approvalMode',

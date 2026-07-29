@@ -40,6 +40,7 @@ export type EventSettingsProjectionSumAggregateOutputType = {
 export type EventSettingsProjectionMinAggregateOutputType = {
   id: string | null
   eventId: string | null
+  tenantId: string | null
   name: string | null
   endsAt: Date | null
   approvalMode: string | null
@@ -55,6 +56,7 @@ export type EventSettingsProjectionMinAggregateOutputType = {
 export type EventSettingsProjectionMaxAggregateOutputType = {
   id: string | null
   eventId: string | null
+  tenantId: string | null
   name: string | null
   endsAt: Date | null
   approvalMode: string | null
@@ -70,6 +72,7 @@ export type EventSettingsProjectionMaxAggregateOutputType = {
 export type EventSettingsProjectionCountAggregateOutputType = {
   id: number
   eventId: number
+  tenantId: number
   name: number
   endsAt: number
   approvalMode: number
@@ -95,6 +98,7 @@ export type EventSettingsProjectionSumAggregateInputType = {
 export type EventSettingsProjectionMinAggregateInputType = {
   id?: true
   eventId?: true
+  tenantId?: true
   name?: true
   endsAt?: true
   approvalMode?: true
@@ -110,6 +114,7 @@ export type EventSettingsProjectionMinAggregateInputType = {
 export type EventSettingsProjectionMaxAggregateInputType = {
   id?: true
   eventId?: true
+  tenantId?: true
   name?: true
   endsAt?: true
   approvalMode?: true
@@ -125,6 +130,7 @@ export type EventSettingsProjectionMaxAggregateInputType = {
 export type EventSettingsProjectionCountAggregateInputType = {
   id?: true
   eventId?: true
+  tenantId?: true
   name?: true
   endsAt?: true
   approvalMode?: true
@@ -227,6 +233,7 @@ export type EventSettingsProjectionGroupByArgs<ExtArgs extends runtime.Types.Ext
 export type EventSettingsProjectionGroupByOutputType = {
   id: string
   eventId: string
+  tenantId: string | null
   name: string | null
   endsAt: Date | null
   approvalMode: string | null
@@ -265,6 +272,7 @@ export type EventSettingsProjectionWhereInput = {
   NOT?: Prisma.EventSettingsProjectionWhereInput | Prisma.EventSettingsProjectionWhereInput[]
   id?: Prisma.UuidFilter<"EventSettingsProjection"> | string
   eventId?: Prisma.UuidFilter<"EventSettingsProjection"> | string
+  tenantId?: Prisma.UuidNullableFilter<"EventSettingsProjection"> | string | null
   name?: Prisma.StringNullableFilter<"EventSettingsProjection"> | string | null
   endsAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   approvalMode?: Prisma.StringNullableFilter<"EventSettingsProjection"> | string | null
@@ -280,6 +288,7 @@ export type EventSettingsProjectionWhereInput = {
 export type EventSettingsProjectionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  tenantId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   endsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   approvalMode?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -298,6 +307,7 @@ export type EventSettingsProjectionWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.EventSettingsProjectionWhereInput | Prisma.EventSettingsProjectionWhereInput[]
   OR?: Prisma.EventSettingsProjectionWhereInput[]
   NOT?: Prisma.EventSettingsProjectionWhereInput | Prisma.EventSettingsProjectionWhereInput[]
+  tenantId?: Prisma.UuidNullableFilter<"EventSettingsProjection"> | string | null
   name?: Prisma.StringNullableFilter<"EventSettingsProjection"> | string | null
   endsAt?: Prisma.DateTimeNullableFilter<"EventSettingsProjection"> | Date | string | null
   approvalMode?: Prisma.StringNullableFilter<"EventSettingsProjection"> | string | null
@@ -313,6 +323,7 @@ export type EventSettingsProjectionWhereUniqueInput = Prisma.AtLeast<{
 export type EventSettingsProjectionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  tenantId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   endsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   approvalMode?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -336,6 +347,7 @@ export type EventSettingsProjectionScalarWhereWithAggregatesInput = {
   NOT?: Prisma.EventSettingsProjectionScalarWhereWithAggregatesInput | Prisma.EventSettingsProjectionScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"EventSettingsProjection"> | string
   eventId?: Prisma.UuidWithAggregatesFilter<"EventSettingsProjection"> | string
+  tenantId?: Prisma.UuidNullableWithAggregatesFilter<"EventSettingsProjection"> | string | null
   name?: Prisma.StringNullableWithAggregatesFilter<"EventSettingsProjection"> | string | null
   endsAt?: Prisma.DateTimeNullableWithAggregatesFilter<"EventSettingsProjection"> | Date | string | null
   approvalMode?: Prisma.StringNullableWithAggregatesFilter<"EventSettingsProjection"> | string | null
@@ -351,6 +363,7 @@ export type EventSettingsProjectionScalarWhereWithAggregatesInput = {
 export type EventSettingsProjectionCreateInput = {
   id?: string
   eventId: string
+  tenantId?: string | null
   name?: string | null
   endsAt?: Date | string | null
   approvalMode?: string | null
@@ -366,6 +379,7 @@ export type EventSettingsProjectionCreateInput = {
 export type EventSettingsProjectionUncheckedCreateInput = {
   id?: string
   eventId: string
+  tenantId?: string | null
   name?: string | null
   endsAt?: Date | string | null
   approvalMode?: string | null
@@ -381,6 +395,7 @@ export type EventSettingsProjectionUncheckedCreateInput = {
 export type EventSettingsProjectionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
+  tenantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -396,6 +411,7 @@ export type EventSettingsProjectionUpdateInput = {
 export type EventSettingsProjectionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
+  tenantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -411,6 +427,7 @@ export type EventSettingsProjectionUncheckedUpdateInput = {
 export type EventSettingsProjectionCreateManyInput = {
   id?: string
   eventId: string
+  tenantId?: string | null
   name?: string | null
   endsAt?: Date | string | null
   approvalMode?: string | null
@@ -426,6 +443,7 @@ export type EventSettingsProjectionCreateManyInput = {
 export type EventSettingsProjectionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
+  tenantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -441,6 +459,7 @@ export type EventSettingsProjectionUpdateManyMutationInput = {
 export type EventSettingsProjectionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
+  tenantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   approvalMode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -456,6 +475,7 @@ export type EventSettingsProjectionUncheckedUpdateManyInput = {
 export type EventSettingsProjectionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  tenantId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   endsAt?: Prisma.SortOrder
   approvalMode?: Prisma.SortOrder
@@ -475,6 +495,7 @@ export type EventSettingsProjectionAvgOrderByAggregateInput = {
 export type EventSettingsProjectionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  tenantId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   endsAt?: Prisma.SortOrder
   approvalMode?: Prisma.SortOrder
@@ -490,6 +511,7 @@ export type EventSettingsProjectionMaxOrderByAggregateInput = {
 export type EventSettingsProjectionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  tenantId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   endsAt?: Prisma.SortOrder
   approvalMode?: Prisma.SortOrder
@@ -519,6 +541,7 @@ export type NullableIntFieldUpdateOperationsInput = {
 export type EventSettingsProjectionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   eventId?: boolean
+  tenantId?: boolean
   name?: boolean
   endsAt?: boolean
   approvalMode?: boolean
@@ -534,6 +557,7 @@ export type EventSettingsProjectionSelect<ExtArgs extends runtime.Types.Extensio
 export type EventSettingsProjectionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   eventId?: boolean
+  tenantId?: boolean
   name?: boolean
   endsAt?: boolean
   approvalMode?: boolean
@@ -549,6 +573,7 @@ export type EventSettingsProjectionSelectCreateManyAndReturn<ExtArgs extends run
 export type EventSettingsProjectionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   eventId?: boolean
+  tenantId?: boolean
   name?: boolean
   endsAt?: boolean
   approvalMode?: boolean
@@ -564,6 +589,7 @@ export type EventSettingsProjectionSelectUpdateManyAndReturn<ExtArgs extends run
 export type EventSettingsProjectionSelectScalar = {
   id?: boolean
   eventId?: boolean
+  tenantId?: boolean
   name?: boolean
   endsAt?: boolean
   approvalMode?: boolean
@@ -576,7 +602,7 @@ export type EventSettingsProjectionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type EventSettingsProjectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "name" | "endsAt" | "approvalMode" | "allowPublicRsvp" | "requireApprovalForPlusOnes" | "rsvpDeadline" | "maxSeats" | "scheduleTicketRelease" | "ticketReleaseAt" | "updatedAt", ExtArgs["result"]["eventSettingsProjection"]>
+export type EventSettingsProjectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "tenantId" | "name" | "endsAt" | "approvalMode" | "allowPublicRsvp" | "requireApprovalForPlusOnes" | "rsvpDeadline" | "maxSeats" | "scheduleTicketRelease" | "ticketReleaseAt" | "updatedAt", ExtArgs["result"]["eventSettingsProjection"]>
 
 export type $EventSettingsProjectionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "EventSettingsProjection"
@@ -584,6 +610,7 @@ export type $EventSettingsProjectionPayload<ExtArgs extends runtime.Types.Extens
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     eventId: string
+    tenantId: string | null
     name: string | null
     endsAt: Date | null
     approvalMode: string | null
@@ -1019,6 +1046,7 @@ export interface Prisma__EventSettingsProjectionClient<T, Null = never, ExtArgs 
 export interface EventSettingsProjectionFieldRefs {
   readonly id: Prisma.FieldRef<"EventSettingsProjection", 'String'>
   readonly eventId: Prisma.FieldRef<"EventSettingsProjection", 'String'>
+  readonly tenantId: Prisma.FieldRef<"EventSettingsProjection", 'String'>
   readonly name: Prisma.FieldRef<"EventSettingsProjection", 'String'>
   readonly endsAt: Prisma.FieldRef<"EventSettingsProjection", 'DateTime'>
   readonly approvalMode: Prisma.FieldRef<"EventSettingsProjection", 'String'>

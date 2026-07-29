@@ -22,10 +22,12 @@ import {
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
+  KAFKA_HEADERS,
   type IKafkaEventContext,
 } from '@omnixys/kafka';
 import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
 import { TraceRunner } from '@omnixys/observability';
+import { isUUID } from 'class-validator';
 
 interface EventSettingsApprovalPayload {
   requireApprovalForPlusOnes?: boolean;
@@ -47,7 +49,7 @@ export class EventSettingsHandler {
   @KafkaEvent(KafkaTopics.event.created)
   async handleEventCreated(
     payload: EventCreatedDTO,
-    _context: IKafkaEventContext,
+    context: IKafkaEventContext,
   ): Promise<void> {
     return TraceRunner.run('[HANDLER] event.created', async () => {
       const {
@@ -62,6 +64,7 @@ export class EventSettingsHandler {
         maxSeats,
         ticketReleaseAt,
       } = payload as EventCreatedDTO & EventSettingsApprovalPayload;
+      const tenantId = verifiedTenantId(context);
 
       this.logger.info('event_created_received', { eventId, name });
 
@@ -70,6 +73,7 @@ export class EventSettingsHandler {
           where: { eventId },
           create: {
             eventId,
+            tenantId,
             name,
             endsAt: endsAt ? new Date(endsAt) : null,
             approvalMode,
@@ -81,6 +85,7 @@ export class EventSettingsHandler {
             ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
           },
           update: {
+            tenantId,
             name,
             endsAt: endsAt ? new Date(endsAt) : null,
             approvalMode,
@@ -106,7 +111,7 @@ export class EventSettingsHandler {
   @KafkaEvent(KafkaTopics.event.updated)
   async handleEventUpdated(
     payload: EventUpdatedDTO,
-    _context: IKafkaEventContext,
+    context: IKafkaEventContext,
   ): Promise<void> {
     return TraceRunner.run('[HANDLER] event.updated', async () => {
       const {
@@ -122,6 +127,7 @@ export class EventSettingsHandler {
         ticketReleaseAt,
         occurredAt,
       } = payload as EventUpdatedDTO & EventSettingsApprovalPayload;
+      const tenantId = verifiedTenantId(context);
 
       this.logger.info('event_updated_received', { eventId, name });
 
@@ -143,6 +149,7 @@ export class EventSettingsHandler {
           where: { eventId },
           create: {
             eventId,
+            tenantId,
             name: name ?? null,
             endsAt: endsAt ? new Date(endsAt) : null,
             approvalMode: approvalMode ?? null,
@@ -154,6 +161,7 @@ export class EventSettingsHandler {
             ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
           },
           update: {
+            tenantId,
             name: name ?? undefined,
             endsAt:
               endsAt !== undefined
@@ -190,4 +198,12 @@ export class EventSettingsHandler {
       }
     });
   }
+}
+
+function verifiedTenantId(context: IKafkaEventContext): string {
+  const tenantId = context.headers[KAFKA_HEADERS.TENANT_ID];
+  if (!tenantId || !isUUID(tenantId)) {
+    throw new Error('Event projection requires a valid Kafka tenant header');
+  }
+  return tenantId;
 }

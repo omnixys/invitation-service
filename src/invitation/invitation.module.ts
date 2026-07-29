@@ -1,5 +1,6 @@
 import { AnalyticsModule } from '../analytics/analytics.module.js';
 import { EventAuthModule } from '../event-auth/event-auth.module.js';
+import { AnalyticsTenantController } from './controller/analytics-tenant.controller.js';
 import { InvitationUploadController } from './controller/upload.controller.js';
 import { GuestMutationResolver } from './resolver/guest-mutation.resolver.js';
 import { AdminMutationResolver } from './resolver/invitation-admin-mutation.resolver.js';
@@ -16,7 +17,7 @@ import { Module } from '@nestjs/common';
 
 @Module({
   imports: [EventAuthModule, AnalyticsModule],
-  controllers: [InvitationUploadController],
+  controllers: [InvitationUploadController, AnalyticsTenantController],
   providers: [
     InvitationQueryResolver,
     AdminMutationResolver,

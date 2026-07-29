@@ -114,6 +114,7 @@ model EventAccessProjection {
 model EventSettingsProjection {
   id                         String    @id @default(uuid()) @map("id") @db.Uuid
   eventId                    String    @unique @map("event_id") @db.Uuid
+  tenantId                   String?   @map("tenant_id") @db.Uuid
   name                       String?   @map("name")
   endsAt                     DateTime? @map("ends_at")
   approvalMode               String?   @map("approval_mode")
@@ -125,6 +126,7 @@ model EventSettingsProjection {
   ticketReleaseAt            DateTime? @map("ticket_release_at")
   updatedAt                  DateTime? @updatedAt @map("updated_at")
 
+  @@index([tenantId])
   @@map("event_settings_projection")
 }
 

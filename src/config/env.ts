@@ -113,6 +113,11 @@ export const env = {
   COOKIE_SECRET: getEnv('COOKIE_SECRET', 'omnixys-development-secret', {
     required: true,
   }),
+  INTERNAL_GATEWAY_TOKEN: getEnv(
+    'INTERNAL_GATEWAY_TOKEN',
+    'dev-internal-gateway-token',
+    { required: true },
+  ),
 
   PC_TTL_SEC: getEnv('PC_TTL_SEC', String(60 * 60 * 24 * 30), {
     transform: toNumber,
