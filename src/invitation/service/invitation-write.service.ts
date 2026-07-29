@@ -1,3 +1,4 @@
+import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
 import { InvitationStatus, InvitationType } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
@@ -19,7 +20,11 @@ export type Trigger = (typeof TRIGGER)[keyof typeof TRIGGER];
 
 @Injectable()
 export class InvitationWriteService extends InvitationBaseService {
-  constructor(prisma: PrismaService, logger: OmnixysLogger) {
+  constructor(
+    prisma: PrismaService,
+    logger: OmnixysLogger,
+    private readonly analyticsOutbox: AnalyticsOutboxService,
+  ) {
     super(logger, prisma);
   }
 
@@ -84,24 +89,38 @@ export class InvitationWriteService extends InvitationBaseService {
       return { inserted: 0 };
     }
 
-    const ops = records.map((r) =>
-      this.prismaService.invitation.create({
-        data: {
-          type: InvitationType.PRIVATE,
-          firstName: r.firstName,
-          lastName: r.lastName,
-          eventId: r.eventId,
-          status: InvitationStatus.PENDING,
-          maxInvitees: r.maxInvitees ?? 0,
-          invitedByInvitationId: r.invitedByInvitationId ?? null,
-          phoneNumber: r.phoneNumber,
-        },
-      }),
-    );
-
     this.logger.debug('Importing invitations: count=%s', records.length);
 
-    const result = await this.prismaService.$transaction(ops);
+    const result = await this.prismaService.$transaction(async (tx) => {
+      const created = [];
+      for (const record of records) {
+        const invitation = await tx.invitation.create({
+          data: {
+            type: InvitationType.PRIVATE,
+            firstName: record.firstName,
+            lastName: record.lastName,
+            eventId: record.eventId,
+            status: InvitationStatus.PENDING,
+            maxInvitees: record.maxInvitees ?? 0,
+            invitedByInvitationId: record.invitedByInvitationId ?? null,
+            phoneNumber: record.phoneNumber,
+          },
+        });
+        await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
+          eventName: 'InvitationCreated',
+          aggregateId: invitation.id,
+          aggregateType: 'invitation',
+          properties: {
+            eventId: invitation.eventId,
+            invitationType: invitation.type,
+            isPlusOne: Boolean(invitation.invitedByInvitationId),
+            source: 'import',
+          },
+        });
+        created.push(invitation);
+      }
+      return created;
+    });
 
     this.logger.debug('Invitations imported: count=%s', result.length);
 

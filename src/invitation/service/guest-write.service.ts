@@ -1,3 +1,4 @@
+import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
 import {
   Invitation,
   InvitationStatus,
@@ -86,6 +87,7 @@ export class GuestWriteService extends InvitationBaseService {
     private readonly cache: ValkeyService,
     private readonly producer: KafkaProducerService,
     private readonly adminWrite: AdminWriteService,
+    private readonly analyticsOutbox: AnalyticsOutboxService,
   ) {
     super(logger, prisma);
   }
@@ -288,6 +290,40 @@ export class GuestWriteService extends InvitationBaseService {
             where: { id },
             data: { pendingContactId },
           });
+        }
+
+        const isUpdate = previous !== null;
+        await this.analyticsOutbox.enqueue(
+          tx,
+          isUpdate ? 'invitation.rsvp.updated.v1' : 'invitation.rsvp.submitted.v1',
+          {
+            eventName: isUpdate ? 'RsvpUpdated' : 'RsvpSubmitted',
+            aggregateId: updatedInvitation.id,
+            aggregateType: 'invitation',
+            subjectId: updatedInvitation.guestProfileId ?? undefined,
+            properties: {
+              choice: decision.newChoice,
+              eventId: updatedInvitation.eventId,
+              plusOneCount: createdPlusOnes.length,
+            },
+          },
+        );
+        if (decision.newChoice === RsvpChoice.YES || decision.newChoice === RsvpChoice.NO) {
+          const accepted = decision.newChoice === RsvpChoice.YES;
+          await this.analyticsOutbox.enqueue(
+            tx,
+            accepted ? 'invitation.accepted.v1' : 'invitation.declined.v1',
+            {
+              eventName: accepted ? 'InvitationAccepted' : 'InvitationDeclined',
+              aggregateId: updatedInvitation.id,
+              aggregateType: 'invitation',
+              subjectId: updatedInvitation.guestProfileId ?? undefined,
+              properties: {
+                eventId: updatedInvitation.eventId,
+                isPlusOne: Boolean(updatedInvitation.invitedByInvitationId),
+              },
+            },
+          );
         }
 
         return updatedInvitation;
@@ -497,6 +533,17 @@ export class GuestWriteService extends InvitationBaseService {
         const updatedChild = await tx.invitation.update({
           where: { id: child.id },
           data: { pendingContactId },
+        });
+        await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
+          eventName: 'InvitationCreated',
+          aggregateId: updatedChild.id,
+          aggregateType: 'invitation',
+          subjectId: actorId,
+          properties: {
+            eventId: updatedChild.eventId,
+            invitationType: updatedChild.type,
+            isPlusOne: true,
+          },
         });
 
         return {
@@ -752,80 +799,31 @@ export class GuestWriteService extends InvitationBaseService {
         where: { eventId: input.eventId },
       });
 
-      /**
-       * 1. Create main invitation
-       */
-      const invitee = await this.prismaService.invitation.create({
-        data: {
-          type: InvitationType.PUBLIC,
-          eventId: input.eventId,
-          eventName: settings?.name ?? null,
-          eventEndsAt: settings?.endsAt ?? null,
-          autoApproveOnAccept: shouldAutoApproveInvitation(
-            settings?.approvalMode,
-            InvitationType.PUBLIC,
-          ),
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          status: InvitationStatus.ACCEPTED,
-          rsvpChoice: RsvpChoice.YES,
-          rsvpAt: new Date(),
-          maxInvitees: input.plusOnes?.length ?? 0,
-          selectedInvitedBy,
-          guestNote,
-
-          phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
-          phoneNumbers: input.phoneNumbers?.length
-            ? {
-                createMany: {
-                  data: input.phoneNumbers.map((ph) => ({
-                    number: ph.number,
-                    type: ph.type,
-                    label: ph.label ?? null,
-                    isPrimary: ph.isPrimary ?? false,
-                    countryCode: ph.countryCode,
-                  })),
-                },
-              }
-            : undefined,
-        },
-      });
-
-      this.logger.debug(
-        'Public RSVP invitation created: invitationId=%s | eventId=%s',
-        invitee.id,
-        input.eventId,
-      );
-
-      /**
-       * 2. Create plusOnes WITH IDs
-       */
-      const plusOneInvitations = [];
-
-      for (const p of input.plusOnes ?? []) {
-        if (!p.firstName || !p.lastName) {
-          continue;
-        }
-        const created = await this.prismaService.invitation.create({
+      const { invitee, plusOneInvitations } = await this.prismaService.$transaction(async (tx) => {
+        const invitee = await tx.invitation.create({
           data: {
             type: InvitationType.PUBLIC,
             eventId: input.eventId,
-            firstName: p.firstName,
-            lastName: p.lastName,
+            eventName: settings?.name ?? null,
+            eventEndsAt: settings?.endsAt ?? null,
+            autoApproveOnAccept: shouldAutoApproveInvitation(
+              settings?.approvalMode,
+              InvitationType.PUBLIC,
+            ),
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
             status: InvitationStatus.ACCEPTED,
             rsvpChoice: RsvpChoice.YES,
             rsvpAt: new Date(),
-            invitedByInvitationId: invitee.id,
-            email: p.email,
-            plusOneAgeCategory: p.plusOneAgeCategory,
+            maxInvitees: input.plusOnes?.length ?? 0,
             selectedInvitedBy,
-
-            phoneNumber: getPrimaryPhoneNumber(p.phoneNumbers),
-            phoneNumbers: p.phoneNumbers?.length
+            guestNote,
+            phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
+            phoneNumbers: input.phoneNumbers?.length
               ? {
                   createMany: {
-                    data: p.phoneNumbers.map((ph) => ({
+                    data: input.phoneNumbers.map((ph) => ({
                       number: ph.number,
                       type: ph.type,
                       label: ph.label ?? null,
@@ -836,13 +834,100 @@ export class GuestWriteService extends InvitationBaseService {
                 }
               : undefined,
           },
-          include: {
-            phoneNumbers: true,
-          },
         });
 
-        plusOneInvitations.push(created);
-      }
+        const plusOneInvitations: InvitationWithPhones[] = [];
+        for (const plusOne of input.plusOnes ?? []) {
+          if (!plusOne.firstName || !plusOne.lastName) continue;
+          const created = await tx.invitation.create({
+            data: {
+              type: InvitationType.PUBLIC,
+              eventId: input.eventId,
+              firstName: plusOne.firstName,
+              lastName: plusOne.lastName,
+              status: InvitationStatus.ACCEPTED,
+              rsvpChoice: RsvpChoice.YES,
+              rsvpAt: new Date(),
+              invitedByInvitationId: invitee.id,
+              email: plusOne.email,
+              plusOneAgeCategory: plusOne.plusOneAgeCategory,
+              selectedInvitedBy,
+              phoneNumber: getPrimaryPhoneNumber(plusOne.phoneNumbers),
+              phoneNumbers: plusOne.phoneNumbers?.length
+                ? {
+                    createMany: {
+                      data: plusOne.phoneNumbers.map((phone) => ({
+                        number: phone.number,
+                        type: phone.type,
+                        label: phone.label ?? null,
+                        isPrimary: phone.isPrimary ?? false,
+                        countryCode: phone.countryCode,
+                      })),
+                    },
+                  }
+                : undefined,
+            },
+            include: { phoneNumbers: true },
+          });
+          plusOneInvitations.push(created);
+          await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
+            eventName: 'InvitationCreated',
+            aggregateId: created.id,
+            aggregateType: 'invitation',
+            properties: {
+              eventId: created.eventId,
+              invitationType: created.type,
+              isPlusOne: true,
+            },
+          });
+          await this.analyticsOutbox.enqueue(tx, 'invitation.accepted.v1', {
+            eventName: 'InvitationAccepted',
+            aggregateId: created.id,
+            aggregateType: 'invitation',
+            properties: {
+              eventId: created.eventId,
+              isPlusOne: true,
+            },
+          });
+        }
+
+        await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
+          eventName: 'InvitationCreated',
+          aggregateId: invitee.id,
+          aggregateType: 'invitation',
+          properties: {
+            eventId: invitee.eventId,
+            invitationType: invitee.type,
+            isPlusOne: false,
+          },
+        });
+        await this.analyticsOutbox.enqueue(tx, 'invitation.rsvp.submitted.v1', {
+          eventName: 'RsvpSubmitted',
+          aggregateId: invitee.id,
+          aggregateType: 'invitation',
+          properties: {
+            choice: RsvpChoice.YES,
+            eventId: invitee.eventId,
+            plusOneCount: plusOneInvitations.length,
+          },
+        });
+        await this.analyticsOutbox.enqueue(tx, 'invitation.accepted.v1', {
+          eventName: 'InvitationAccepted',
+          aggregateId: invitee.id,
+          aggregateType: 'invitation',
+          properties: {
+            eventId: invitee.eventId,
+            isPlusOne: false,
+          },
+        });
+        return { invitee, plusOneInvitations };
+      });
+
+      this.logger.debug(
+        'Public RSVP invitation created: invitationId=%s | eventId=%s',
+        invitee.id,
+        input.eventId,
+      );
 
       this.logger.debug(
         'Public RSVP Plus Ones created: invitationId=%s | count=%s',

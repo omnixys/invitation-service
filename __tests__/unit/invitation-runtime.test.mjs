@@ -79,8 +79,7 @@ test('RSVP domain rejects duplicate state with structured diagnostics', () => {
 test('admin invitation creation persists auto-approval policy and emits milestone', async () => {
   const sent = [];
   let createData;
-  const service = new AdminWriteService(
-    {
+  const prisma = {
       eventSettingsProjection: {
         async findUnique() {
           return {
@@ -96,10 +95,15 @@ test('admin invitation creation persists auto-approval policy and emits mileston
           return invitation({ ...data });
         },
       },
-    },
+  };
+  prisma.$transaction = async (work) => work(prisma);
+  const service = new AdminWriteService(
+    prisma,
     logger,
     { send: async (event) => sent.push(event) },
     {},
+    {},
+    { enqueue: async () => undefined },
     {},
   );
   const eventEndsAt = new Date('2030-01-01T00:00:00.000Z');
@@ -175,6 +179,7 @@ test('accepted RSVP applies configured automatic approval', async () => {
         });
       },
     },
+    { enqueue: async () => undefined },
   );
 
   const result = await service.reply(

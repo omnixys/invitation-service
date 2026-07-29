@@ -401,7 +401,8 @@ export const ModelName = {
   PhoneNumber: 'PhoneNumber',
   EventRoleProjection: 'EventRoleProjection',
   EventAccessProjection: 'EventAccessProjection',
-  EventSettingsProjection: 'EventSettingsProjection'
+  EventSettingsProjection: 'EventSettingsProjection',
+  AnalyticsOutbox: 'AnalyticsOutbox'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "invitation" | "phoneNumber" | "eventRoleProjection" | "eventAccessProjection" | "eventSettingsProjection"
+    modelProps: "invitation" | "phoneNumber" | "eventRoleProjection" | "eventAccessProjection" | "eventSettingsProjection" | "analyticsOutbox"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -791,6 +792,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AnalyticsOutbox: {
+      payload: Prisma.$AnalyticsOutboxPayload<ExtArgs>
+      fields: Prisma.AnalyticsOutboxFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AnalyticsOutboxFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AnalyticsOutboxFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>
+        }
+        findFirst: {
+          args: Prisma.AnalyticsOutboxFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AnalyticsOutboxFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>
+        }
+        findMany: {
+          args: Prisma.AnalyticsOutboxFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>[]
+        }
+        create: {
+          args: Prisma.AnalyticsOutboxCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>
+        }
+        createMany: {
+          args: Prisma.AnalyticsOutboxCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AnalyticsOutboxCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>[]
+        }
+        delete: {
+          args: Prisma.AnalyticsOutboxDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>
+        }
+        update: {
+          args: Prisma.AnalyticsOutboxUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>
+        }
+        deleteMany: {
+          args: Prisma.AnalyticsOutboxDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AnalyticsOutboxUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AnalyticsOutboxUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>[]
+        }
+        upsert: {
+          args: Prisma.AnalyticsOutboxUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnalyticsOutboxPayload>
+        }
+        aggregate: {
+          args: Prisma.AnalyticsOutboxAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAnalyticsOutbox>
+        }
+        groupBy: {
+          args: Prisma.AnalyticsOutboxGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AnalyticsOutboxGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AnalyticsOutboxCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AnalyticsOutboxCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -918,6 +993,26 @@ export const EventSettingsProjectionScalarFieldEnum = {
 export type EventSettingsProjectionScalarFieldEnum = (typeof EventSettingsProjectionScalarFieldEnum)[keyof typeof EventSettingsProjectionScalarFieldEnum]
 
 
+export const AnalyticsOutboxScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  topic: 'topic',
+  payload: 'payload',
+  correlationId: 'correlationId',
+  actorId: 'actorId',
+  attempts: 'attempts',
+  nextAttemptAt: 'nextAttemptAt',
+  lockedAt: 'lockedAt',
+  lockedBy: 'lockedBy',
+  publishedAt: 'publishedAt',
+  deadLetteredAt: 'deadLetteredAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt'
+} as const
+
+export type AnalyticsOutboxScalarFieldEnum = (typeof AnalyticsOutboxScalarFieldEnum)[keyof typeof AnalyticsOutboxScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -932,6 +1027,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1281,6 +1383,7 @@ export type GlobalOmitConfig = {
   eventRoleProjection?: Prisma.EventRoleProjectionOmit
   eventAccessProjection?: Prisma.EventAccessProjectionOmit
   eventSettingsProjection?: Prisma.EventSettingsProjectionOmit
+  analyticsOutbox?: Prisma.AnalyticsOutboxOmit
 }
 
 /* Types for Logging */

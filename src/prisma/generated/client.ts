@@ -69,3 +69,8 @@ export type EventAccessProjection = Prisma.EventAccessProjectionModel
  * ----------------------------------------------------------------------
  */
 export type EventSettingsProjection = Prisma.EventSettingsProjectionModel
+/**
+ * Model AnalyticsOutbox
+ *
+ */
+export type AnalyticsOutbox = Prisma.AnalyticsOutboxModel

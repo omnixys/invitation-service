@@ -55,7 +55,8 @@ export const ModelName = {
   PhoneNumber: 'PhoneNumber',
   EventRoleProjection: 'EventRoleProjection',
   EventAccessProjection: 'EventAccessProjection',
-  EventSettingsProjection: 'EventSettingsProjection'
+  EventSettingsProjection: 'EventSettingsProjection',
+  AnalyticsOutbox: 'AnalyticsOutbox'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -162,6 +163,26 @@ export const EventSettingsProjectionScalarFieldEnum = {
 export type EventSettingsProjectionScalarFieldEnum = (typeof EventSettingsProjectionScalarFieldEnum)[keyof typeof EventSettingsProjectionScalarFieldEnum]
 
 
+export const AnalyticsOutboxScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  topic: 'topic',
+  payload: 'payload',
+  correlationId: 'correlationId',
+  actorId: 'actorId',
+  attempts: 'attempts',
+  nextAttemptAt: 'nextAttemptAt',
+  lockedAt: 'lockedAt',
+  lockedBy: 'lockedBy',
+  publishedAt: 'publishedAt',
+  deadLetteredAt: 'deadLetteredAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt'
+} as const
+
+export type AnalyticsOutboxScalarFieldEnum = (typeof AnalyticsOutboxScalarFieldEnum)[keyof typeof AnalyticsOutboxScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -176,6 +197,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {

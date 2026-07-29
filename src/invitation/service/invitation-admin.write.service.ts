@@ -1,3 +1,4 @@
+import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
 import { InvitationStatus, InvitationType, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { applyMapping } from '../../utils/apply-mapping.js';
@@ -44,6 +45,7 @@ export class AdminWriteService extends InvitationBaseService {
     private readonly producer: KafkaProducerService,
     private readonly cache: ValkeyService,
     private readonly delayedJob: DelayedJobService,
+    private readonly analyticsOutbox: AnalyticsOutboxService,
 
     @Inject(FILE_STORAGE)
     private readonly storage: FileStorage,
@@ -74,39 +76,52 @@ export class AdminWriteService extends InvitationBaseService {
 
     this.logger.debug('Creating invitation: eventId=%s | actorId=%s', input.eventId, eventAdminId);
 
-    const created = await this.prismaService.invitation.create({
-      data: {
-        type: InvitationType.PRIVATE,
-        eventId: input.eventId,
-        eventName: settings?.name ?? null,
-        eventEndsAt: settings?.endsAt ?? null,
-        autoApproveOnAccept: shouldAutoApproveInvitation(
-          settings?.approvalMode,
-          InvitationType.PRIVATE,
-        ),
-        firstName: input.firstName ?? null,
-        lastName: input.lastName ?? null,
-        invitedByInvitationId: input.invitedByInvitationId ?? null,
-        invitedByUserId: eventAdminId ?? null,
-        maxInvitees: input.maxInvitees ?? 0,
-        status: InvitationStatus.PENDING,
-
-        phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
-        email: input.email,
-        phoneNumbers: input.phoneNumbers?.length
-          ? {
-              createMany: {
-                data: input.phoneNumbers.map((ph) => ({
-                  number: ph.number,
-                  type: ph.type,
-                  label: ph.label ?? null,
-                  isPrimary: ph.isPrimary ?? false,
-                  countryCode: ph.countryCode,
-                })),
-              },
-            }
-          : undefined,
-      },
+    const created = await this.prismaService.$transaction(async (tx) => {
+      const invitation = await tx.invitation.create({
+        data: {
+          type: InvitationType.PRIVATE,
+          eventId: input.eventId,
+          eventName: settings?.name ?? null,
+          eventEndsAt: settings?.endsAt ?? null,
+          autoApproveOnAccept: shouldAutoApproveInvitation(
+            settings?.approvalMode,
+            InvitationType.PRIVATE,
+          ),
+          firstName: input.firstName ?? null,
+          lastName: input.lastName ?? null,
+          invitedByInvitationId: input.invitedByInvitationId ?? null,
+          invitedByUserId: eventAdminId ?? null,
+          maxInvitees: input.maxInvitees ?? 0,
+          status: InvitationStatus.PENDING,
+          phoneNumber: getPrimaryPhoneNumber(input.phoneNumbers),
+          email: input.email,
+          phoneNumbers: input.phoneNumbers?.length
+            ? {
+                createMany: {
+                  data: input.phoneNumbers.map((ph) => ({
+                    number: ph.number,
+                    type: ph.type,
+                    label: ph.label ?? null,
+                    isPrimary: ph.isPrimary ?? false,
+                    countryCode: ph.countryCode,
+                  })),
+                },
+              }
+            : undefined,
+        },
+      });
+      await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
+        eventName: 'InvitationCreated',
+        aggregateId: invitation.id,
+        aggregateType: 'invitation',
+        subjectId: eventAdminId,
+        properties: {
+          eventId: invitation.eventId,
+          invitationType: invitation.type,
+          isPlusOne: Boolean(invitation.invitedByInvitationId),
+        },
+      });
+      return invitation;
     });
 
     this.logger.debug(
@@ -436,9 +451,24 @@ export class AdminWriteService extends InvitationBaseService {
 
     this.logger.debug('Updating invitation: invitationId=%s', id);
 
-    const updated = await this.prismaService.invitation.update({
-      where: { id },
-      data,
+    const updated = await this.prismaService.$transaction(async (tx) => {
+      const result = await tx.invitation.update({
+        where: { id },
+        data,
+      });
+      if (input.rsvpChoice !== undefined) {
+        await this.analyticsOutbox.enqueue(tx, 'invitation.rsvp.updated.v1', {
+          eventName: 'RsvpUpdated',
+          aggregateId: result.id,
+          aggregateType: 'invitation',
+          subjectId: result.guestProfileId ?? undefined,
+          properties: {
+            choice: input.rsvpChoice,
+            eventId: result.eventId,
+          },
+        });
+      }
+      return result;
     });
 
     this.logger.debug('Invitation updated: invitationId=%s', id);
@@ -683,15 +713,29 @@ export class AdminWriteService extends InvitationBaseService {
           continue;
         }
 
-        await this.prismaService.invitation.create({
-          data: {
-            type: InvitationType.PRIVATE,
-            eventId,
-            firstName,
-            lastName,
-            maxInvitees: Number(row.maxPlusOnes ?? 0),
-            invitedByUserId: actorId,
-          },
+        await this.prismaService.$transaction(async (tx) => {
+          const invitation = await tx.invitation.create({
+            data: {
+              type: InvitationType.PRIVATE,
+              eventId,
+              firstName,
+              lastName,
+              maxInvitees: Number(row.maxPlusOnes ?? 0),
+              invitedByUserId: actorId,
+            },
+          });
+          await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
+            eventName: 'InvitationCreated',
+            aggregateId: invitation.id,
+            aggregateType: 'invitation',
+            subjectId: actorId,
+            properties: {
+              eventId: invitation.eventId,
+              invitationType: invitation.type,
+              isPlusOne: false,
+              source: 'import',
+            },
+          });
         });
 
         existingSet.add(key);
