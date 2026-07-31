@@ -1,4 +1,5 @@
 import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
+import { env } from '../../config/env.js';
 import { InvitationStatus, InvitationType, RsvpChoice } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { applyMapping } from '../../utils/apply-mapping.js';
@@ -21,20 +22,20 @@ import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { shouldAutoApproveInvitation, shouldAutoApprovePlusOnes } from '../utils/approval-mode.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache';
-import { ContextAccessor } from '@omnixys/context';
-import type { EventMilestoneRecordedDTO } from '@omnixys/contracts';
-import { getPrimaryPhoneNumber } from '@omnixys/contracts';
-import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
-import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
-import { TraceRunner } from '@omnixys/observability';
+import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
+import { ContextAccessor } from '@omnixys/context-ts';
+import type { EventMilestoneRecordedDTO } from '@omnixys/contracts-ts';
+import { getPrimaryPhoneNumber } from '@omnixys/contracts-ts';
+import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
+import { OmnixysLogger } from '@omnixys/logger-ts';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
 
 function currentTenantId(): string {
   const context = ContextAccessor.get();
-  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? 'omnixys';
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? env.DEFAULT_TENANT_ID;
 }
 
 @Injectable()

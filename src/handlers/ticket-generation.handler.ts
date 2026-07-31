@@ -1,3 +1,4 @@
+import { env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Injectable } from '@nestjs/common';
 import {
@@ -5,14 +6,14 @@ import {
   DelayedJobHandler,
   DelayedJobKeys,
   ValkeyLockService,
-} from '@omnixys/cache';
-import { ContextAccessor } from '@omnixys/context';
-import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
+} from '@omnixys/cache-ts';
+import { ContextAccessor } from '@omnixys/context-ts';
+import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
+import { OmnixysLogger } from '@omnixys/logger-ts';
 
 function currentTenantId(): string {
   const context = ContextAccessor.get();
-  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? 'omnixys';
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? env.DEFAULT_TENANT_ID;
 }
 
 @Injectable()

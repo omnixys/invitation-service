@@ -1,4 +1,5 @@
 import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
+import { env } from '../../config/env.js';
 import {
   Invitation,
   InvitationStatus,
@@ -28,8 +29,8 @@ import { shouldAutoApproveInvitation, shouldAutoApprovePlusOnes } from '../utils
 import { AdminWriteService } from './invitation-admin.write.service.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
-import { ValkeyKey, ValkeyService } from '@omnixys/cache';
-import { ContextAccessor, type ClientContext } from '@omnixys/context';
+import { ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
+import { ContextAccessor, type ClientContext } from '@omnixys/context-ts';
 import {
   createTmpUsername,
   getPrimaryPhoneNumber,
@@ -39,10 +40,10 @@ import {
   type EventMilestoneRecordedDTO,
   type InvitationSeatingInfoUpdatedDTO,
   type PhoneNumberDTO,
-} from '@omnixys/contracts';
-import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+} from '@omnixys/contracts-ts';
+import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
+import { OmnixysLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 
 type InvitationWithPhones = Prisma.InvitationGetPayload<{
   include: { phoneNumbers: true };
@@ -76,7 +77,7 @@ function normalizeOptionalText(value?: string | null): string | null {
 
 function currentTenantId(): string {
   const context = ContextAccessor.get();
-  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? 'omnixys';
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? env.DEFAULT_TENANT_ID;
 }
 
 @Injectable()
@@ -838,7 +839,9 @@ export class GuestWriteService extends InvitationBaseService {
 
         const plusOneInvitations: InvitationWithPhones[] = [];
         for (const plusOne of input.plusOnes ?? []) {
-          if (!plusOne.firstName || !plusOne.lastName) continue;
+          if (!plusOne.firstName || !plusOne.lastName) {
+            continue;
+          }
           const created = await tx.invitation.create({
             data: {
               type: InvitationType.PUBLIC,
