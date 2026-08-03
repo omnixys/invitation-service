@@ -3,7 +3,7 @@
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { PhoneNumberMapper } from '../models/mappers/phone-number.mapper.js';
 import { Injectable } from '@nestjs/common';
-import { PhoneNumberPayload } from '@omnixys/graphql';
+import { PhoneNumberPayload } from '@omnixys/graphql-ts';
 import DataLoader from 'dataloader';
 
 @Injectable()

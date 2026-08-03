@@ -11,7 +11,7 @@ import {
   Int,
   ObjectType,
 } from '@nestjs/graphql';
-import { registerEnum } from '@omnixys/graphql';
+import { registerEnum } from '@omnixys/graphql-ts';
 
 registerEnum('InvitationStatus', InvitationStatus);
 registerEnum('RsvpChoice', RsvpChoice);

@@ -30,8 +30,8 @@ import {
   type HealthIndicatorFunction,
   type HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { ValkeyService } from '@omnixys/cache';
-// import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
+import { ValkeyService } from '@omnixys/cache-ts';
+// import { FILE_STORAGE, type FileStorage } from '@omnixys/media-ts';
 
 const { KEYCLOAK_HEALTH_URL, TEMPO_HEALTH_URL, PROMETHEUS_HEALTH_URL } = env;
 @Controller('health')

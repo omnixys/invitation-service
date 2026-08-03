@@ -3,8 +3,8 @@ import { applyMapping } from '../../utils/apply-mapping.js';
 import { mapColumns } from '../../utils/column-mapper.js';
 import { InvitationValidationException } from '../errors/invitation-domain.error.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
-import { TraceRunner } from '@omnixys/observability';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
 

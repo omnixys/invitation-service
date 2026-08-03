@@ -1,5 +1,5 @@
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
-import { PhoneNumberInput } from '@omnixys/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql-ts';
 
 @InputType({
   description:

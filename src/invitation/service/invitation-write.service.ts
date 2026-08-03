@@ -7,9 +7,9 @@ import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Injectable } from '@nestjs/common';
-import { AddGuestIdToInvitationDTO } from '@omnixys/contracts';
-import { OmnixysLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+import { AddGuestIdToInvitationDTO } from '@omnixys/contracts-ts';
+import { OmnixysLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 
 // ✔ Deine lokale Trigger-Konstante (NICHT abhängig von Redis)
 export const TRIGGER = {

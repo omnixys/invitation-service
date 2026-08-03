@@ -17,16 +17,16 @@
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Injectable } from '@nestjs/common';
-import type { EventCreatedDTO, EventUpdatedDTO } from '@omnixys/contracts';
+import type { EventCreatedDTO, EventUpdatedDTO } from '@omnixys/contracts-ts';
 import {
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
   KAFKA_HEADERS,
   type IKafkaEventContext,
-} from '@omnixys/kafka';
-import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+} from '@omnixys/kafka-ts';
+import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 import { isUUID } from 'class-validator';
 
 interface EventSettingsApprovalPayload {

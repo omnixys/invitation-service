@@ -4,7 +4,7 @@ import { Body, Controller, Inject, Post, Req, UseGuards } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { FastifyRequest } from 'fastify';
 
-import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security';
+import { CookieAuthGuard, CurrentUser, CurrentUserData } from '@omnixys/security-ts';
 
 import {
   InvitationHttpAuthenticationException,
@@ -15,9 +15,9 @@ import {
   InvitationPreviewService,
   type InvitationPreviewResult,
 } from '../service/invitation-preview.service.js';
-import { OmnixysLogger } from '@omnixys/logger';
-import { FILE_STORAGE, type FileStorage } from '@omnixys/media';
-import { TraceRunner } from '@omnixys/observability';
+import { OmnixysLogger } from '@omnixys/logger-ts';
+import { FILE_STORAGE, type FileStorage } from '@omnixys/media-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 import { IsIn, IsString } from 'class-validator';
 
 /* ---------------------------------------------------------------------------

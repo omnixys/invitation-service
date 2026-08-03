@@ -1,6 +1,6 @@
 import { PlusOneAgeCategory } from '../../../prisma/generated/client.js';
 import { Field, ID, InputType } from '@nestjs/graphql';
-import { PhoneNumberInput } from '@omnixys/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql-ts';
 
 @InputType()
 export class CreatePlusOneInput {

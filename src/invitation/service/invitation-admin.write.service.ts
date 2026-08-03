@@ -33,9 +33,11 @@ import { TraceRunner } from '@omnixys/observability-ts';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
 
+const { DEFAULT_TENANT_ID } = env;
+
 function currentTenantId(): string {
   const context = ContextAccessor.get();
-  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? env.DEFAULT_TENANT_ID;
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? DEFAULT_TENANT_ID;
 }
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { RsvpChoice } from '../../../prisma/generated/client.js';
 import { PublicPlusOneInput } from './public-rsvp.input.js';
 import { Field, ID, InputType } from '@nestjs/graphql';
-import { PhoneNumberInput } from '@omnixys/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql-ts';
 import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 @InputType({

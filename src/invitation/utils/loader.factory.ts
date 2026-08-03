@@ -3,7 +3,7 @@ import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { InvitationLoader } from './invitation.loader.js';
 import { PhoneNumberLoader } from './phone-number.loader.js';
 import { Injectable, Scope } from '@nestjs/common';
-import { PhoneNumberPayload } from '@omnixys/graphql';
+import { PhoneNumberPayload } from '@omnixys/graphql-ts';
 import DataLoader from 'dataloader';
 
 @Injectable({ scope: Scope.REQUEST })

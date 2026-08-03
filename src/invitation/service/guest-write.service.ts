@@ -45,6 +45,8 @@ import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
 
+const { DEFAULT_TENANT_ID } = env;
+
 type InvitationWithPhones = Prisma.InvitationGetPayload<{
   include: { phoneNumbers: true };
 }>;
@@ -77,7 +79,7 @@ function normalizeOptionalText(value?: string | null): string | null {
 
 function currentTenantId(): string {
   const context = ContextAccessor.get();
-  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? env.DEFAULT_TENANT_ID;
+  return context?.tenant?.tenantId ?? context?.principal?.tenantId ?? DEFAULT_TENANT_ID;
 }
 
 @Injectable()

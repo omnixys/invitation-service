@@ -17,16 +17,16 @@
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
 import { Injectable } from '@nestjs/common';
-import { UserIdDTO } from '@omnixys/contracts';
+import { UserIdDTO } from '@omnixys/contracts-ts';
 import {
   IKafkaEventContext,
   KAFKA_HEADERS,
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
-} from '@omnixys/kafka';
-import { OmnixysLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+} from '@omnixys/kafka-ts';
+import { OmnixysLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 
 /**
  * Central Kafka Authentication Handler.

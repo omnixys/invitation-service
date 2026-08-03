@@ -1,8 +1,8 @@
 import type { Invitation } from '../../prisma/generated/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
-import type { OmnixysLogger, ScopedLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+import type { OmnixysLogger, ScopedLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 
 /**
  * Shared base class for invitation read/write services.

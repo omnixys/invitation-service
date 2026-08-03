@@ -1,7 +1,7 @@
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { LoaderFactory } from '../utils/loader.factory.js';
 import { Resolver, ResolveField, Parent } from '@nestjs/graphql';
-import { PhoneNumberPayload } from '@omnixys/graphql';
+import { PhoneNumberPayload } from '@omnixys/graphql-ts';
 
 @Resolver(() => InvitationPayload)
 export class InvitationFieldResolver {

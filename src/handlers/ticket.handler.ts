@@ -18,15 +18,15 @@
 import { Injectable } from '@nestjs/common';
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
-import { AddGuestIdToInvitationDTO } from '@omnixys/contracts';
+import { AddGuestIdToInvitationDTO } from '@omnixys/contracts-ts';
 import {
   IKafkaEventContext,
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
-} from '@omnixys/kafka';
-import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+} from '@omnixys/kafka-ts';
+import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 
 /**
  * Kafka event handler responsible for useristrative commands such as

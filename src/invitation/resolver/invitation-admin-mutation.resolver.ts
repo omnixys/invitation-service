@@ -11,9 +11,9 @@ import { SuccessPayload } from '../models/payloads/success.payload.js';
 import { AdminWriteService } from '../service/invitation-admin.write.service.js';
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
-import { EventPermissionKey, RealmRoleType } from '@omnixys/contracts';
-import { OmnixysLogger } from '@omnixys/logger';
-import { TraceRunner } from '@omnixys/observability';
+import { EventPermissionKey, RealmRoleType } from '@omnixys/contracts-ts';
+import { OmnixysLogger } from '@omnixys/logger-ts';
+import { TraceRunner } from '@omnixys/observability-ts';
 import {
   CookieAuthGuard,
   CurrentEventId,
@@ -23,7 +23,7 @@ import {
   EventPermissions,
   RoleGuard,
   Roles,
-} from '@omnixys/security';
+} from '@omnixys/security-ts';
 
 export enum UploadType {
   CSV = 'csv',

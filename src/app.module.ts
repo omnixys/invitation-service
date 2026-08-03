@@ -16,7 +16,7 @@
  */
 
 import { ValkeyAdapterModule } from './adapter/valkey-adapter.module.js';
-import { BannerService } from './banner.service.js';
+import { BannerService } from './config/banner.service.js';
 import { env } from './config/env.js';
 import { HandlerModule } from './handlers/handler.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -24,39 +24,71 @@ import { InvitationModule } from './invitation/invitation.module.js';
 
 import { PrismaModule } from './prisma/prisma.module.js';
 import { Module } from '@nestjs/common';
-import { ValkeyModule } from '@omnixys/cache';
-import { ContextModule } from '@omnixys/context';
-import { OmnixysGraphQLModule } from '@omnixys/graphql';
-import { OmnixysHttpModule } from '@omnixys/http';
-import { KafkaModule } from '@omnixys/kafka';
-import { LoggerModule } from '@omnixys/logger';
-import { StorageModule } from '@omnixys/media';
-import { ObservabilityModule } from '@omnixys/observability';
-import { SecurityModule } from '@omnixys/security';
+import { ValkeyModule } from '@omnixys/cache-ts';
+import { ContextModule, trustedProxyPolicyFromAddresses } from '@omnixys/context-ts';
+import { OmnixysGraphQLModule } from '@omnixys/graphql-ts';
+import { OmnixysHttpModule } from '@omnixys/http-ts';
+import { KafkaModule } from '@omnixys/kafka-ts';
+import { LoggerModule } from '@omnixys/logger-ts';
+import { StorageModule } from '@omnixys/media-ts';
+import { ObservabilityModule } from '@omnixys/observability-ts';
+import { SecurityModule } from '@omnixys/security-ts';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 const {
   SCHEMA_TARGET,
   SERVICE,
-  KAFKA_BROKER,
-  TEMPO_URI,
-  VALKEY_URL,
-  VALKEY_PASSWORD,
+  NODE_ENV,
+
   KC_URL,
   KC_REALM,
+
+  KAFKA_BROKER,
+  KAFKA_IDEMPOTENCY_ENABLE,
+  KAFKA_IDEMPOTENCY_TTL,
+  KAFKA_RETRY,
+
+  OTEL_URI,
+  OTEL_TRANSPORT_MODE,
+  OTEL_SAMPLING_RATIO,
+  PROMETHEUS_ENABLE,
+  PROMETHEUS_PORT,
+
+  VALKEY_URL,
+  VALKEY_PASSWORD,
+
+  ENCRYPTION_KEY,
+  DEFAULT_TENANT_ID,
+
+  RATE_LIMIT_ENABLE,
+  RATE_LIMIT_REQUESTS,
+  RATE_LIMIT_WINDOW,
+
+  LOG_BATCH_ENABLE,
+  LOG_BATCH_FLUSH_INTERVAL,
+  LOG_BATCH_MAX_SIZE,
+
+  TRUSTED_PROXY_ADDRESSES,
 
   STORAGE_REGION,
   STORAGE_ENDPOINT,
   STORAGE_ACCESS_KEY_ID,
   STORAGE_SECRET_ACCESS_KEY,
   STORAGE_BUCKET,
-  // STORAGE_PUBLIC_URL,
+  STORAGE_PUBLIC_URL,
   STORAGE_FORCE_PATH_STYLE,
+  STORAGE_LINK_TTL,
 } = env;
 
 @Module({
   imports: [
-    ContextModule.forRoot(),
+    ContextModule.forRoot({
+      tenant: {
+        mode: NODE_ENV === 'production' ? 'strict' : 'legacy',
+        ...(DEFAULT_TENANT_ID ? { defaultTenantId: DEFAULT_TENANT_ID } : {}),
+      },
+      trustedProxyPolicy: trustedProxyPolicyFromAddresses(TRUSTED_PROXY_ADDRESSES),
+    }),
     OmnixysHttpModule.forRoot({ serviceName: SERVICE }),
 
     StorageModule.forRoot({
@@ -65,9 +97,9 @@ const {
       accessKeyId: STORAGE_ACCESS_KEY_ID,
       secretAccessKey: STORAGE_SECRET_ACCESS_KEY,
       bucket: STORAGE_BUCKET,
-      // publicUrl: STORAGE_PUBLIC_URL,
+      publicUrl: STORAGE_PUBLIC_URL,
       forcePathStyle: STORAGE_FORCE_PATH_STYLE,
-      linkTTL: 60,
+      linkTTL: STORAGE_LINK_TTL,
     }),
 
     OmnixysGraphQLModule.forRoot({
@@ -97,6 +129,8 @@ const {
       brokers: [KAFKA_BROKER],
       groupId: `${SERVICE}-group`,
       serviceName: SERVICE,
+      retry: { maxRetries: KAFKA_RETRY },
+      idempotency: { enabled: KAFKA_IDEMPOTENCY_ENABLE, ttlSeconds: KAFKA_IDEMPOTENCY_TTL },
     }),
 
     SecurityModule.forRoot({
@@ -106,10 +140,14 @@ const {
       },
 
       rateLimit: {
-        enabled: true,
-        defaultLimit: 100,
-        defaultWindowMs: 60_000,
+        enabled: RATE_LIMIT_ENABLE,
+        defaultLimit: RATE_LIMIT_REQUESTS,
+        defaultWindowMs: RATE_LIMIT_WINDOW,
         imports: [ValkeyAdapterModule],
+      },
+
+      hash: {
+        encryptionKey: ENCRYPTION_KEY,
       },
     }),
 
@@ -117,14 +155,14 @@ const {
       serviceName: SERVICE,
 
       otel: {
-        endpoint: TEMPO_URI,
-        transport: 'http',
-        samplingRatio: 1,
+        endpoint: OTEL_URI,
+        transport: OTEL_TRANSPORT_MODE as 'http' | 'grpc',
+        samplingRatio: OTEL_SAMPLING_RATIO,
       },
 
       metrics: {
-        port: 9464,
-        enabled: true,
+        port: PROMETHEUS_PORT,
+        enabled: PROMETHEUS_ENABLE,
       },
     }),
 
@@ -133,9 +171,9 @@ const {
       registerGlobalInterceptor: true,
 
       batch: {
-        enabled: true,
-        maxSize: 50,
-        flushInterval: 2000,
+        enabled: LOG_BATCH_ENABLE,
+        maxSize: LOG_BATCH_MAX_SIZE,
+        flushInterval: LOG_BATCH_FLUSH_INTERVAL,
       },
     }),
     HealthModule,

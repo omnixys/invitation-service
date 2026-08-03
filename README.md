@@ -14,7 +14,7 @@ This service owns:
 - invitation import preview and persistence;
 - invitation-to-guest-profile linkage.
 
-It does not verify or issue tokens, own user identities, create tickets directly, send notifications, or implement logging/tracing transports. Those capabilities come from `@omnixys/security`, the Authentication and Ticket services, the Notification service, `@omnixys/logger`, and `@omnixys/observability`.
+It does not verify or issue tokens, own user identities, create tickets directly, send notifications, or implement logging/tracing transports. Those capabilities come from `@omnixys/security-ts`, the Authentication and Ticket services, the Notification service, `@omnixys/logger-ts`, and `@omnixys/observability-ts`.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ Invitation read/write services ----> PostgreSQL
 Kafka package ----> Authentication / Event / Notification / Ticket workflows
 ```
 
-The canonical request scope is provided by `@omnixys/context`. Logger enrichment, framework errors, traces, and Kafka headers therefore share the same request ID, correlation ID, actor, tenant, and trace metadata. OpenTelemetry runtime state remains owned by `@omnixys/observability`.
+The canonical request scope is provided by `@omnixys/context-ts`. Logger enrichment, framework errors, traces, and Kafka headers therefore share the same request ID, correlation ID, actor, tenant, and trace metadata. OpenTelemetry runtime state remains owned by `@omnixys/observability-ts`.
 
 ## Core workflows
 
@@ -53,7 +53,7 @@ Plus-ones are child invitations. Their count is capped by `maxInvitees`, and mut
 
 ### Bulk import
 
-CSV and XLSX files are uploaded to object storage, previewed, mapped, validated, checked for duplicates, and then imported. Uploads are limited to one 5 MiB file per request. Storage is accessed only through `@omnixys/media`.
+CSV and XLSX files are uploaded to object storage, previewed, mapped, validated, checked for duplicates, and then imported. Uploads are limited to one 5 MiB file per request. Storage is accessed only through `@omnixys/media-ts`.
 
 ### Event milestones
 
@@ -98,7 +98,7 @@ Produced topics:
 | `authentication.deleteGuestList` | Remove multiple obsolete guest identities |
 | `event.milestoneRecorded`        | Record invitation lifecycle milestones    |
 
-Handlers await their work so package-level retry and dead-letter handling can observe failures. Kafka lifecycle, propagation, retry, and shutdown behavior are supplied by `@omnixys/kafka`.
+Handlers await their work so package-level retry and dead-letter handling can observe failures. Kafka lifecycle, propagation, retry, and shutdown behavior are supplied by `@omnixys/kafka-ts`.
 
 ## Data model and migrations
 

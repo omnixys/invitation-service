@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ContextAccessor } from '@omnixys/context';
+import { ContextAccessor } from '@omnixys/context-ts';
 
 export class InvitationHttpException extends HttpException {
   constructor(

@@ -8,8 +8,10 @@ import {
   NotFoundException,
   Post,
 } from '@nestjs/common';
-import { Public } from '@omnixys/security';
+import { Public } from '@omnixys/security-ts';
 import { timingSafeEqual } from 'node:crypto';
+
+const { INTERNAL_GATEWAY_TOKEN } = env;
 
 type PublicAnalyticsReference = { type: 'event'; id: string } | { type: 'invitation'; id: string };
 
@@ -68,8 +70,10 @@ export class AnalyticsTenantController {
 }
 
 function matchesInternalToken(candidate: string | undefined): boolean {
-  if (!candidate) return false;
-  const expected = Buffer.from(env.INTERNAL_GATEWAY_TOKEN);
+  if (!candidate) {
+    return false;
+  }
+  const expected = Buffer.from(INTERNAL_GATEWAY_TOKEN);
   const actual = Buffer.from(candidate);
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }

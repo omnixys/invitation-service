@@ -1,6 +1,6 @@
 import { PlusOneAgeCategory } from '../../../prisma/generated/client.js';
 import { InputType, Field, ID, registerEnumType } from '@nestjs/graphql';
-import { PhoneNumberInput } from '@omnixys/graphql';
+import { PhoneNumberInput } from '@omnixys/graphql-ts';
 
 registerEnumType(PlusOneAgeCategory, { name: 'PlusOneAgeCategory' });
 
