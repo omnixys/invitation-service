@@ -93,3 +93,7 @@ TODO.md
 node_profiles
 
 # src/prisma/generated
+# Managed by the Omnixys repository-policy rollout: track VS Code workspace config
+!.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
