@@ -1,6 +1,6 @@
 {
   "name": "invitation-service",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Omnixys Invitation Service",
   "author": {
     "name": "Caleb Gyamfi",
@@ -83,7 +83,7 @@
     "@omnixys/logger-ts": "^3.2.2",
     "@omnixys/media-ts": "^3.0.3",
     "@omnixys/observability-ts": "^3.2.2",
-    "@omnixys/security-ts": "^4.0.0",
+    "@omnixys/security-ts": "^4.0.1",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "cfonts": "^3.3.1",
