@@ -135,7 +135,7 @@ async function bootstrap(): Promise<void> {
   await app.register(rateLimit, {
     max: 100, // max. Requests pro Minute
     timeWindow: '1 minute',
-    skip: (request) => request.url.startsWith('/health'),
+    allowList: (request: { url: string }) => request.url.startsWith('/health'),
   });
 
   // ======================================================
