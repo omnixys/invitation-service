@@ -3,6 +3,13 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.3.3](https://github.com/omnixys/invitation-service/compare/v3.3.2...v3.3.3) (2026-08-23)
+
+### Logger
+
+* **Logger:** fix terminal logger ([](https://github.com/omnixys/invitation-service/commit/5aef8e6f35569f3e18384a8378a68ae987b08184))
+* **Logger:** fix terminal logger ([](https://github.com/omnixys/invitation-service/commit/97291d28d3f6ddd97cb39004b68cfa8c31bf0431))
+
 ## [3.3.2](https://github.com/omnixys/invitation-service/compare/v3.3.1...v3.3.2) (2026-08-23)
 
 ## [3.3.1](https://github.com/omnixys/invitation-service/compare/v3.3.0...v3.3.1) (2026-08-19)
