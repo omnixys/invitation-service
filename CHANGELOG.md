@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.4.3](https://github.com/omnixys/invitation-service/compare/v3.4.2...v3.4.3) (2026-08-26)
+
+### Build
+
+* **Build:** fix build errors ([](https://github.com/omnixys/invitation-service/commit/d0bebf387b044aa5048807b6d5b746391acd605c))
+
+### Other
+
+* **Other:** Merge branch 'main' of https://github.com/omnixys/invitation-service ([](https://github.com/omnixys/invitation-service/commit/ccdb7ce4978662a89785bd3f2f6e62005eef7552))
+
 ## [3.4.2](https://github.com/omnixys/invitation-service/compare/v3.4.1...v3.4.2) (2026-08-26)
 
 ### Build
