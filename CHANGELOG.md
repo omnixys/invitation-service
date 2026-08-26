@@ -3,6 +3,13 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.4.1](https://github.com/omnixys/invitation-service/compare/v3.4.0...v3.4.1) (2026-08-26)
+
+### Deps
+
+* **Deps:** update logger to 3.2.6 ([](https://github.com/omnixys/invitation-service/commit/945260ff8a1dec39c4d85c255cf771eea420b24b))
+* **Deps:** update shared TypeScript packages ([](https://github.com/omnixys/invitation-service/commit/5bcff1cf66c7e8db70f1bc6f535b7ab7a1e4536b))
+
 ## [3.4.0](https://github.com/omnixys/invitation-service/compare/v3.3.3...v3.4.0) (2026-08-26)
 
 ### Deps
