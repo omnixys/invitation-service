@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.4.2](https://github.com/omnixys/invitation-service/compare/v3.4.1...v3.4.2) (2026-08-26)
+
+### Build
+
+* **Build:** fix build errors ([](https://github.com/omnixys/invitation-service/commit/74c4716a0d5d44be2eaa2495ed4258011991ab24))
+
 ## [3.4.1](https://github.com/omnixys/invitation-service/compare/v3.4.0...v3.4.1) (2026-08-26)
 
 ### Deps
