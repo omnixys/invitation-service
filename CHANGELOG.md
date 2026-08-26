@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.4.0](https://github.com/omnixys/invitation-service/compare/v3.3.3...v3.4.0) (2026-08-26)
+
+### Deps
+
+* **Deps:** update omnixys ts packages ([](https://github.com/omnixys/invitation-service/commit/847b6384ca085f196822b5e15c64e904d128e7ac))
+
+### Otel
+
+* **Otel:** add otel logs ([](https://github.com/omnixys/invitation-service/commit/9e551b4bce0e16fde217002aa69ad674017d391d))
+
 ## [3.3.3](https://github.com/omnixys/invitation-service/compare/v3.3.2...v3.3.3) (2026-08-23)
 
 ### Logger
