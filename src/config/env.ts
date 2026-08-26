@@ -88,6 +88,7 @@ export const env = {
     transform: toNumber,
   }),
 
+  OTEL_LOGS_ENABLED: getEnv('OTEL_LOGS_ENABLED', 'true', { transform: toBool }),
   OTEL_URI: getEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'),
   OTEL_TRANSPORT_MODE: getEnv('OTEL_TRANSPORT_MODE', 'http', {
     required: true,
@@ -157,5 +158,5 @@ export const env = {
   STORAGE_FORCE_PATH_STYLE: getEnv('STORAGE_FORCE_PATH_STYLE', 'false', {
     transform: toBool,
   }),
-  STORAGE_LINK_TTL: getEnv('STORAGE_LINK_TTL:', '60', { transform: toNumber }),
+  STORAGE_LINK_TTL: getEnv('STORAGE_LINK_TTL', '60', { transform: toNumber }),
 } as const;

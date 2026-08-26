@@ -93,8 +93,8 @@ importers:
         specifier: ^3.4.1
         version: 3.4.1(e17957fa5fd10a424135bf34b2a4a608)
       '@omnixys/security-ts':
-        specifier: ^4.1.0
-        version: 4.1.0(cd6f41b0696ee9ae14d792aae69d0782)
+        specifier: ^4.1.1
+        version: 4.1.1(cd6f41b0696ee9ae14d792aae69d0782)
       '@prisma/adapter-pg':
         specifier: ^7.9.1
         version: 7.9.1
@@ -1778,9 +1778,18 @@ packages:
       '@omnixys/context-ts': ^3.2.1
       '@omnixys/contracts-ts': ^3.3.0
       fastify: 5.8.5
+    peerDependenciesMeta:
+      '@nestjs/common':
+        optional: true
+      '@nestjs/core':
+        optional: true
+      '@nestjs/graphql':
+        optional: true
+      fastify:
+        optional: true
 
-  '@omnixys/security-ts@4.1.0':
-    resolution: {integrity: sha512-a6rzLygYB4PEMilv6oj9rUcZCYcfA3gXcwra8M/RlQrhswqJMYZWOJ3X/IS3+6/l0RJsLxqM3OzaelzEVbppqA==, tarball: https://npm.pkg.github.com/download/@omnixys/security-ts/4.1.0/8900a9b03965fa21ea60e8b0fc0d944564485277}
+  '@omnixys/security-ts@4.1.1':
+    resolution: {integrity: sha512-BLz+H4TZZnk+xElvFpepYB6gyen0jQjxHrzlYty8agYzJG8qrtxdR/pjAF/5L0U+q/PhV8zsC+WN9APQO6/iZA==, tarball: https://npm.pkg.github.com/download/@omnixys/security-ts/4.1.1/6bbf85ec04ade39e2e96219ceafc5445bd71a78a}
     peerDependencies:
       '@fastify/cookie': ^11.0.0
       '@nestjs/common': ^10 || ^11
@@ -9112,9 +9121,6 @@ snapshots:
 
   '@omnixys/observability-ts@3.4.1(e17957fa5fd10a424135bf34b2a4a608)':
     dependencies:
-      '@nestjs/common': 11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 11.2.1(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.2.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/graphql': 13.4.5(@apollo/subgraph@2.14.4(graphql@16.14.0))(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.1)(class-transformer@0.5.1)(class-validator@0.14.4)(graphql@16.14.0)(reflect-metadata@0.2.2)(ts-morph@27.0.2)
       '@omnixys/context-ts': 3.2.1(@fastify/cookie@11.1.2)(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.1)(@nestjs/graphql@13.4.5(@apollo/subgraph@2.14.4(graphql@16.14.0))(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.1)(class-transformer@0.5.1)(class-validator@0.14.4)(graphql@16.14.0)(reflect-metadata@0.2.2)(ts-morph@27.0.2))(@omnixys/contracts-ts@3.3.0(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)))(fastify@5.8.5)(graphql@16.14.0)(rxjs@7.8.2)
       '@omnixys/contracts-ts': 3.3.0(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@opentelemetry/api': 1.9.1
@@ -9136,15 +9142,19 @@ snapshots:
       '@opentelemetry/sdk-trace-base': 2.10.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-web': 2.10.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/semantic-conventions': 1.43.0
-      fastify: 5.8.5
       rxjs: 7.8.2
       web-vitals: 4.2.4
+    optionalDependencies:
+      '@nestjs/common': 11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 11.2.1(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.2.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/graphql': 13.4.5(@apollo/subgraph@2.14.4(graphql@16.14.0))(@nestjs/common@11.2.1(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.1)(class-transformer@0.5.1)(class-validator@0.14.4)(graphql@16.14.0)(reflect-metadata@0.2.2)(ts-morph@27.0.2)
+      fastify: 5.8.5
     transitivePeerDependencies:
       - '@opentelemetry/core'
       - supports-color
       - zone.js
 
-  '@omnixys/security-ts@4.1.0(cd6f41b0696ee9ae14d792aae69d0782)':
+  '@omnixys/security-ts@4.1.1(cd6f41b0696ee9ae14d792aae69d0782)':
     dependencies:
       '@fastify/cookie': 11.1.2
       '@grpc/grpc-js': 1.14.4
@@ -10597,7 +10607,7 @@ snapshots:
 
   '@types/pg-pool@2.0.7':
     dependencies:
-      '@types/pg': 8.15.6
+      '@types/pg': 8.23.1
 
   '@types/pg@8.15.6':
     dependencies:
