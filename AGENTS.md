@@ -10,7 +10,7 @@
 Omnixys Invitation Service – invitations, RSVPs, event-auth, analytics.
 
 - Repository path: `services/invitation` (relative to the Omnixys root)
-- Package: `invitation-service` (version: 3.3.0)
+- Package: `invitation-service` (version: 3.4.0)
 - Runtime: Node >=25.8.2 (pnpm >=10.33.0)
 - Kind: Service
 
