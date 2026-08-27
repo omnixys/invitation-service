@@ -61,21 +61,21 @@ export class InvitationQueryResolver {
     await this.assertCanViewInvitations(user, eventIds);
     return this.service.findFullByEventIds(eventIds);
   }
-
+// TODO implementiere eine extra query für public zugrif und hier wieder internal
   @Query(() => InvitationPayload, {
     name: 'invitation',
   })
-  @UseGuards(CookieAuthGuard, RoleGuard)
-  @Roles(RealmRoleType.USER)
+  //@UseGuards(CookieAuthGuard, RoleGuard)
+  //@Roles(RealmRoleType.USER)
   async getById(
-    @CurrentUser() user: CurrentUserData,
+    //@CurrentUser() user: CurrentUserData,
     @Args('id', {
       type: () => ID,
     })
     id: string,
   ): Promise<InvitationPayload> {
     const invitation = await this.service.findOne(id);
-    await this.assertCanViewInvitations(user, [invitation.eventId]);
+    //await this.assertCanViewInvitations(user, [invitation.eventId]);
     return invitation;
   }
 
