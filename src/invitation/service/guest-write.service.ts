@@ -128,6 +128,11 @@ export class GuestWriteService extends InvitationBaseService {
       const previous = invitation.rsvpChoice ?? null;
 
       const decision = RsvpDomain.decide(previous, choice, !!replyInput);
+      const resultingStatus =
+        invitation.status === InvitationStatus.APPROVAL_STAGED &&
+        decision.newChoice === RsvpChoice.YES
+          ? InvitationStatus.APPROVAL_STAGED
+          : decision.newStatus;
 
       /**
        * Validate contact details for YES
@@ -182,7 +187,7 @@ export class GuestWriteService extends InvitationBaseService {
           where: { id },
           data: {
             rsvpChoice: decision.newChoice,
-            status: decision.newStatus,
+            status: resultingStatus,
             rsvpAt: now,
             firstName: replyInput?.firstName ?? invitation.firstName,
             lastName: replyInput?.lastName ?? invitation.lastName,
@@ -362,7 +367,11 @@ export class GuestWriteService extends InvitationBaseService {
         });
       }
 
-      if (decision.newChoice === RsvpChoice.YES && autoApproveOnAccept) {
+      if (
+        decision.newChoice === RsvpChoice.YES &&
+        autoApproveOnAccept &&
+        invitation.status !== InvitationStatus.APPROVAL_STAGED
+      ) {
         const approvingActor = invitation.invitedByUserId;
         if (!approvingActor) {
           throw new InvitationValidationException('Automatic approval configuration is incomplete');

@@ -138,6 +138,88 @@ test('admin invitation creation persists auto-approval policy and emits mileston
   assert.equal(sent[0].meta.actorId, '00000000-0000-4000-8000-000000000001');
 });
 
+test('bulk staging persists approval intent without ticket or notification side effects', async () => {
+  let stored = invitation({
+    status: InvitationStatus.ACCEPTED,
+    rsvpChoice: RsvpChoice.YES,
+  });
+  let producerCalls = 0;
+  let delayedJobCalls = 0;
+  const prisma = {
+    invitation: {
+      async findMany() {
+        return [stored];
+      },
+      async update({ data }) {
+        stored = invitation({ ...stored, ...data });
+        return stored;
+      },
+    },
+    async $transaction(operations) {
+      return Promise.all(operations);
+    },
+  };
+  const service = new AdminWriteService(
+    prisma,
+    logger,
+    { send: async () => producerCalls++ },
+    {},
+    { schedule: async () => delayedJobCalls++ },
+    { enqueue: async () => undefined },
+    {},
+  );
+
+  const result = await service.bulkStage({
+    invitationIds: [stored.id],
+    staged: true,
+    actorId: 'admin-1',
+    activeEventId: stored.eventId,
+  });
+
+  assert.equal(result[0].status, InvitationStatus.APPROVAL_STAGED);
+  assert.equal(producerCalls, 0);
+  assert.equal(delayedJobCalls, 0);
+  assert.equal(result[0].guestProfileId, null);
+  assert.equal(result[0].approvedAt, null);
+});
+
+test('bulk staging validates every invitation before applying any update', async () => {
+  const eligible = invitation({ id: 'eligible', status: InvitationStatus.ACCEPTED });
+  const ineligible = invitation({ id: 'approved', status: InvitationStatus.APPROVED });
+  let updateCalls = 0;
+  const service = new AdminWriteService(
+    {
+      invitation: {
+        async findMany() {
+          return [eligible, ineligible];
+        },
+        async update() {
+          updateCalls++;
+        },
+      },
+      async $transaction(operations) {
+        return Promise.all(operations);
+      },
+    },
+    logger,
+    {},
+    {},
+    {},
+    {},
+    {},
+  );
+
+  await assert.rejects(
+    service.bulkStage({
+      invitationIds: [eligible.id, ineligible.id],
+      staged: true,
+      actorId: 'admin-1',
+      activeEventId: eligible.eventId,
+    }),
+  );
+  assert.equal(updateCalls, 0);
+});
+
 test('accepted RSVP applies configured automatic approval', async () => {
   const existing = invitation();
   const approvalCalls = [];
@@ -218,6 +300,71 @@ test('accepted RSVP applies configured automatic approval', async () => {
   assert.equal(approvalCalls[0].actorId, existing.invitedByUserId);
   assert.equal(approvalCalls[0].activeEventId, existing.eventId);
   assert.equal(result.status, InvitationStatus.APPROVED);
+});
+
+test('accepted RSVP keeps a staged invitation staged and suppresses automatic approval', async () => {
+  const existing = invitation({ status: InvitationStatus.APPROVAL_STAGED });
+  const approvalCalls = [];
+  const transactionClient = {
+    invitation: {
+      async update({ data }) {
+        return invitation({
+          ...existing,
+          ...data,
+          pendingContactId: data.pendingContactId ?? 'pending-1',
+        });
+      },
+      async create() {
+        throw new Error('plus-one creation was not expected');
+      },
+    },
+  };
+  const service = new GuestWriteService(
+    {
+      eventSettingsProjection: { findUnique: async () => ({ approvalMode: 'AUTO' }) },
+      invitation: { findUnique: async () => existing },
+      $transaction: async (work) => work(transactionClient),
+    },
+    logger,
+    { set: async () => 'pending-1' },
+    { send: async () => undefined },
+    { approve: async (input) => approvalCalls.push(input) },
+    { enqueue: async () => undefined },
+  );
+
+  const result = await service.reply(
+    {
+      invitationId: existing.id,
+      choice: RsvpChoice.YES,
+      replyInput: {
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        email: existing.email,
+        phoneNumbers: [
+          {
+            type: 'MOBILE',
+            number: '+4915112345678',
+            countryCode: '+49',
+            isPrimary: true,
+            label: null,
+          },
+        ],
+        eventEndsAt: existing.eventEndsAt,
+      },
+    },
+    {
+      locale: 'en-US',
+      ip: undefined,
+      userAgent: undefined,
+      device: 'unknown',
+      browser: 'unknown',
+      os: 'unknown',
+      location: 'unknown',
+    },
+  );
+
+  assert.equal(approvalCalls.length, 0);
+  assert.equal(result.status, InvitationStatus.APPROVAL_STAGED);
 });
 
 test('ticket link handler propagates failures to Kafka retry and DLQ handling', async () => {

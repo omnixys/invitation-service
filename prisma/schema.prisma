@@ -189,6 +189,7 @@ enum PhoneNumberType {
 enum InvitationStatus {
   PENDING
   ACCEPTED
+  APPROVAL_STAGED
   DECLINED
   CANCELED
   REJECTED

@@ -19,7 +19,7 @@ import { ImportInvitationsResult } from '../models/input/import-invitation.input
 import { InvitationUpdateInput } from '../models/input/update-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
-import { shouldAutoApproveInvitation, shouldAutoApprovePlusOnes } from '../utils/approval-mode.js';
+import { shouldAutoApproveInvitation } from '../utils/approval-mode.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
@@ -203,7 +203,6 @@ export class AdminWriteService extends InvitationBaseService {
         const eventSettings = await this.prismaService.eventSettingsProjection.findUnique({
           where: { eventId: updated.eventId },
           select: {
-            requireApprovalForPlusOnes: true,
             scheduleTicketRelease: true,
             ticketReleaseAt: true,
           },
@@ -222,54 +221,6 @@ export class AdminWriteService extends InvitationBaseService {
           },
           actorId,
         );
-
-        if (
-          shouldAutoApprovePlusOnes(eventSettings?.requireApprovalForPlusOnes) &&
-          !updated.invitedByInvitationId
-        ) {
-          const plusOnes = await this.prismaService.invitation.findMany({
-            where: {
-              eventId: updated.eventId,
-              invitedByInvitationId: updated.id,
-              rsvpChoice: RsvpChoice.YES,
-              status: { in: [InvitationStatus.ACCEPTED, InvitationStatus.PENDING] },
-            },
-            select: { id: true },
-          });
-
-          if (plusOnes.length > 0) {
-            const plusOneIds = plusOnes.map((plusOne) => plusOne.id);
-
-            await this.prismaService.invitation.updateMany({
-              where: { id: { in: plusOneIds } },
-              data: {
-                approvedByUserId: actorId ?? null,
-                approvedAt,
-                status: InvitationStatus.APPROVED,
-              },
-            });
-
-            for (const plusOneId of plusOneIds) {
-              await this.publishMilestone(
-                {
-                  eventId: updated.eventId,
-                  milestoneId: `${plusOneId}:approved`,
-                  type: 'INVITATION_APPROVED',
-                  label: 'Invitation approved',
-                  occurredAt: approvedAt.toISOString(),
-                  referenceId: plusOneId,
-                },
-                actorId,
-              );
-            }
-
-            this.logger.debug(
-              'Plus-one invitations auto-approved: invitationId=%s | count=%d',
-              id,
-              plusOneIds.length,
-            );
-          }
-        }
 
         if (!updated.guestProfileId) {
           const missing: string[] = [];
@@ -531,30 +482,15 @@ export class AdminWriteService extends InvitationBaseService {
        */
       for (const item of invitationIds) {
         const { invitationId, seatId } = item;
+        const result = await this.approve({
+          id: invitationId,
+          approve: approved,
+          actorId,
+          seatId,
+          activeEventId,
+        });
 
-        try {
-          const result = await this.approve({
-            id: invitationId,
-            approve: approved,
-            actorId,
-            seatId,
-            activeEventId,
-          });
-
-          results.push(result);
-        } catch (err) {
-          /**
-           * DO NOT break the loop
-           *
-           * WHY:
-           * - Partial success is better than full failure
-           * - Admin can retry failed ones
-           */
-          this.logger.error('Bulk approve failed for invitation', {
-            invitationId,
-            error: err,
-          });
-        }
+        results.push(result);
       }
 
       this.logger.debug('Bulk approve finished', {
@@ -563,6 +499,70 @@ export class AdminWriteService extends InvitationBaseService {
       });
 
       return results;
+    });
+  }
+
+  /**
+   * Persists an internal approval decision without creating a guest, ticket,
+   * delayed job, notification, or approval milestone.
+   */
+  async bulkStage(params: {
+    invitationIds: string[];
+    staged: boolean;
+    actorId: string;
+    activeEventId?: string;
+  }): Promise<InvitationPayload[]> {
+    return TraceRunner.run('[SERVICE] bulkStage', async () => {
+      const uniqueIds = [...new Set(params.invitationIds)];
+      const invitations = await this.prismaService.invitation.findMany({
+        where: { id: { in: uniqueIds } },
+      });
+
+      if (invitations.length !== uniqueIds.length) {
+        throw new InvitationValidationException('One or more invitations do not exist');
+      }
+
+      for (const invitation of invitations) {
+        this.assertInvitationMatchesActiveEvent(
+          invitation.eventId,
+          params.activeEventId,
+          invitation.id,
+        );
+
+        const canStage =
+          invitation.status === InvitationStatus.PENDING ||
+          invitation.status === InvitationStatus.ACCEPTED;
+        const canUnstage = invitation.status === InvitationStatus.APPROVAL_STAGED;
+
+        if ((params.staged && !canStage) || (!params.staged && !canUnstage)) {
+          throw new InvitationValidationException(
+            `Invitation '${invitation.id}' cannot change its staged approval state`,
+          );
+        }
+      }
+
+      const updated = await this.prismaService.$transaction(
+        invitations.map((invitation) =>
+          this.prismaService.invitation.update({
+            where: { id: invitation.id },
+            data: {
+              status: params.staged
+                ? InvitationStatus.APPROVAL_STAGED
+                : invitation.rsvpChoice === RsvpChoice.YES
+                  ? InvitationStatus.ACCEPTED
+                  : InvitationStatus.PENDING,
+            },
+          }),
+        ),
+      );
+
+      this.logger.debug('Bulk stage finished', {
+        actorId: params.actorId,
+        count: updated.length,
+        staged: params.staged,
+      });
+
+      return updated.map((invitation) => InvitationMapper.toPayload(invitation));
     });
   }
 

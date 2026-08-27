@@ -52,6 +52,7 @@ export type PhoneNumberType = (typeof PhoneNumberType)[keyof typeof PhoneNumberT
 export const InvitationStatus = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',
+  APPROVAL_STAGED: 'APPROVAL_STAGED',
   DECLINED: 'DECLINED',
   CANCELED: 'CANCELED',
   REJECTED: 'REJECTED',

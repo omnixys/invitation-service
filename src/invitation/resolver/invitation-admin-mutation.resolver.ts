@@ -1,6 +1,7 @@
 import { InvitationValidationException } from '../errors/invitation-domain.error.js';
 import { ApproveInvitationInput } from '../models/input/approve.input.js';
 import { BulkApproveInvitationInput } from '../models/input/bulk-approve.input.js';
+import { BulkStageInvitationInput } from '../models/input/bulk-stage.input.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import {
   ImportInvitationsInput,
@@ -174,6 +175,33 @@ export class AdminMutationResolver {
         actorId: user.id,
         activeEventId,
       });
+    });
+  }
+
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
+  @Roles(RealmRoleType.USER)
+  @EventPermissions(EventPermissionKey.ApproveGuests)
+  @Mutation(() => [InvitationPayload], {
+    description:
+      'Stages invitations without creating guests, tickets, or notifications.',
+  })
+  async bulkStageInvitations(
+    @Args('input', { type: () => BulkStageInvitationInput })
+    input: BulkStageInvitationInput,
+    @CurrentEventId() activeEventId: string | undefined,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<InvitationPayload[]> {
+    if (!input.invitationIds?.length) {
+      throw new InvitationValidationException(
+        'Invitation IDs must not be empty',
+      );
+    }
+
+    return this.adminService.bulkStage({
+      invitationIds: input.invitationIds.map((item) => item.invitationId),
+      staged: input.staged,
+      actorId: user.id,
+      activeEventId,
     });
   }
 }
