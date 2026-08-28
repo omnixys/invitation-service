@@ -57,6 +57,7 @@ export class SupportContextController {
         email: true,
         phoneNumber: true,
         status: true,
+        eventEndsAt: true,
       },
     });
 
@@ -67,7 +68,10 @@ export class SupportContextController {
       });
     }
 
-    if (INVALID_SUPPORT_STATUSES.has(invitation.status)) {
+    if (
+      INVALID_SUPPORT_STATUSES.has(invitation.status) ||
+      (invitation.eventEndsAt !== null && invitation.eventEndsAt <= new Date())
+    ) {
       throw new UnprocessableEntityException({
         code: 'SUPPORT_CONTEXT_INVITATION_INVALID',
         message: 'Invitation is not valid for support',
