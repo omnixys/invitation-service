@@ -3,6 +3,26 @@
 All notable changes in this project will be documented in this file.
 
 
+## [3.5.0](https://github.com/omnixys/invitation-service/compare/v3.4.4...v3.5.0) (2026-08-28)
+
+### Approvals
+
+* **Approvals:** add persistent invitation staging ([](https://github.com/omnixys/invitation-service/commit/4de5eb67857fd4cd3ce100cd4ab76406bcf44ef8))
+
+### Deps
+
+* **Deps:** update contracts-ts ([](https://github.com/omnixys/invitation-service/commit/a4f601f9fb192d052f93d969f18baeadab7cd3ea))
+
+### Invitation
+
+* **Invitation:** getInvitation ([](https://github.com/omnixys/invitation-service/commit/1fbd1efa57ab7af8f2d0b836d605f82f24fd350e))
+
+### Support
+
+* **Support:** expose internal guest-support context endpoint ([](https://github.com/omnixys/invitation-service/commit/1e065a5d0610e1a0ac222fed53af9dd268f19dce))
+* **Support:** reject expired RSVP capabilities ([](https://github.com/omnixys/invitation-service/commit/10f1b596e11776139116cc47aaff299f9a5b822b))
+* **Support:** cover RSVP capability validation ([](https://github.com/omnixys/invitation-service/commit/e2a3cca09b116eb3745f4c18602aac6ed53acc80))
+
 ## [3.4.4](https://github.com/omnixys/invitation-service/compare/v3.4.3...v3.4.4) (2026-08-26)
 
 ### Build
