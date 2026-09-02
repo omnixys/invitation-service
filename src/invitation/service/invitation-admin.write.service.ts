@@ -358,7 +358,7 @@ export class AdminWriteService extends InvitationBaseService {
         operation: 'Record Event Milestone',
         version: '1',
         type: 'EVENT',
-        actorId: actorId ?? context?.principal?.actorId ?? '',
+        actorId: actorId ?? context?.principal?.actorId,
         tenantId: currentTenantId(),
       },
     });
