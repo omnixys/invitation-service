@@ -32,7 +32,6 @@ import { Injectable } from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor, type ClientContext } from '@omnixys/context-ts';
 import {
-  createTmpUsername,
   getPrimaryPhoneNumber,
   n2u,
   PhoneNumberType as SharedPhoneNumberType,
@@ -43,9 +42,23 @@ import {
 } from '@omnixys/contracts-ts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
+import { createHash } from 'node:crypto';
 import { TraceRunner } from '@omnixys/observability-ts';
 
 const { DEFAULT_TENANT_ID } = env;
+
+/**
+ * Deterministic UUIDv7 for temporary/unauthenticated actor identity.
+ * Used as sentinel in unauthenticated guest flows until real U is provisioned.
+ * Not a real user identity — downstream services must treat nil UUID as "no actor".
+ */
+function tempActorId(namespace: string, key: string): string {
+  const bytes = createHash('sha1').update(`${namespace}:${key}`).digest().subarray(0, 16);
+  bytes[6] = (bytes[6]! & 0x0f) | 0x70; // Version 7
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80; // RFC-4122 Variant
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
 
 type InvitationWithPhones = Prisma.InvitationGetPayload<{
   include: { phoneNumbers: true };
@@ -267,10 +280,7 @@ export class GuestWriteService extends InvitationBaseService {
             eventEndsAt: invitation.eventEndsAt ?? new Date(),
             tenantId: currentTenantId(),
             locale: clientInfo.locale,
-            actorId: createTmpUsername(
-              replyInput.firstName ?? invitation.firstName,
-              replyInput.lastName ?? invitation.lastName,
-            ),
+            actorId: tempActorId('guest-rsvp', invitation.id),
 
             /**
              * Now mapped from DB-created plusOnes
@@ -964,7 +974,7 @@ export class GuestWriteService extends InvitationBaseService {
         eventEndsAt: invitee.eventEndsAt ?? new Date(),
         tenantId: currentTenantId(),
         locale: clientInfo.locale,
-        actorId: createTmpUsername(input.firstName, input.lastName),
+        actorId: tempActorId('guest-plusone', invitee.id),
 
         plusOnes: plusOneInvitations.map((p) => ({
           invitationId: p.id,
@@ -1021,7 +1031,7 @@ export class GuestWriteService extends InvitationBaseService {
         return this.adminWrite.approve({
           id: updated.id,
           approve: true,
-          actorId: createTmpUsername(input.firstName, input.lastName),
+          actorId: tempActorId('system-auto-approval', updated.id),
           activeEventId: input.eventId,
         });
       }
