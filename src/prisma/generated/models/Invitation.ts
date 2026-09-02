@@ -364,11 +364,11 @@ export type InvitationWhereInput = {
   status?: Prisma.EnumInvitationStatusFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
-  pendingContactId?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  pendingContactId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   rsvpChoice?: Prisma.EnumRsvpChoiceNullableFilter<"Invitation"> | $Enums.RsvpChoice | null
   rsvpAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
   approvedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
-  approvedByUserId?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  approvedByUserId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   maxInvitees?: Prisma.IntFilter<"Invitation"> | number
   invitedByInvitationId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   invitedByUserId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
@@ -433,7 +433,7 @@ export type InvitationWhereUniqueInput = Prisma.AtLeast<{
   rsvpChoice?: Prisma.EnumRsvpChoiceNullableFilter<"Invitation"> | $Enums.RsvpChoice | null
   rsvpAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
   approvedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
-  approvedByUserId?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  approvedByUserId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   maxInvitees?: Prisma.IntFilter<"Invitation"> | number
   invitedByInvitationId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   invitedByUserId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
@@ -496,11 +496,11 @@ export type InvitationScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumInvitationStatusWithAggregatesFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
-  pendingContactId?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
+  pendingContactId?: Prisma.UuidNullableWithAggregatesFilter<"Invitation"> | string | null
   rsvpChoice?: Prisma.EnumRsvpChoiceNullableWithAggregatesFilter<"Invitation"> | $Enums.RsvpChoice | null
   rsvpAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
   approvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Invitation"> | Date | string | null
-  approvedByUserId?: Prisma.StringNullableWithAggregatesFilter<"Invitation"> | string | null
+  approvedByUserId?: Prisma.UuidNullableWithAggregatesFilter<"Invitation"> | string | null
   maxInvitees?: Prisma.IntWithAggregatesFilter<"Invitation"> | number
   invitedByInvitationId?: Prisma.UuidNullableWithAggregatesFilter<"Invitation"> | string | null
   invitedByUserId?: Prisma.UuidNullableWithAggregatesFilter<"Invitation"> | string | null
@@ -1189,11 +1189,11 @@ export type InvitationScalarWhereInput = {
   status?: Prisma.EnumInvitationStatusFilter<"Invitation"> | $Enums.InvitationStatus
   createdAt?: Prisma.DateTimeFilter<"Invitation"> | Date | string
   updatedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
-  pendingContactId?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  pendingContactId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   rsvpChoice?: Prisma.EnumRsvpChoiceNullableFilter<"Invitation"> | $Enums.RsvpChoice | null
   rsvpAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
   approvedAt?: Prisma.DateTimeNullableFilter<"Invitation"> | Date | string | null
-  approvedByUserId?: Prisma.StringNullableFilter<"Invitation"> | string | null
+  approvedByUserId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   maxInvitees?: Prisma.IntFilter<"Invitation"> | number
   invitedByInvitationId?: Prisma.UuidNullableFilter<"Invitation"> | string | null
   invitedByUserId?: Prisma.UuidNullableFilter<"Invitation"> | string | null

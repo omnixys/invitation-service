@@ -36,13 +36,13 @@ model Invitation {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
-  pendingContactId String? @unique @map("pending_contact_id")
+  pendingContactId String? @unique @map("pending_contact_id") @db.Uuid
 
   rsvpChoice RsvpChoice? @map("rsvp_choice")
   rsvpAt     DateTime?   @map("rsvp_at")
 
   approvedAt       DateTime? @map("approved_at")
-  approvedByUserId String?   @map("approved_by_user_id")
+  approvedByUserId String?   @map("approved_by_user_id") @db.Uuid
 
   maxInvitees Int @default(0) @map("max_invitees")
 
@@ -136,7 +136,7 @@ model AnalyticsOutbox {
   topic          String
   payload        Json
   correlationId  String?   @map("correlation_id")
-  actorId        String?   @map("actor_id")
+  actorId        String?   @map("actor_id") @db.Uuid
   attempts       Int       @default(0)
   nextAttemptAt  DateTime  @default(now()) @map("next_attempt_at")
   lockedAt       DateTime? @map("locked_at")
