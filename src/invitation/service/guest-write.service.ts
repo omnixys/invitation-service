@@ -42,8 +42,8 @@ import {
 } from '@omnixys/contracts-ts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
-import { createHash } from 'node:crypto';
 import { TraceRunner } from '@omnixys/observability-ts';
+import { createHash } from 'node:crypto';
 
 const { DEFAULT_TENANT_ID } = env;
 
