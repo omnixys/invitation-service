@@ -1,5 +1,5 @@
-import { env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { GuestConfirmationService } from '../invitation/service/guest-confirmation.service.js';
 import { Injectable } from '@nestjs/common';
 import {
   DelayedJob,
@@ -7,20 +7,7 @@ import {
   DelayedJobKeys,
   ValkeyLockService,
 } from '@omnixys/cache-ts';
-import { ContextAccessor } from '@omnixys/context-ts';
-import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
-
-const { DEFAULT_TENANT_ID } = env;
-
-function currentTenantId(): string {
-  const context = ContextAccessor.get();
-  return (
-    context?.tenant?.tenantId ??
-    context?.principal?.tenantId ??
-    DEFAULT_TENANT_ID
-  );
-}
 
 @Injectable()
 @DelayedJobHandler()
@@ -29,8 +16,8 @@ export class TicketGenerationHandler {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly producer: KafkaProducerService,
     private readonly lock: ValkeyLockService,
+    private readonly guestConfirmation: GuestConfirmationService,
     logger: OmnixysLogger,
   ) {
     this.logger = logger.log(this.constructor.name, 'service:invitation');
@@ -120,22 +107,10 @@ export class TicketGenerationHandler {
         invitationId,
       });
 
-      await this.producer.send({
-        topic: KafkaTopics.notification.confirmGuest,
-        payload: {
-          token: invitation.pendingContactId,
-          eventName: invitation.eventName ?? '',
-          seatId: seatId ?? undefined,
-          eventEndsAt: invitation.eventEndsAt ?? new Date(),
-        },
-        meta: {
-          service: 'invitation-service',
-          operation: 'Delayed ticket generation',
-          version: '1',
-          type: 'EVENT',
-          actorId,
-          tenantId: currentTenantId(),
-        },
+      await this.guestConfirmation.sendFirstConfirmation({
+        invitationId,
+        seatId,
+        actorId,
       });
 
       this.logger.info('Delayed ticket generation completed: %o', {

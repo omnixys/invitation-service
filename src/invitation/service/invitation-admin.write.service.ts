@@ -1,6 +1,11 @@
 import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
 import { env } from '../../config/env.js';
-import { InvitationStatus, InvitationType, RsvpChoice } from '../../prisma/generated/client.js';
+import {
+  InvitationStatus,
+  InvitationType,
+  Prisma,
+  RsvpChoice,
+} from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { applyMapping } from '../../utils/apply-mapping.js';
 import { mapColumns } from '../../utils/column-mapper.js';
@@ -19,8 +24,13 @@ import { ImportInvitationsResult } from '../models/input/import-invitation.input
 import { InvitationUpdateInput } from '../models/input/update-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
+import {
+  ResendGuestConfirmationItem,
+  ResendGuestConfirmationsPayload,
+} from '../models/payloads/resend-guest-confirmations.payload.js';
 import { shouldAutoApproveInvitation } from '../utils/approval-mode.js';
 import { InvitationBaseService } from './invitation-base.service.js';
+import { GuestConfirmationService } from './guest-confirmation.service.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
@@ -49,6 +59,7 @@ export class AdminWriteService extends InvitationBaseService {
     private readonly cache: ValkeyService,
     private readonly delayedJob: DelayedJobService,
     private readonly analyticsOutbox: AnalyticsOutboxService,
+    private readonly guestConfirmation: GuestConfirmationService,
 
     @Inject(FILE_STORAGE)
     private readonly storage: FileStorage,
@@ -269,27 +280,14 @@ export class AdminWriteService extends InvitationBaseService {
               delayMs,
             );
           } else {
-            await this.producer.send({
-              topic: KafkaTopics.notification.confirmGuest,
-              payload: {
-                token: updated.pendingContactId,
-                eventName: updated.eventName ?? '',
-                seatId,
-                eventEndsAt: updated.eventEndsAt ?? new Date(),
-              },
-              meta: {
-                service: 'invitation-service',
-                operation: 'Send confirm guest notification',
-                version: '1',
-                type: 'EVENT',
-                actorId,
-                tenantId: currentTenantId(),
-              },
+            await this.guestConfirmation.sendFirstConfirmation({
+              invitationId: id,
+              seatId,
+              actorId,
             });
 
             this.logger.debug(
-              'Kafka event sent: topic=%s | invitationId=%s | actorId=%s',
-              KafkaTopics.notification.confirmGuest,
+              'Confirmation sent: invitationId=%s | actorId=%s',
               id,
               actorId,
             );
@@ -312,6 +310,7 @@ export class AdminWriteService extends InvitationBaseService {
           where: { id },
           data: {
             pendingContactId: null,
+            pendingContactPayload: Prisma.DbNull,
             status: InvitationStatus.REJECTED,
             approvedByUserId: actorId,
             approvedAt: new Date(),
@@ -563,6 +562,57 @@ export class AdminWriteService extends InvitationBaseService {
       });
 
       return updated.map((invitation) => InvitationMapper.toPayload(invitation));
+    });
+  }
+
+  /**
+   * Re-sends the confirmation message (email or WhatsApp) to guests who have not
+   * yet completed their registration, e.g. after they missed the first message.
+   */
+  async resendGuestConfirmations(
+    invitationIds: string[],
+    actorId: string,
+    activeEventId?: string,
+  ): Promise<ResendGuestConfirmationsPayload> {
+    return TraceRunner.run('[SERVICE] resendGuestConfirmations', async () => {
+      this.logger.debug('Resend confirmations requested: %o', {
+        actorId,
+        count: invitationIds.length,
+      });
+
+      const uniqueIds = [...new Set(invitationIds)];
+      const results: ResendGuestConfirmationItem[] = [];
+
+      for (const id of uniqueIds) {
+        const invitation = await this.ensureExists(id);
+        this.assertInvitationMatchesActiveEvent(invitation.eventId, activeEventId, id);
+
+        const outcome = await this.guestConfirmation.resendConfirmation({
+          invitationId: id,
+          actorId,
+        });
+
+        results.push({
+          invitationId: id,
+          resent: outcome.resent,
+          reason: outcome.reason,
+        });
+      }
+
+      const resent = results.filter((item) => item.resent).length;
+
+      this.logger.debug('Resend confirmations finished: %o', {
+        total: uniqueIds.length,
+        resent,
+        skipped: uniqueIds.length - resent,
+      });
+
+      return {
+        total: uniqueIds.length,
+        resent,
+        skipped: uniqueIds.length - resent,
+        results,
+      };
     });
   }
 

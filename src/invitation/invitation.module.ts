@@ -12,6 +12,7 @@ import { AdminWriteService } from './service/invitation-admin.write.service.js';
 import { InvitationPreviewService } from './service/invitation-preview.service.js';
 import { InvitationReadService } from './service/invitation-read.service.js';
 import { InvitationWriteService } from './service/invitation-write.service.js';
+import { GuestConfirmationService } from './service/guest-confirmation.service.js';
 import { LoaderFactory } from './utils/loader.factory.js';
 import { PhoneNumberLoader } from './utils/phone-number.loader.js';
 import { Module } from '@nestjs/common';
@@ -31,7 +32,14 @@ import { Module } from '@nestjs/common';
     PhoneNumberLoader,
     LoaderFactory,
     InvitationPreviewService,
+    GuestConfirmationService,
   ],
-  exports: [InvitationReadService, AdminWriteService, InvitationWriteService, GuestWriteService],
+  exports: [
+    InvitationReadService,
+    AdminWriteService,
+    InvitationWriteService,
+    GuestWriteService,
+    GuestConfirmationService,
+  ],
 })
 export class InvitationModule {}
