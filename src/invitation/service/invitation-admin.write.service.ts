@@ -29,8 +29,8 @@ import {
   ResendGuestConfirmationsPayload,
 } from '../models/payloads/resend-guest-confirmations.payload.js';
 import { shouldAutoApproveInvitation } from '../utils/approval-mode.js';
-import { InvitationBaseService } from './invitation-base.service.js';
 import { GuestConfirmationService } from './guest-confirmation.service.js';
+import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
@@ -286,11 +286,7 @@ export class AdminWriteService extends InvitationBaseService {
               actorId,
             });
 
-            this.logger.debug(
-              'Confirmation sent: invitationId=%s | actorId=%s',
-              id,
-              actorId,
-            );
+            this.logger.debug('Confirmation sent: invitationId=%s | actorId=%s', id, actorId);
           }
         } else {
           this.logger.debug('Guest profile already exists – skip Kafka event: invitationId=%s', id);

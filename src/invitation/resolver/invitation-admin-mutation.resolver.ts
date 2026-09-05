@@ -223,7 +223,9 @@ export class AdminMutationResolver {
     @CurrentUser() user: CurrentUserData,
   ): Promise<ResendGuestConfirmationsPayload> {
     if (!invitationIds?.length) {
-      throw new InvitationValidationException('Invitation IDs must not be empty');
+      throw new InvitationValidationException(
+        'Invitation IDs must not be empty',
+      );
     }
 
     return this.adminService.resendGuestConfirmations(

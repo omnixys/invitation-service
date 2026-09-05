@@ -983,6 +983,7 @@ export const EventSettingsProjectionScalarFieldEnum = {
   eventId: 'eventId',
   tenantId: 'tenantId',
   name: 'name',
+  startsAt: 'startsAt',
   endsAt: 'endsAt',
   approvalMode: 'approvalMode',
   allowPublicRsvp: 'allowPublicRsvp',
@@ -991,6 +992,9 @@ export const EventSettingsProjectionScalarFieldEnum = {
   maxSeats: 'maxSeats',
   scheduleTicketRelease: 'scheduleTicketRelease',
   ticketReleaseAt: 'ticketReleaseAt',
+  guestConfirmationReminderEnabled: 'guestConfirmationReminderEnabled',
+  guestConfirmationReminderPresets: 'guestConfirmationReminderPresets',
+  guestConfirmationMaxResends: 'guestConfirmationMaxResends',
   updatedAt: 'updatedAt'
 } as const
 

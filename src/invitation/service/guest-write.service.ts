@@ -308,8 +308,7 @@ export class GuestWriteService extends InvitationBaseService {
             where: { id },
             data: {
               pendingContactId,
-              pendingContactPayload:
-                pendingUser as unknown as Prisma.InputJsonValue,
+              pendingContactPayload: pendingUser as unknown as Prisma.InputJsonValue,
             },
           });
         }

@@ -1,24 +1,12 @@
-import { env } from '../../config/env.js';
-import {
-  Invitation,
-  InvitationStatus,
-  Prisma,
-} from '../../prisma/generated/client.js';
-import { PrismaService } from '../../prisma/prisma.service.js';
 import { AnalyticsOutboxService } from '../../analytics/analytics-outbox.service.js';
+import { env } from '../../config/env.js';
+import { Invitation, InvitationStatus, Prisma } from '../../prisma/generated/client.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
 import { Injectable } from '@nestjs/common';
-import {
-  DelayedJobKeys,
-  DelayedJobService,
-  ValkeyKey,
-  ValkeyService,
-} from '@omnixys/cache-ts';
+import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
-import type {
-  CreatePendingUserDTO,
-  GuestNotificationDTO,
-} from '@omnixys/contracts-ts';
+import type { CreatePendingUserDTO, GuestNotificationDTO } from '@omnixys/contracts-ts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
@@ -26,6 +14,12 @@ import { TraceRunner } from '@omnixys/observability-ts';
 const { DEFAULT_TENANT_ID } = env;
 
 const PENDING_CONTACT_TTL_SECONDS = 60 * 60 * 24 * 7;
+
+const GUEST_REMINDER_OFFSETS: Record<string, number> = {
+  WEEK_BEFORE: 7 * 24 * 60 * 60 * 1000,
+  THREE_DAYS_BEFORE: 3 * 24 * 60 * 60 * 1000,
+  HOURS_24_BEFORE: 24 * 60 * 60 * 1000,
+};
 
 export interface ResendConfirmationResult {
   resent: boolean;
@@ -132,7 +126,7 @@ export class GuestConfirmationService {
         operation: 'Send confirm guest notification',
       });
 
-      await this.scheduleReminder(invitationId, actorId);
+      await this.scheduleReminders(invitationId, actorId);
       return true;
     });
   }
@@ -171,9 +165,7 @@ export class GuestConfirmationService {
         return { resent: false, reason: 'event-ended' };
       }
 
-      const payload = invitation.pendingContactPayload as unknown as
-        | CreatePendingUserDTO
-        | null;
+      const payload = invitation.pendingContactPayload as unknown as CreatePendingUserDTO | null;
       if (!payload) {
         this.logger.warn(
           'Confirmation resend skipped, pending payload missing: invitationId=%s',
@@ -192,9 +184,7 @@ export class GuestConfirmationService {
         return { resent: false, reason: 'rate-limited' };
       }
 
-      const cooldownSeconds = Math.ceil(
-        env.GUEST_CONFIRMATION_RESEND_COOLDOWN_MS / 1000,
-      );
+      const cooldownSeconds = Math.ceil(env.GUEST_CONFIRMATION_RESEND_COOLDOWN_MS / 1000);
       await this.cache.rawSet(rateKey, '1', cooldownSeconds);
 
       const token = await this.reanchorPendingContact(payload);
@@ -209,7 +199,6 @@ export class GuestConfirmationService {
       });
 
       await this.recordResentAnalytics(invitationId);
-      await this.scheduleReminder(invitationId, actorId);
 
       this.logger.info(
         'Confirmation resent: invitationId=%s actorId=%s',
@@ -223,9 +212,7 @@ export class GuestConfirmationService {
   private async resolvePendingContactPayload(
     invitation: Invitation,
   ): Promise<CreatePendingUserDTO | null> {
-    const stored = invitation.pendingContactPayload as unknown as
-      | CreatePendingUserDTO
-      | null;
+    const stored = invitation.pendingContactPayload as unknown as CreatePendingUserDTO | null;
     if (stored && typeof stored === 'object') {
       return stored;
     }
@@ -251,9 +238,7 @@ export class GuestConfirmationService {
     }
   }
 
-  private async reanchorPendingContact(
-    payload: CreatePendingUserDTO,
-  ): Promise<string> {
+  private async reanchorPendingContact(payload: CreatePendingUserDTO): Promise<string> {
     return this.cache.set(
       ValkeyKey.pendingContact,
       JSON.stringify(payload),
@@ -273,9 +258,7 @@ export class GuestConfirmationService {
         pendingContactId: token,
         pendingContactPayload: payload as unknown as Prisma.InputJsonValue,
         confirmationSentAt: new Date(),
-        ...(incrementResend
-          ? { confirmationResendCount: { increment: 1 } }
-          : {}),
+        ...(incrementResend ? { confirmationResendCount: { increment: 1 } } : {}),
       },
     });
   }
@@ -316,7 +299,61 @@ export class GuestConfirmationService {
     );
   }
 
-  private async scheduleReminder(invitationId: string, actorId?: string): Promise<void> {
+  private async scheduleReminders(invitationId: string, actorId?: string): Promise<void> {
+    const invitation = await this.prismaService.invitation.findUnique({
+      where: { id: invitationId },
+      select: { eventId: true },
+    });
+
+    const settings = invitation
+      ? await this.prismaService.eventSettingsProjection.findUnique({
+          where: { eventId: invitation.eventId },
+        })
+      : null;
+
+    const presets = settings?.guestConfirmationReminderPresets ?? [];
+
+    if (
+      settings &&
+      settings.guestConfirmationReminderEnabled &&
+      settings.startsAt &&
+      presets.length > 0
+    ) {
+      const startsAtMs = settings.startsAt.getTime();
+      const now = Date.now();
+      const scheduled: Array<{ preset: string; delayMs: number }> = [];
+
+      for (const preset of presets) {
+        const offset = GUEST_REMINDER_OFFSETS[preset];
+        if (!offset) {
+          continue;
+        }
+        const delayMs = startsAtMs - offset - now;
+        if (delayMs > 0) {
+          scheduled.push({ preset, delayMs });
+        }
+      }
+
+      if (scheduled.length === 0) {
+        return;
+      }
+
+      for (const { preset, delayMs } of scheduled) {
+        await this.delayedJob.schedule({
+          type: DelayedJobKeys.guest.confirmation.remind,
+          payload: { invitationId, actorId, preset },
+          delayMs,
+        });
+      }
+
+      this.logger.debug(
+        'Confirmation reminders scheduled from settings: invitationId=%s count=%d',
+        invitationId,
+        scheduled.length,
+      );
+      return;
+    }
+
     if (env.GUEST_REMINDER_AFTER_MS <= 0) {
       return;
     }
@@ -328,7 +365,7 @@ export class GuestConfirmationService {
     });
 
     this.logger.debug(
-      'Confirmation reminder scheduled: invitationId=%s delayMs=%d',
+      'Confirmation reminder scheduled via fallback: invitationId=%s delayMs=%d',
       invitationId,
       env.GUEST_REMINDER_AFTER_MS,
     );

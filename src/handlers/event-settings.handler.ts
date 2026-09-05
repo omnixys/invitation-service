@@ -19,6 +19,10 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { Injectable } from '@nestjs/common';
 import type { EventCreatedDTO, EventUpdatedDTO } from '@omnixys/contracts-ts';
 import {
+  GUEST_REMINDER_PRESETS,
+  type GuestReminderPreset,
+} from '@omnixys/contracts-ts';
+import {
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
@@ -32,6 +36,10 @@ import { isUUID } from 'class-validator';
 interface EventSettingsApprovalPayload {
   requireApprovalForPlusOnes?: boolean;
   scheduleTicketRelease?: boolean;
+  startsAt?: string;
+  guestConfirmationReminderEnabled?: boolean;
+  guestConfirmationReminderPresets?: GuestReminderPreset[];
+  guestConfirmationMaxResends?: number;
 }
 
 @KafkaEventHandler('event')
@@ -58,11 +66,15 @@ export class EventSettingsHandler {
       const {
         eventId,
         name,
+        startsAt,
         endsAt,
         approvalMode,
         allowPublicRsvp,
         requireApprovalForPlusOnes,
         scheduleTicketRelease,
+        guestConfirmationReminderEnabled,
+        guestConfirmationReminderPresets,
+        guestConfirmationMaxResends,
         rsvpDeadline,
         maxSeats,
         ticketReleaseAt,
@@ -78,11 +90,17 @@ export class EventSettingsHandler {
             eventId,
             tenantId,
             name,
+            startsAt: startsAt ? new Date(startsAt) : null,
             endsAt: endsAt ? new Date(endsAt) : null,
             approvalMode,
             allowPublicRsvp,
             requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
             scheduleTicketRelease: scheduleTicketRelease ?? false,
+            guestConfirmationReminderEnabled:
+              guestConfirmationReminderEnabled ?? true,
+            guestConfirmationReminderPresets:
+              guestConfirmationReminderPresets ?? [...GUEST_REMINDER_PRESETS],
+            guestConfirmationMaxResends: guestConfirmationMaxResends ?? null,
             rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
             maxSeats,
             ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
@@ -90,11 +108,17 @@ export class EventSettingsHandler {
           update: {
             tenantId,
             name,
+            startsAt: startsAt ? new Date(startsAt) : null,
             endsAt: endsAt ? new Date(endsAt) : null,
             approvalMode,
             allowPublicRsvp,
             requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
             scheduleTicketRelease: scheduleTicketRelease ?? false,
+            guestConfirmationReminderEnabled:
+              guestConfirmationReminderEnabled ?? true,
+            guestConfirmationReminderPresets:
+              guestConfirmationReminderPresets ?? [...GUEST_REMINDER_PRESETS],
+            guestConfirmationMaxResends: guestConfirmationMaxResends ?? null,
             rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
             maxSeats,
             ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
@@ -120,11 +144,15 @@ export class EventSettingsHandler {
       const {
         eventId,
         name,
+        startsAt,
         endsAt,
         approvalMode,
         allowPublicRsvp,
         requireApprovalForPlusOnes,
         scheduleTicketRelease,
+        guestConfirmationReminderEnabled,
+        guestConfirmationReminderPresets,
+        guestConfirmationMaxResends,
         rsvpDeadline,
         maxSeats,
         ticketReleaseAt,
@@ -154,11 +182,17 @@ export class EventSettingsHandler {
             eventId,
             tenantId,
             name: name ?? null,
+            startsAt: startsAt ? new Date(startsAt) : null,
             endsAt: endsAt ? new Date(endsAt) : null,
             approvalMode: approvalMode ?? null,
             allowPublicRsvp: allowPublicRsvp ?? false,
             requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? true,
             scheduleTicketRelease: scheduleTicketRelease ?? false,
+            guestConfirmationReminderEnabled:
+              guestConfirmationReminderEnabled ?? true,
+            guestConfirmationReminderPresets:
+              guestConfirmationReminderPresets ?? [...GUEST_REMINDER_PRESETS],
+            guestConfirmationMaxResends: guestConfirmationMaxResends ?? null,
             rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : null,
             maxSeats: maxSeats ?? null,
             ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
@@ -166,6 +200,12 @@ export class EventSettingsHandler {
           update: {
             tenantId,
             name: name ?? undefined,
+            startsAt:
+              startsAt !== undefined
+                ? startsAt
+                  ? new Date(startsAt)
+                  : null
+                : undefined,
             endsAt:
               endsAt !== undefined
                 ? endsAt
@@ -176,6 +216,12 @@ export class EventSettingsHandler {
             allowPublicRsvp: allowPublicRsvp ?? undefined,
             requireApprovalForPlusOnes: requireApprovalForPlusOnes ?? undefined,
             scheduleTicketRelease: scheduleTicketRelease ?? undefined,
+            guestConfirmationReminderEnabled:
+              guestConfirmationReminderEnabled ?? undefined,
+            guestConfirmationReminderPresets:
+              guestConfirmationReminderPresets ?? undefined,
+            guestConfirmationMaxResends:
+              guestConfirmationMaxResends ?? undefined,
             rsvpDeadline:
               rsvpDeadline !== undefined
                 ? rsvpDeadline
