@@ -38,7 +38,9 @@ export class AdminMutationResolver {
     private readonly loggerService: OmnixysLogger,
     private readonly adminService: AdminWriteService,
   ) {
-    this.logger = this.loggerService.log(this.constructor.name);
+    this.logger = this.loggerService.log(
+      this.constructor.name,
+    );
   }
 
   @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
@@ -75,7 +77,7 @@ export class AdminMutationResolver {
         );
       }
 
-      this.logger.debug('Import invitations requested', {
+      this.logger.debug('Import invitations requested: %o', {
         actorId: user.id,
         eventId: input.eventId,
         key: input.key,
@@ -89,7 +91,7 @@ export class AdminMutationResolver {
         user.id,
       );
 
-      this.logger.debug('Import completed', {
+      this.logger.debug('Import completed: %o', {
         actorId: user.id,
         duplicates: result.duplicates.length,
         imported: result.imported,
@@ -164,7 +166,7 @@ export class AdminMutationResolver {
         );
       }
 
-      this.logger.debug('Bulk approve requested', {
+      this.logger.debug('Bulk approve requested: %o', {
         actorId: user.id,
         count: input.invitationIds.length,
       });

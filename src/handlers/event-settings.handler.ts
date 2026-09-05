@@ -43,7 +43,9 @@ export class EventSettingsHandler {
     private readonly omnixysLogger: OmnixysLogger,
     private readonly prisma: PrismaService,
   ) {
-    this.logger = this.omnixysLogger.log(this.constructor.name);
+    this.logger = this.omnixysLogger.log(
+      this.constructor.name,
+    );
   }
 
   @KafkaEvent(KafkaTopics.event.created)
@@ -66,7 +68,7 @@ export class EventSettingsHandler {
       } = payload as EventCreatedDTO & EventSettingsApprovalPayload;
       const tenantId = verifiedTenantId(context);
 
-      this.logger.info('event_created_received', { eventId, name });
+      this.logger.info('event_created_received: %o', { eventId, name });
 
       try {
         await this.prisma.eventSettingsProjection.upsert({
@@ -97,9 +99,9 @@ export class EventSettingsHandler {
             ticketReleaseAt: ticketReleaseAt ? new Date(ticketReleaseAt) : null,
           },
         });
-        this.logger.info('event_created_settings_upserted', { eventId });
+        this.logger.info('event_created_settings_upserted: %o', { eventId });
       } catch (error) {
-        this.logger.error('event_created_settings_failed', {
+        this.logger.error('event_created_settings_failed: %o', {
           eventId,
           error,
         });
@@ -129,7 +131,7 @@ export class EventSettingsHandler {
       } = payload as EventUpdatedDTO & EventSettingsApprovalPayload;
       const tenantId = verifiedTenantId(context);
 
-      this.logger.info('event_updated_received', { eventId, name });
+      this.logger.info('event_updated_received: %o', { eventId, name });
 
       const existing = await this.prisma.eventSettingsProjection.findUnique({
         where: { eventId },
@@ -140,7 +142,7 @@ export class EventSettingsHandler {
         existing?.updatedAt &&
         new Date(occurredAt).getTime() < existing.updatedAt.getTime()
       ) {
-        this.logger.debug('Skipping stale event.updated', { eventId });
+        this.logger.debug('Skipping stale event.updated: %o', { eventId });
         return;
       }
 
@@ -188,9 +190,9 @@ export class EventSettingsHandler {
                 : undefined,
           },
         });
-        this.logger.info('event_updated_settings_upserted', { eventId });
+        this.logger.info('event_updated_settings_upserted: %o', { eventId });
       } catch (error) {
-        this.logger.error('event_updated_settings_failed', {
+        this.logger.error('event_updated_settings_failed: %o', {
           eventId,
           error,
         });

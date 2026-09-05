@@ -118,7 +118,7 @@ export class InvitationUploadController {
         contentType: part.mimetype,
       });
 
-      this.logger.debug('Upload successful', {
+      this.logger.debug('Upload successful: %o', {
         actorId: user.id,
         filename: part.filename,
         mimetype: part.mimetype,

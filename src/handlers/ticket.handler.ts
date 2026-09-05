@@ -51,7 +51,9 @@ export class TicketHandler {
     loggerService: OmnixysLogger,
     private readonly invitationWriteService: InvitationWriteService,
   ) {
-    this.logger = loggerService.log(this.constructor.name);
+    this.logger = loggerService.log(
+      this.constructor.name,
+    );
   }
 
   @KafkaEvent(KafkaTopics.invitation.addGuestId)

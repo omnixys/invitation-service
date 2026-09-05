@@ -465,7 +465,7 @@ export class AdminWriteService extends InvitationBaseService {
     return TraceRunner.run('[SERVICE] bulkApprove', async () => {
       const { invitationIds, approved, actorId, activeEventId } = params;
 
-      this.logger.debug('Bulk approve start', {
+      this.logger.debug('Bulk approve start: %o', {
         actorId,
         count: invitationIds.length,
       });
@@ -493,7 +493,7 @@ export class AdminWriteService extends InvitationBaseService {
         results.push(result);
       }
 
-      this.logger.debug('Bulk approve finished', {
+      this.logger.debug('Bulk approve finished: %o', {
         success: results.length,
         total: invitationIds.length,
       });
@@ -556,7 +556,7 @@ export class AdminWriteService extends InvitationBaseService {
         ),
       );
 
-      this.logger.debug('Bulk stage finished', {
+      this.logger.debug('Bulk stage finished: %o', {
         actorId: params.actorId,
         count: updated.length,
         staged: params.staged,
@@ -573,7 +573,7 @@ export class AdminWriteService extends InvitationBaseService {
     actorId: string,
   ): Promise<ImportInvitationsResult> {
     return TraceRunner.run('[SERVICE] importInvitations', async () => {
-      this.logger.debug('Import start', {
+      this.logger.debug('Import start: %o', {
         actorId,
         eventId,
         key,
@@ -585,7 +585,7 @@ export class AdminWriteService extends InvitationBaseService {
        */
       const buffer = await this.storage.get({ key });
 
-      this.logger.debug('Import file loaded', {
+      this.logger.debug('Import file loaded: %o', {
         actorId,
         eventId,
         uploadType,
@@ -666,7 +666,7 @@ export class AdminWriteService extends InvitationBaseService {
       });
 
       if (errors.length) {
-        this.logger.warn('Import validation failed', {
+        this.logger.warn('Import validation failed: %o', {
           actorId,
           eventId,
           errors: errors.length,
@@ -690,7 +690,7 @@ export class AdminWriteService extends InvitationBaseService {
         select: { firstName: true, lastName: true },
       });
 
-      this.logger.debug('Import duplicate check completed', {
+      this.logger.debug('Import duplicate check completed: %o', {
         actorId,
         eventId,
         existing: existing.length,
@@ -745,7 +745,7 @@ export class AdminWriteService extends InvitationBaseService {
         imported++;
       }
 
-      this.logger.debug('Import finished', {
+      this.logger.debug('Import finished: %o', {
         actorId,
         eventId,
         imported,
