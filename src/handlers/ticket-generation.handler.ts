@@ -33,7 +33,7 @@ export class TicketGenerationHandler {
     private readonly lock: ValkeyLockService,
     logger: OmnixysLogger,
   ) {
-    this.logger = logger.log(this.constructor.name);
+    this.logger = logger.log(this.constructor.name, 'service:invitation');
   }
 
   @DelayedJob(DelayedJobKeys.ticket.generate)

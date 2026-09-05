@@ -26,6 +26,7 @@ export class GuestMutationResolver {
     private readonly guestService: GuestWriteService,
   ) {
     this.logger = this.loggerService.log(
+      'service:invitation',
       this.constructor.name,
     );
   }

@@ -44,6 +44,7 @@ export class EventSettingsHandler {
     private readonly prisma: PrismaService,
   ) {
     this.logger = this.omnixysLogger.log(
+      'service:invitation',
       this.constructor.name,
     );
   }

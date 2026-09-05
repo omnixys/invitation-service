@@ -52,6 +52,7 @@ export class TicketHandler {
     private readonly invitationWriteService: InvitationWriteService,
   ) {
     this.logger = loggerService.log(
+      'service:invitation',
       this.constructor.name,
     );
   }

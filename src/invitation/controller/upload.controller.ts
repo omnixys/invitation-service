@@ -65,7 +65,7 @@ export class InvitationUploadController {
     private readonly loggerService: OmnixysLogger,
     private readonly previewService: InvitationPreviewService,
   ) {
-    this.logger = this.loggerService.log(this.constructor.name);
+    this.logger = this.loggerService.log(this.constructor.name, 'service:invitation');
   }
 
   /* =========================================================================

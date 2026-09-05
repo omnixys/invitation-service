@@ -39,6 +39,7 @@ export class AdminMutationResolver {
     private readonly adminService: AdminWriteService,
   ) {
     this.logger = this.loggerService.log(
+      'service:invitation',
       this.constructor.name,
     );
   }

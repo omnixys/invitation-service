@@ -54,6 +54,7 @@ export class AuthenticationHandler {
     private readonly invitationWriteService: InvitationWriteService,
   ) {
     this.logger = this.omnixysLogger.log(
+      'service:invitation',
       this.constructor.name,
     );
   }
