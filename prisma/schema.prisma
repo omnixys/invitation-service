@@ -38,6 +38,10 @@ model Invitation {
 
   pendingContactId String? @unique @map("pending_contact_id") @db.Uuid
 
+  pendingContactPayload   Json?     @map("pending_contact_payload")
+  confirmationSentAt      DateTime? @map("confirmation_sent_at")
+  confirmationResendCount Int       @default(0) @map("confirmation_resend_count")
+
   rsvpChoice RsvpChoice? @map("rsvp_choice")
   rsvpAt     DateTime?   @map("rsvp_at")
 

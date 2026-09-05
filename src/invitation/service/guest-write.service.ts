@@ -306,7 +306,11 @@ export class GuestWriteService extends InvitationBaseService {
            */
           await tx.invitation.update({
             where: { id },
-            data: { pendingContactId },
+            data: {
+              pendingContactId,
+              pendingContactPayload:
+                pendingUser as unknown as Prisma.InputJsonValue,
+            },
           });
         }
 
@@ -554,7 +558,10 @@ export class GuestWriteService extends InvitationBaseService {
 
         const updatedChild = await tx.invitation.update({
           where: { id: child.id },
-          data: { pendingContactId },
+          data: {
+            pendingContactId,
+            pendingContactPayload: pendingUser as unknown as Prisma.InputJsonValue,
+          },
         });
         await this.analyticsOutbox.enqueue(tx, 'invitation.created.v1', {
           eventName: 'InvitationCreated',
@@ -1000,7 +1007,10 @@ export class GuestWriteService extends InvitationBaseService {
 
       const updated = await this.prismaService.invitation.update({
         where: { id: invitee.id },
-        data: { pendingContactId },
+        data: {
+          pendingContactId,
+          pendingContactPayload: pendingUser as unknown as Prisma.InputJsonValue,
+        },
       });
 
       this.logger.debug(

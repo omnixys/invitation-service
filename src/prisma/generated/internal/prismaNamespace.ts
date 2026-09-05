@@ -924,6 +924,9 @@ export const InvitationScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   pendingContactId: 'pendingContactId',
+  pendingContactPayload: 'pendingContactPayload',
+  confirmationSentAt: 'confirmationSentAt',
+  confirmationResendCount: 'confirmationResendCount',
   rsvpChoice: 'rsvpChoice',
   rsvpAt: 'rsvpAt',
   approvedAt: 'approvedAt',
@@ -1045,14 +1048,6 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -1060,6 +1055,14 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -1146,16 +1149,16 @@ export type ListEnumInvitationStatusFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
- * Reference to a field of type 'RsvpChoice'
+ * Reference to a field of type 'Json'
  */
-export type EnumRsvpChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RsvpChoice'>
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
     
 
 
 /**
- * Reference to a field of type 'RsvpChoice[]'
+ * Reference to a field of type 'QueryMode'
  */
-export type ListEnumRsvpChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RsvpChoice[]'>
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -1170,6 +1173,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'RsvpChoice'
+ */
+export type EnumRsvpChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RsvpChoice'>
+    
+
+
+/**
+ * Reference to a field of type 'RsvpChoice[]'
+ */
+export type ListEnumRsvpChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RsvpChoice[]'>
     
 
 
@@ -1198,20 +1215,6 @@ export type EnumEventRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  * Reference to a field of type 'EventRoleType[]'
  */
 export type ListEnumEventRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventRoleType[]'>
-    
-
-
-/**
- * Reference to a field of type 'Json'
- */
-export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-/**
- * Reference to a field of type 'QueryMode'
- */
-export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
