@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.1.0](https://github.com/omnixys/invitation-service/compare/v4.0.0...v4.1.0) (2026-09-08)
+
+### Invitation
+
+* **Invitation:** accept guestNote on public RSVP plus-ones ([](https://github.com/omnixys/invitation-service/commit/02735f7959a24b72c0c3ddc18db05e9dea75e3cb))
+
 ## [4.0.0](https://github.com/omnixys/invitation-service/compare/v3.5.0...v4.0.0) (2026-09-05)
 
 ### Confirmations
