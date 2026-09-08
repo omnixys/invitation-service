@@ -880,6 +880,7 @@ export class GuestWriteService extends InvitationBaseService {
               rsvpAt: new Date(),
               invitedByInvitationId: invitee.id,
               email: plusOne.email,
+              guestNote: normalizeOptionalText(plusOne.guestNote),
               plusOneAgeCategory: plusOne.plusOneAgeCategory,
               selectedInvitedBy,
               phoneNumber: getPrimaryPhoneNumber(plusOne.phoneNumbers),

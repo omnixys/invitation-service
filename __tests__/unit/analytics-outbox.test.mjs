@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import 'reflect-metadata';
 
-const { ContextAccessor } = await import('@omnixys/context');
+const { ContextAccessor } = await import('@omnixys/context-ts');
 const { AnalyticsOutboxService } = await import(
   '../../dist/analytics/analytics-outbox.service.js'
 );

@@ -10,9 +10,9 @@ import {
   InvitationType,
   RsvpChoice,
 } from '../../dist/prisma/generated/client.js';
-import { ContextAccessor } from '@omnixys/context';
-import { EventPermissionKey, EventRoleType } from '@omnixys/contracts';
-import { KafkaTopics } from '@omnixys/kafka';
+import { ContextAccessor } from '@omnixys/context-ts';
+import { EventPermissionKey, EventRoleType } from '@omnixys/contracts-ts';
+import { KafkaTopics } from '@omnixys/kafka-ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
@@ -179,8 +179,8 @@ test('bulk staging persists approval intent without ticket or notification side 
   assert.equal(result[0].status, InvitationStatus.APPROVAL_STAGED);
   assert.equal(producerCalls, 0);
   assert.equal(delayedJobCalls, 0);
-  assert.equal(result[0].guestProfileId, null);
-  assert.equal(result[0].approvedAt, null);
+  assert.equal(result[0].guestProfileId, undefined);
+  assert.equal(result[0].approvedAt, undefined);
 });
 
 test('bulk staging validates every invitation before applying any update', async () => {
@@ -659,4 +659,98 @@ test('HTTP validation errors expose canonical request diagnostics', () => {
       });
     },
   );
+});
+
+test('public RSVP persists trimmed guestNote on plus-one invitations', async () => {
+  const created = [];
+  const tx = {
+    invitation: {
+      async create({ data }) {
+        const record = invitation({
+          ...data,
+          phoneNumbers: [],
+          id: data.invitedByInvitationId ? 'plusone-1' : 'invitee-1',
+        });
+        created.push(record);
+        return record;
+      },
+    },
+  };
+  const prisma = {
+    eventSettingsProjection: {
+      async findUnique() {
+        return {
+          name: 'Launch',
+          endsAt: new Date('2030-01-01T00:00:00.000Z'),
+          approvalMode: 'MANUAL',
+        };
+      },
+    },
+    invitation: {
+      async update({ where, data }) {
+        const invitee = created.find((record) => record.id === where.id) ?? invitation({});
+        return invitation({ ...invitee, autoApproveOnAccept: false, ...data });
+      },
+    },
+    async $transaction(work) {
+      return work(tx);
+    },
+  };
+  const service = new GuestWriteService(
+    prisma,
+    logger,
+    { set: async () => 'pending-1' },
+    { send: async () => undefined },
+    {
+      async approve() {
+        throw new Error('auto-approval was not expected');
+      },
+    },
+    { enqueue: async () => undefined },
+  );
+
+  const result = await ContextAccessor.run(
+    {
+      requestId: 'request-rsvp',
+      actorId: '00000000-0000-4000-8000-000000000001',
+      tenantId: 'tenant-1',
+    },
+    () =>
+      service.createFromPublicRsvp(
+        {
+          eventId: 'event-1',
+          firstName: 'Public',
+          lastName: 'Guest',
+          phoneNumbers: [
+            {
+              type: 'MOBILE',
+              countryCode: '+49',
+              number: '0151111951223',
+              label: 'Mobile',
+              isPrimary: true,
+            },
+          ],
+          email: 'public@test.example',
+          guestNote: '  hello note  ',
+          selectedInvitedBy: ['Bride', ' Friends '],
+          plusOnes: [
+            {
+              firstName: 'Plus',
+              lastName: 'One',
+              email: 'plus@test.example',
+              plusOneAgeCategory: 'OVER_SIX',
+              guestNote: '  dfgdfg ',
+            },
+          ],
+        },
+        { locale: 'en-US' },
+      ),
+  );
+
+  const invitee = created.find((record) => record.id === 'invitee-1');
+  const plusOne = created.find((record) => record.id === 'plusone-1');
+  assert.equal(invitee.guestNote, 'hello note');
+  assert.equal(plusOne.guestNote, 'dfgdfg');
+  assert.deepEqual(invitee.selectedInvitedBy, ['Bride', 'Friends']);
+  assert.equal(result.firstName, 'Public');
 });

@@ -8,7 +8,8 @@ const { AnalyticsTenantController } = await import(
 const { EventSettingsHandler } = await import(
   '../../dist/handlers/event-settings.handler.js'
 );
-const { KAFKA_HEADERS } = await import('@omnixys/kafka');
+const { KAFKA_HEADERS } = await import('@omnixys/kafka-ts');
+const { env } = await import('../../dist/config/env.js');
 
 const tenantId = '11111111-1111-4111-8111-111111111111';
 
@@ -20,7 +21,7 @@ test('public event tenant resolution requires an enabled RSVP projection', async
   });
 
   assert.deepEqual(
-    await controller.resolveTenant('dev-internal-gateway-token', {
+    await controller.resolveTenant(env.INTERNAL_GATEWAY_TOKEN, {
       type: 'event',
       id: '22222222-2222-4222-8222-222222222222',
     }),

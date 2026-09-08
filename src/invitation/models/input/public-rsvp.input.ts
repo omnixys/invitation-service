@@ -61,6 +61,12 @@ export class PublicPlusOneInput {
   @Field(() => String, { nullable: true })
   email?: string;
 
+  @Field(() => String, {
+    nullable: true,
+    description: 'Optional note from guest',
+  })
+  guestNote?: string;
+
   @Field(() => PlusOneAgeCategory)
   plusOneAgeCategory!: PlusOneAgeCategory;
 
