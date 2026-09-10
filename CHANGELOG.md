@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.1.1](https://github.com/omnixys/invitation-service/compare/v4.1.0...v4.1.1) (2026-09-10)
+
+### Deps
+
+* **Deps:** update graphql-ts ([](https://github.com/omnixys/invitation-service/commit/6c992cb10fbf3ff4ebc75077e4fafbebbe4317a6))
+
 ## [4.1.0](https://github.com/omnixys/invitation-service/compare/v4.0.0...v4.1.0) (2026-09-08)
 
 ### Invitation
