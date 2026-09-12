@@ -388,6 +388,37 @@ test('ticket link handler propagates failures to Kafka retry and DLQ handling', 
   );
 });
 
+test('ticket link handler writes the sign-up marker into the shared cache namespace', async () => {
+  const sharedWrites = [];
+  const handler = new TicketHandler(logger, {
+    async addGuestId() {
+      return undefined;
+    },
+  });
+  handler.cache = {
+    async setShared(key, value, ttlSeconds) {
+      sharedWrites.push({ key, value, ttlSeconds });
+    },
+  };
+
+  await handler.handleAddGuestId(
+    {
+      invitationId: 'invitation-1',
+      userId: 'user-1',
+      actorId: 'actor-1',
+    },
+    { headers: {} },
+  );
+
+  assert.deepEqual(sharedWrites, [
+    {
+      key: 'guest-signup:invitation-1:user-1',
+      value: '1',
+      ttlSeconds: 60 * 30,
+    },
+  ]);
+});
+
 test('invitation permission resolver prefers access projection over legacy roles', async () => {
   const resolver = new InvitationEventRoleResolver({
     eventAccessProjection: {

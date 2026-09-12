@@ -18,8 +18,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
-import { AddGuestIdToInvitationDTO } from '@omnixys/contracts-ts';
 import { ValkeyService } from '@omnixys/cache-ts';
+import { AddGuestIdToInvitationDTO } from '@omnixys/contracts-ts';
 import {
   IKafkaEventContext,
   KafkaEvent,
@@ -33,6 +33,10 @@ import { TraceRunner } from '@omnixys/observability-ts';
  * Marker key that the Authentication service polls after publishing the
  * guest sign-up fan-out. It is only written once the invitation link is set,
  * which (chain order) also proves a ticket and a seat exist for the guest.
+ *
+ * The key lives in the shared, service-agnostic cache namespace
+ * ({@link ValkeyService.setShared}), so the Authentication service reads the
+ * exact same valkey key without any per-service prefix.
  */
 const GUEST_SIGNUP_MARKER_TTL_SECONDS = 60 * 30;
 
@@ -93,7 +97,7 @@ export class TicketHandler {
       try {
         await this.invitationWriteService.addGuestId(payload);
 
-        await this.cache.rawSet(
+        await this.cache.setShared(
           guestSignupMarkerKey(payload.invitationId, payload.userId),
           '1',
           GUEST_SIGNUP_MARKER_TTL_SECONDS,
