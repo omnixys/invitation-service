@@ -220,6 +220,8 @@ export class AdminMutationResolver {
   async resendGuestConfirmations(
     @Args('invitationIds', { type: () => [ID] })
     invitationIds: string[],
+    @Args('locale', { type: () => String, nullable: true })
+    locale: string | undefined,
     @CurrentEventId() activeEventId: string | undefined,
     @CurrentUser() user: CurrentUserData,
   ): Promise<ResendGuestConfirmationsPayload> {
@@ -231,6 +233,7 @@ export class AdminMutationResolver {
 
     return this.adminService.resendGuestConfirmations(
       invitationIds,
+      locale,
       user.id,
       activeEventId,
     );

@@ -578,6 +578,7 @@ export class AdminWriteService extends InvitationBaseService {
    */
   async resendGuestConfirmations(
     invitationIds: string[],
+    locale: string | null | undefined,
     actorId: string,
     activeEventId?: string,
   ): Promise<ResendGuestConfirmationsPayload> {
@@ -597,6 +598,7 @@ export class AdminWriteService extends InvitationBaseService {
         const outcome = await this.guestConfirmation.resendConfirmation({
           invitationId: id,
           actorId,
+          locale,
         });
 
         results.push({

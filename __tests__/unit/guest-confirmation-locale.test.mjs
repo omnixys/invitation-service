@@ -160,6 +160,128 @@ test('sendFirstConfirmation ignores a locale when it is not in the supported set
   assert.equal(JSON.parse(cached[0]).locale, 'de-DE');
 });
 
+test('resendConfirmation overrides the stored pending payload locale', async () => {
+  const sent = [];
+  const scheduled = [];
+  const stored = invitation({
+    status: InvitationStatus.APPROVED,
+  });
+  const cached = [];
+
+  const service = guestConfirmationService({
+    prisma: {
+      invitation: {
+        async findUnique({ select }) {
+          return select ? { eventId: stored.eventId } : stored;
+        },
+        async update({ data }) {
+          Object.assign(stored, data);
+          return stored;
+        },
+      },
+      eventSettingsProjection: {
+        async findUnique() {
+          return null;
+        },
+      },
+      async $transaction(work) {
+        return work(null);
+      },
+    },
+    cache: {
+      async rawGet() {
+        return null;
+      },
+      async rawSet() {
+        return undefined;
+      },
+      async set(_key, value, _ttl) {
+        cached.push(value);
+        return 'token-2';
+      },
+    },
+    sent,
+    scheduled,
+  });
+
+  const result = await ContextAccessor.run(
+    {
+      requestId: 'request-resend-locale',
+      correlationId: 'correlation-resend-locale',
+      tenantId: 'tenant-1',
+      actorId: 'admin-1',
+    },
+    () =>
+      service.resendConfirmation({
+        invitationId: 'invitation-1',
+        actorId: 'admin-1',
+        locale: 'en-US',
+      }),
+  );
+
+  assert.deepEqual(result, { resent: true });
+  assert.equal(JSON.parse(cached[0]).locale, 'en-US');
+  assert.equal(stored.pendingContactPayload.locale, 'en-US');
+  assert.equal(stored.pendingContactId, 'token-2');
+  assert.deepEqual(stored.confirmationResendCount, { increment: 1 });
+  assert.equal(sent[0].topic, KafkaTopics.notification.confirmGuest);
+  assert.equal(sent[0].payload.token, 'token-2');
+});
+
+test('resendConfirmation ignores a locale that is not in the supported set', async () => {
+  const sent = [];
+  const scheduled = [];
+  const stored = invitation({
+    status: InvitationStatus.APPROVED,
+  });
+  const cached = [];
+
+  const service = guestConfirmationService({
+    prisma: {
+      invitation: {
+        async findUnique({ select }) {
+          return select ? { eventId: stored.eventId } : stored;
+        },
+        async update({ data }) {
+          Object.assign(stored, data);
+          return stored;
+        },
+      },
+      eventSettingsProjection: {
+        async findUnique() {
+          return null;
+        },
+      },
+      async $transaction(work) {
+        return work(null);
+      },
+    },
+    cache: {
+      async rawGet() {
+        return null;
+      },
+      async rawSet() {
+        return undefined;
+      },
+      async set(_key, value, _ttl) {
+        cached.push(value);
+        return 'token-2';
+      },
+    },
+    sent,
+    scheduled,
+  });
+
+  const result = await service.resendConfirmation({
+    invitationId: 'invitation-1',
+    actorId: 'admin-1',
+    locale: 'fr-FR',
+  });
+
+  assert.equal(result.resent, true);
+  assert.equal(JSON.parse(cached[0]).locale, 'de-DE');
+});
+
 test('approve passes the admin locale to the immediate confirmation', async () => {
   const stored = invitation({
     rsvpChoice: RsvpChoice.YES,

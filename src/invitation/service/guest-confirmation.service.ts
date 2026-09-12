@@ -150,9 +150,10 @@ export class GuestConfirmationService {
   async resendConfirmation(input: {
     invitationId: string;
     actorId?: string;
+    locale?: string | null;
   }): Promise<ResendConfirmationResult> {
     return TraceRunner.run('[SERVICE] resendConfirmation', async () => {
-      const { invitationId, actorId } = input;
+      const { invitationId, actorId, locale } = input;
       const invitation = await this.prismaService.invitation.findUnique({
         where: { id: invitationId },
         include: { phoneNumbers: true },
@@ -184,6 +185,15 @@ export class GuestConfirmationService {
           invitationId,
         );
         return { resent: false, reason: 'missing-payload' };
+      }
+
+      if (locale && SUPPORTED_LOCALES.has(locale)) {
+        payload.locale = locale as Locale;
+        this.logger.debug(
+          'Resend confirmation locale overridden: invitationId=%s locale=%s',
+          invitationId,
+          locale,
+        );
       }
 
       const rateKey = `confirmation:resend:${invitationId}`;
