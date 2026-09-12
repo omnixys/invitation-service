@@ -6,7 +6,7 @@ import { InvitationNotFoundException } from '../errors/invitation-domain.error.j
 import { Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
-import type { CreatePendingUserDTO, GuestNotificationDTO } from '@omnixys/contracts-ts';
+import type { CreatePendingUserDTO, GuestNotificationDTO, Locale } from '@omnixys/contracts-ts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
@@ -20,6 +20,8 @@ const GUEST_REMINDER_OFFSETS: Record<string, number> = {
   THREE_DAYS_BEFORE: 3 * 24 * 60 * 60 * 1000,
   HOURS_24_BEFORE: 24 * 60 * 60 * 1000,
 };
+
+const SUPPORTED_LOCALES: ReadonlySet<string> = new Set(['de-DE', 'en-US']);
 
 export interface ResendConfirmationResult {
   resent: boolean;
@@ -65,9 +67,10 @@ export class GuestConfirmationService {
     invitationId: string;
     seatId?: string | null;
     actorId?: string;
+    locale?: string | null;
   }): Promise<boolean> {
     return TraceRunner.run('[SERVICE] sendFirstConfirmation', async () => {
-      const { invitationId, seatId, actorId } = input;
+      const { invitationId, seatId, actorId, locale } = input;
       const invitation = await this.prismaService.invitation.findUnique({
         where: { id: invitationId },
         include: { phoneNumbers: true },
@@ -113,6 +116,15 @@ export class GuestConfirmationService {
           invitationId,
         );
         return false;
+      }
+
+      if (locale && SUPPORTED_LOCALES.has(locale)) {
+        payload.locale = locale as Locale;
+        this.logger.debug(
+          'Confirmation locale overridden: invitationId=%s locale=%s',
+          invitationId,
+          locale,
+        );
       }
 
       const token = await this.reanchorPendingContact(payload);

@@ -29,8 +29,9 @@ export class TicketGenerationHandler {
     eventId: string;
     seatId: string | null;
     actorId: string;
+    locale?: string | null;
   }): Promise<void> {
-    const { invitationId, seatId, actorId } = payload;
+    const { invitationId, seatId, actorId, locale } = payload;
 
     const lockKey = `lock:ticket-generate:${invitationId}`;
     const token = await this.lock.acquireLock(lockKey, 60000);
@@ -111,6 +112,7 @@ export class TicketGenerationHandler {
         invitationId,
         seatId,
         actorId,
+        locale,
       });
 
       this.logger.info('Delayed ticket generation completed: %o', {

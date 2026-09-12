@@ -3,5 +3,6 @@ export interface ApproveInvitationDTO {
   approve: boolean;
   actorId: string;
   seatId?: string;
+  locale?: string;
   activeEventId?: string;
 }

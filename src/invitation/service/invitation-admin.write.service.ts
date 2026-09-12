@@ -32,7 +32,13 @@ import { shouldAutoApproveInvitation } from '../utils/approval-mode.js';
 import { GuestConfirmationService } from './guest-confirmation.service.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
-import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
+import {
+  DelayedJobKeys,
+  DelayedJobService,
+  type DelayedJobRegistry,
+  ValkeyKey,
+  ValkeyService,
+} from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
 import type { EventMilestoneRecordedDTO } from '@omnixys/contracts-ts';
 import { getPrimaryPhoneNumber } from '@omnixys/contracts-ts';
@@ -168,6 +174,7 @@ export class AdminWriteService extends InvitationBaseService {
     approve,
     actorId,
     seatId,
+    locale,
     activeEventId,
   }: ApproveInvitationDTO): Promise<InvitationPayload> {
     return TraceRunner.run('[SERVICE] approve', async () => {
@@ -270,7 +277,8 @@ export class AdminWriteService extends InvitationBaseService {
                 eventId: updated.eventId,
                 seatId: seatId ?? null,
                 actorId,
-              },
+                locale: locale ?? null,
+              } as DelayedJobRegistry[typeof DelayedJobKeys.ticket.generate],
               delayMs,
             });
 
@@ -284,6 +292,7 @@ export class AdminWriteService extends InvitationBaseService {
               invitationId: id,
               seatId,
               actorId,
+              locale,
             });
 
             this.logger.debug('Confirmation sent: invitationId=%s | actorId=%s', id, actorId);
@@ -452,6 +461,7 @@ export class AdminWriteService extends InvitationBaseService {
     invitationIds: Array<{
       invitationId: string;
       seatId?: string;
+      locale?: string;
     }>;
     approved: boolean;
     actorId: string;
@@ -476,12 +486,13 @@ export class AdminWriteService extends InvitationBaseService {
        * - Easier error tracking per invitation
        */
       for (const item of invitationIds) {
-        const { invitationId, seatId } = item;
+        const { invitationId, seatId, locale } = item;
         const result = await this.approve({
           id: invitationId,
           approve: approved,
           actorId,
           seatId,
+          locale,
           activeEventId,
         });
 

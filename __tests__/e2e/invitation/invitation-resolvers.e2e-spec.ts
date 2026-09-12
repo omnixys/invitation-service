@@ -169,6 +169,7 @@ describe('AdminMutationResolver integration', () => {
           eventName: 'Platform Launch',
           eventEndsAt,
           seat: 'A-1',
+          locale: 'en-US',
         },
         'event-1',
         { id: 'admin-1' },
@@ -182,6 +183,7 @@ describe('AdminMutationResolver integration', () => {
       eventEndsAt,
       seat: 'A-1',
       seatId: undefined,
+      locale: 'en-US',
       activeEventId: 'event-1',
     });
   });
@@ -207,6 +209,7 @@ describe('AdminMutationResolver integration', () => {
               invitationId: 'invitation-1',
               eventName: 'Platform Launch',
               seat: 'A-1',
+              locale: 'de-DE',
             },
           ],
         },
@@ -223,6 +226,7 @@ describe('AdminMutationResolver integration', () => {
           invitationId: 'invitation-1',
           eventName: 'Platform Launch',
           seat: 'A-1',
+          locale: 'de-DE',
         },
       ],
       approved: true,

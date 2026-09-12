@@ -35,4 +35,12 @@ export class ApproveInvitationDataInput {
   })
   @Optional()
   seatId?: string;
+
+  @Field(() => String, {
+    description:
+      'Locale used for the guest confirmation message (e.g. de-DE, en-US).',
+    nullable: true,
+  })
+  @Optional()
+  locale?: string;
 }
