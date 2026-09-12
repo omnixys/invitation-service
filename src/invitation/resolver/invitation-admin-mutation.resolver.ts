@@ -153,6 +153,29 @@ export class AdminMutationResolver {
 
   @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
   @Roles(RealmRoleType.USER)
+  @EventPermissions(EventPermissionKey.ManageInvitations)
+  @Mutation(() => SuccessPayload)
+  async removeInvitations(
+    @Args('ids', { type: () => [ID] })
+    ids: string[],
+    @CurrentEventId() activeEventId: string | undefined,
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<SuccessPayload> {
+    return TraceRunner.run('[RESOLVER] removeInvitations', async () => {
+      const ok = await this.adminService.deleteMany(
+        ids,
+        user.id,
+        activeEventId,
+      );
+      return {
+        ok,
+        message: `${ids.length} Einladungen gelöscht`,
+      };
+    });
+  }
+
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
+  @Roles(RealmRoleType.USER)
   @EventPermissions(EventPermissionKey.ApproveGuests)
   @Mutation(() => [InvitationPayload])
   async bulkApproveInvitations(

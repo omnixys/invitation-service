@@ -12,6 +12,7 @@ import { mapColumns } from '../../utils/column-mapper.js';
 import {
   InvitationAlreadyApprovedException,
   InvitationAlreadyRejectedException,
+  InvitationNotFoundException,
   InvitationValidationException,
   MissingGuestNameException,
   MissingPendingContactException,
@@ -445,6 +446,35 @@ export class AdminWriteService extends InvitationBaseService {
       this.logger.debug('Deleting invitation: invitationID=%s', id);
       await this.prismaService.invitation.delete({ where: { id } });
       this.logger.debug('Invitation deleted: invitationID=%s | actorId=%s', id, actorId);
+      return true;
+    });
+  }
+
+  /**
+   * Bulk deletes multiple invitations in a single transaction, preserving the
+   * same validation and active-event scoping as `delete`.
+   */
+  async deleteMany(ids: string[], actorId: string, activeEventId?: string): Promise<boolean> {
+    return TraceRunner.run('[SERVICE] deleteMany', async () => {
+      if (ids.length === 0) {
+        throw new InvitationValidationException('At least one invitation id is required');
+      }
+
+      this.logger.debug('deleteMany: count=%d | actorId=%s', ids.length, actorId);
+
+      await this.prismaService.$transaction(async (tx) => {
+        for (const id of ids) {
+          const invitation = await tx.invitation.findUnique({ where: { id } });
+          if (!invitation) {
+            throw new InvitationNotFoundException(id);
+          }
+          this.assertInvitationMatchesActiveEvent(invitation.eventId, activeEventId, id);
+          await tx.invitation.delete({ where: { id } });
+          this.logger.debug('Invitation deleted: invitationID=%s | actorId=%s', id, actorId);
+        }
+      });
+
+      this.logger.debug('deleteMany finished: count=%d | actorId=%s', ids.length, actorId);
       return true;
     });
   }
