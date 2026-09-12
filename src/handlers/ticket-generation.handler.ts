@@ -108,7 +108,7 @@ export class TicketGenerationHandler {
         invitationId,
       });
 
-      await this.guestConfirmation.sendFirstConfirmation({
+      await this.guestConfirmation.sendFirstConfirmationOrReserve({
         invitationId,
         seatId,
         actorId,

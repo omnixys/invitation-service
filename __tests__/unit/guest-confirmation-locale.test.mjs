@@ -165,6 +165,14 @@ test('resendConfirmation overrides the stored pending payload locale', async () 
   const scheduled = [];
   const stored = invitation({
     status: InvitationStatus.APPROVED,
+    pendingContactPayload: {
+      invitationId: 'invitation-1',
+      eventId: 'event-1',
+      eventEndsAt: new Date('2030-01-01T00:00:00.000Z'),
+      locale: 'de-DE',
+      actorId: 'actor-1',
+      seatId: 'seat-1',
+    },
   });
   const cached = [];
 
@@ -225,6 +233,7 @@ test('resendConfirmation overrides the stored pending payload locale', async () 
   assert.equal(stored.pendingContactId, 'token-2');
   assert.deepEqual(stored.confirmationResendCount, { increment: 1 });
   assert.equal(sent[0].topic, KafkaTopics.notification.confirmGuest);
+  assert.equal(sent[0].payload.seatId, 'seat-1');
   assert.equal(sent[0].payload.token, 'token-2');
 });
 
@@ -233,6 +242,14 @@ test('resendConfirmation ignores a locale that is not in the supported set', asy
   const scheduled = [];
   const stored = invitation({
     status: InvitationStatus.APPROVED,
+    pendingContactPayload: {
+      invitationId: 'invitation-1',
+      eventId: 'event-1',
+      eventEndsAt: new Date('2030-01-01T00:00:00.000Z'),
+      locale: 'de-DE',
+      actorId: 'actor-1',
+      seatId: 'seat-1',
+    },
   });
   const cached = [];
 
@@ -322,6 +339,10 @@ test('approve passes the admin locale to the immediate confirmation', async () =
     { enqueue: async () => undefined },
     {
       async sendFirstConfirmation(input) {
+        confirmationInput = input;
+        return true;
+      },
+      async sendFirstConfirmationOrReserve(input) {
         confirmationInput = input;
         return true;
       },

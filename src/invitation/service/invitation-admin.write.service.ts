@@ -288,7 +288,7 @@ export class AdminWriteService extends InvitationBaseService {
               delayMs,
             );
           } else {
-            await this.guestConfirmation.sendFirstConfirmation({
+            await this.guestConfirmation.sendFirstConfirmationOrReserve({
               invitationId: id,
               seatId,
               actorId,

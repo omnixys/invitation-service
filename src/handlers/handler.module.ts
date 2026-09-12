@@ -21,6 +21,7 @@ import { EventRoleHandler } from './event-role.handler.js';
 import { EventSettingsHandler } from './event-settings.handler.js';
 import { EventHandler } from './event.handler.js';
 import { GuestConfirmationReminderHandler } from './guest-confirmation-reminder.handler.js';
+import { GuestSeatReservationHandler } from './guest-seat-reservation.handler.js';
 import { TicketGenerationHandler } from './ticket-generation.handler.js';
 import { TicketHandler } from './ticket.handler.js';
 import { Module } from '@nestjs/common';
@@ -35,6 +36,7 @@ import { Module } from '@nestjs/common';
     EventSettingsHandler,
     TicketGenerationHandler,
     GuestConfirmationReminderHandler,
+    GuestSeatReservationHandler,
   ],
   exports: [
     TicketHandler,
@@ -44,6 +46,7 @@ import { Module } from '@nestjs/common';
     EventSettingsHandler,
     TicketGenerationHandler,
     GuestConfirmationReminderHandler,
+    GuestSeatReservationHandler,
   ],
 })
 export class HandlerModule {}

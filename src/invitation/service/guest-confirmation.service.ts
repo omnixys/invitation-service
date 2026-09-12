@@ -10,6 +10,10 @@ import type { CreatePendingUserDTO, GuestNotificationDTO, Locale } from '@omnixy
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
+import {
+  SEAT_RESERVE_TOPIC,
+  type SeatReserveDTO,
+} from './guest-seat-reservation.js';
 
 const { DEFAULT_TENANT_ID } = env;
 
@@ -144,6 +148,91 @@ export class GuestConfirmationService {
   }
 
   /**
+   * Sends the first guest confirmation when a seat is already known,
+   * otherwise requests a seat reservation from the Seat service first. The
+   * Seat service answers via `seat.reserved` which triggers
+   * {@link sendFirstConfirmation} with the reserved seat id. This keeps the
+   * invitation → seat → ticket → link invariant strict: no confirmation link
+   * (and therefore no guest sign-up) is emitted for an unseatable invitation.
+   */
+  async sendFirstConfirmationOrReserve(input: {
+    invitationId: string;
+    seatId?: string | null;
+    actorId?: string;
+    locale?: string | null;
+  }): Promise<boolean> {
+    if (input.seatId) {
+      return this.sendFirstConfirmation(input);
+    }
+    return this.requestSeatReservation(input.invitationId, input.actorId);
+  }
+
+  /**
+   * Requests a seat reservation for an approved/accepted invitation that has
+   * no seat assigned yet. Idempotent: the Seat service returns the seat it
+   * already reserved for the invitation when the invitation is still unlinked.
+   */
+  async requestSeatReservation(invitationId: string, actorId?: string): Promise<boolean> {
+    return TraceRunner.run('[SERVICE] requestSeatReservation', async () => {
+      const invitation = await this.prismaService.invitation.findUnique({
+        where: { id: invitationId },
+        select: { eventId: true, status: true, guestProfileId: true },
+      });
+
+      if (!invitation) {
+        this.logger.warn('Reservation skipped, invitation not found: invitationId=%s', invitationId);
+        return false;
+      }
+
+      if (invitation.guestProfileId) {
+        this.logger.debug(
+          'Reservation skipped, guest already registered: invitationId=%s',
+          invitationId,
+        );
+        return false;
+      }
+
+      if (
+        invitation.status !== InvitationStatus.APPROVED &&
+        invitation.status !== InvitationStatus.ACCEPTED
+      ) {
+        this.logger.debug(
+          'Reservation skipped, invitation not actionable: invitationId=%s status=%s',
+          invitationId,
+          invitation.status,
+        );
+        return false;
+      }
+
+      const payload: SeatReserveDTO = {
+        eventId: invitation.eventId,
+        invitationId,
+        actorId,
+      };
+
+      await this.producer.send({
+        topic: SEAT_RESERVE_TOPIC,
+        payload,
+        meta: {
+          service: 'invitation-service',
+          operation: 'Reserve guest seat',
+          version: '1',
+          type: 'EVENT',
+          actorId,
+          tenantId: currentTenantId(),
+        },
+      });
+
+      this.logger.debug(
+        'Seat reservation requested: topic=%s | invitationId=%s',
+        SEAT_RESERVE_TOPIC,
+        invitationId,
+      );
+      return true;
+    });
+  }
+
+  /**
    * Re-sends the guest confirmation for an invitation whose guest did not
    * complete the registration within the previous link lifetime.
    */
@@ -209,16 +298,24 @@ export class GuestConfirmationService {
       const cooldownSeconds = Math.ceil(env.GUEST_CONFIRMATION_RESEND_COOLDOWN_MS / 1000);
       await this.cache.rawSet(rateKey, '1', cooldownSeconds);
 
-      const token = await this.reanchorPendingContact(payload);
-      await this.persistSend(invitationId, token, payload, true);
+      if (payload.seatId) {
+        const token = await this.reanchorPendingContact(payload);
+        await this.persistSend(invitationId, token, payload, true);
 
-      await this.emitConfirmGuest({
-        invitation,
-        token,
-        seatId: undefined,
-        actorId,
-        operation: 'Resend confirm guest notification',
-      });
+        await this.emitConfirmGuest({
+          invitation,
+          token,
+          seatId: payload.seatId,
+          actorId,
+          operation: 'Resend confirm guest notification',
+        });
+      } else {
+        this.logger.debug(
+          'Resend routed through seat reservation: invitationId=%s',
+          invitationId,
+        );
+        await this.requestSeatReservation(invitationId, actorId);
+      }
 
       await this.recordResentAnalytics(invitationId);
 

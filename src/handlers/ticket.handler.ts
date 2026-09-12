@@ -19,6 +19,7 @@ import { Injectable } from '@nestjs/common';
 
 import { InvitationWriteService } from '../invitation/service/invitation-write.service.js';
 import { AddGuestIdToInvitationDTO } from '@omnixys/contracts-ts';
+import { ValkeyService } from '@omnixys/cache-ts';
 import {
   IKafkaEventContext,
   KafkaEvent,
@@ -27,6 +28,17 @@ import {
 } from '@omnixys/kafka-ts';
 import { OmnixysLogger, type ScopedLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
+
+/**
+ * Marker key that the Authentication service polls after publishing the
+ * guest sign-up fan-out. It is only written once the invitation link is set,
+ * which (chain order) also proves a ticket and a seat exist for the guest.
+ */
+const GUEST_SIGNUP_MARKER_TTL_SECONDS = 60 * 30;
+
+function guestSignupMarkerKey(invitationId: string, userId: string): string {
+  return `guest-signup:${invitationId}:${userId}`;
+}
 
 /**
  * Kafka event handler responsible for useristrative commands such as
@@ -50,6 +62,7 @@ export class TicketHandler {
   constructor(
     loggerService: OmnixysLogger,
     private readonly invitationWriteService: InvitationWriteService,
+    private readonly cache: ValkeyService,
   ) {
     this.logger = loggerService.log(
       'service:invitation',
@@ -79,6 +92,18 @@ export class TicketHandler {
 
       try {
         await this.invitationWriteService.addGuestId(payload);
+
+        await this.cache.rawSet(
+          guestSignupMarkerKey(payload.invitationId, payload.userId),
+          '1',
+          GUEST_SIGNUP_MARKER_TTL_SECONDS,
+        );
+        this.logger.debug(
+          'Guest sign-up marker written: invitationId=%s | guestId=%s',
+          payload.invitationId,
+          payload.userId,
+        );
+
         this.logger.debug(
           'Kafka processing completed: topic=%s | invitationId=%s | guestId=%s',
           KafkaTopics.invitation.addGuestId,
