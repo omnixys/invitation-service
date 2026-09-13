@@ -24,6 +24,16 @@ interface ContactMatch {
   guestProfileId: string | null;
   status: string;
   eventEndsAt: Date | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  invitedByInvitationId?: string | null;
+  updatedAt?: Date | string | null;
+}
+
+interface GuestMagicLinkRequest {
+  identifier: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface NormalizedIdentifier {
@@ -50,6 +60,73 @@ function normalizeIdentifier(raw: string): NormalizedIdentifier | null {
   return null;
 }
 
+function normalizeNamePart(value: string | null | undefined): string {
+  return (value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function fullName(match: Pick<ContactMatch, 'firstName' | 'lastName'>): string {
+  return `${normalizeNamePart(match.firstName)} ${normalizeNamePart(match.lastName)}`;
+}
+
+/**
+ * Deterministically picks a single eligible invitation for dispatch.
+ *
+ * Priority ladder:
+ * 1. If a full name was provided: keep only matches with the exact normalized full name.
+ *    If none match, the identifier cannot be safely scoped → null (AMBIGUOUS).
+ * 2. A single candidate wins.
+ * 3. Prefer root invitations (invitedByInvitationId IS NULL) over plus-one children.
+ * 4. If multiple roots remain with a matching full name, the requester is the same
+ *    person across events → newest updatedAt wins (deterministic).
+ * 5. Anything else (no name, multiple roots) → null (AMBIGUOUS, fail closed).
+ */
+function resolveEligibleMatch(
+  candidates: ContactMatch[],
+  name?: { firstName?: string; lastName?: string },
+): ContactMatch | null {
+  if (!candidates.length) {
+    return null;
+  }
+
+  let subset = candidates;
+
+  const firstName = name?.firstName?.trim();
+  const lastName = name?.lastName?.trim();
+  if (firstName && lastName) {
+    const provided = `${normalizeNamePart(firstName)} ${normalizeNamePart(lastName)}`;
+    subset = candidates.filter((candidate) => fullName(candidate) === provided);
+    if (!subset.length) {
+      return null;
+    }
+  }
+
+  if (subset.length === 1) {
+    return subset[0] ?? null;
+  }
+
+  const roots = subset.filter((candidate) => !candidate.invitedByInvitationId);
+  if (roots.length === 1) {
+    return roots[0] ?? null;
+  }
+
+  if (firstName && lastName && roots.length > 1) {
+    const sorted = [...roots].sort(
+      (a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime(),
+    );
+    const newest = sorted[0] ?? null;
+    const second = sorted[1] ?? null;
+    if (
+      newest &&
+      second &&
+      new Date(newest.updatedAt ?? 0).getTime() !== new Date(second.updatedAt ?? 0).getTime()
+    ) {
+      return newest;
+    }
+  }
+
+  return null;
+}
+
 @Injectable()
 export class GuestMagicLinkService {
   private readonly logger;
@@ -66,11 +143,11 @@ export class GuestMagicLinkService {
     this.logger = loggerService.log('service:invitation', this.constructor.name);
   }
 
-  async request(identifier: string, client: ClientContext): Promise<void> {
+  async request(input: GuestMagicLinkRequest, client: ClientContext): Promise<void> {
     const context = ContextAccessor.get();
     const correlationId = context?.correlationId ?? context?.requestId ?? randomUUID();
-    const normalized = normalizeIdentifier(identifier);
-    const fingerprint = this.fingerprint(normalized?.value ?? identifier.trim());
+    const normalized = normalizeIdentifier(input.identifier);
+    const fingerprint = this.fingerprint(normalized?.value ?? input.identifier.trim());
 
     if (await this.isRateLimited(client.ip)) {
       this.record('RATE_LIMITED', correlationId, fingerprint, normalized?.channel);
@@ -91,10 +168,11 @@ export class GuestMagicLinkService {
       }
 
       const matches = await this.findMatches(normalized, tenantId);
-      if (matches.length > 1) {
-        this.record('AMBIGUOUS', correlationId, fingerprint, normalized.channel);
+      if (matches.length === 0) {
+        this.record('NO_MATCH', correlationId, fingerprint, normalized.channel);
         return;
       }
+
       const eligible = matches.filter(
         (match) =>
           ELIGIBLE_STATUSES.has(match.status) &&
@@ -102,19 +180,22 @@ export class GuestMagicLinkService {
           new Date(match.eventEndsAt).getTime() > Date.now() &&
           match.guestProfileId,
       );
-      const guestIds = [...new Set(eligible.map((match) => match.guestProfileId as string))];
-
-      if (matches.length === 0) {
-        this.record('NO_MATCH', correlationId, fingerprint, normalized.channel);
-        return;
-      }
-      if (guestIds.length === 0) {
+      if (eligible.length === 0) {
         this.record(this.ineligibleReason(matches), correlationId, fingerprint, normalized.channel);
         return;
       }
 
+      const chosen = resolveEligibleMatch(eligible, {
+        firstName: input.firstName,
+        lastName: input.lastName,
+      });
+      if (!chosen?.guestProfileId) {
+        this.record('AMBIGUOUS', correlationId, fingerprint, normalized.channel);
+        return;
+      }
+
       const payload: GuestMagicLinkRequestDTO = {
-        userId: guestIds[0]!,
+        userId: chosen.guestProfileId,
         tenantId,
         recipient: normalized.value,
         channel: normalized.channel,
@@ -149,7 +230,10 @@ export class GuestMagicLinkService {
     if (identifier.channel === 'EMAIL') {
       return this.prisma.$queryRaw<ContactMatch[]>`
         SELECT i.guest_profile_id AS "guestProfileId", i.status::text AS status,
-               COALESCE(i.event_ends_at, esp.ends_at) AS "eventEndsAt"
+               COALESCE(i.event_ends_at, esp.ends_at) AS "eventEndsAt",
+               i.first_name AS "firstName", i.last_name AS "lastName",
+               i.invited_by_invitation_id::text AS "invitedByInvitationId",
+               i.updated_at AS "updatedAt"
         FROM invitation i
         INNER JOIN event_settings_projection esp ON esp.event_id = i.event_id
         WHERE esp.tenant_id = ${tenantId}::uuid AND lower(i.email) = ${identifier.value}
@@ -158,7 +242,10 @@ export class GuestMagicLinkService {
     const digits = identifier.value.slice(1);
     return this.prisma.$queryRaw<ContactMatch[]>`
       SELECT i.guest_profile_id AS "guestProfileId", i.status::text AS status,
-             COALESCE(i.event_ends_at, esp.ends_at) AS "eventEndsAt"
+             COALESCE(i.event_ends_at, esp.ends_at) AS "eventEndsAt",
+             i.first_name AS "firstName", i.last_name AS "lastName",
+             i.invited_by_invitation_id::text AS "invitedByInvitationId",
+             i.updated_at AS "updatedAt"
       FROM invitation i
       INNER JOIN event_settings_projection esp ON esp.event_id = i.event_id
       WHERE esp.tenant_id = ${tenantId}::uuid

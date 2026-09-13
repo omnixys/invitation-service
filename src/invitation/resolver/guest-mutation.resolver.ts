@@ -36,12 +36,23 @@ export class GuestMutationResolver {
   @Mutation(() => Boolean)
   async requestGuestMagicLink(
     @Args('identifier') identifier: string,
+    @Args('firstName', { type: () => String, nullable: true })
+    firstName: string | null,
+    @Args('lastName', { type: () => String, nullable: true })
+    lastName: string | null,
     @ClientInfo() clientInfo: ClientContext,
   ): Promise<boolean> {
     // Deliberately detach all lookup and dispatch work from the public response.
     // The service records its internal outcome and absorbs processing failures.
     void this.guestMagicLinkService
-      .request(identifier, clientInfo)
+      .request(
+        {
+          identifier,
+          ...(firstName ? { firstName } : {}),
+          ...(lastName ? { lastName } : {}),
+        },
+        clientInfo,
+      )
       .catch(() => undefined);
     return true;
   }
