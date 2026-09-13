@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.2.1](https://github.com/omnixys/invitation-service/compare/v4.2.0...v4.2.1) (2026-09-13)
+
+### Deps
+
+* **Deps:** update omnixys packages ([](https://github.com/omnixys/invitation-service/commit/1a8db1721863f8fe1d97b861c2f24716616b0560))
+
 ## [4.2.0](https://github.com/omnixys/invitation-service/compare/v4.1.2...v4.2.0) (2026-09-13)
 
 ### Invitation
