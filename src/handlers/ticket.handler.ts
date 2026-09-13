@@ -97,15 +97,22 @@ export class TicketHandler {
       try {
         await this.invitationWriteService.addGuestId(payload);
 
+        this.logger.info(
+          'Guest provisioning invitation linked: invitationId=%s userId=%s',
+          payload.invitationId,
+          payload.userId,
+        );
+
         await this.cache.setShared(
           guestSignupMarkerKey(payload.invitationId, payload.userId),
           '1',
           GUEST_SIGNUP_MARKER_TTL_SECONDS,
         );
-        this.logger.debug(
-          'Guest sign-up marker written: invitationId=%s | guestId=%s',
+        this.logger.info(
+          'Guest provisioning completion marker written: invitationId=%s userId=%s markerKey=%s',
           payload.invitationId,
           payload.userId,
+          guestSignupMarkerKey(payload.invitationId, payload.userId),
         );
 
         this.logger.debug(
