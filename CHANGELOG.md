@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.3.0](https://github.com/omnixys/invitation-service/compare/v4.2.2...v4.3.0) (2026-09-13)
+
+### Invitation
+
+* **Invitation:** resolve guest magic-link recipients by full name ([](https://github.com/omnixys/invitation-service/commit/7506d4527b89f43f2faf23abfb99d837656390ce))
+
 ## [4.2.2](https://github.com/omnixys/invitation-service/compare/v4.2.1...v4.2.2) (2026-09-13)
 
 ### Guest-provisioning
