@@ -33,13 +33,7 @@ import { shouldAutoApproveInvitation } from '../utils/approval-mode.js';
 import { GuestConfirmationService } from './guest-confirmation.service.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  DelayedJobKeys,
-  DelayedJobService,
-  type DelayedJobRegistry,
-  ValkeyKey,
-  ValkeyService,
-} from '@omnixys/cache-ts';
+import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
 import type { EventMilestoneRecordedDTO } from '@omnixys/contracts-ts';
 import { getPrimaryPhoneNumber } from '@omnixys/contracts-ts';
@@ -279,7 +273,7 @@ export class AdminWriteService extends InvitationBaseService {
                 seatId: seatId ?? null,
                 actorId,
                 locale: locale ?? null,
-              } as DelayedJobRegistry[typeof DelayedJobKeys.ticket.generate],
+              },
               delayMs,
             });
 

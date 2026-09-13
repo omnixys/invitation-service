@@ -3,6 +3,7 @@ import { env } from '../../config/env.js';
 import { Invitation, InvitationStatus, Prisma } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
+import { SEAT_RESERVE_TOPIC, type SeatReserveDTO } from './guest-seat-reservation.js';
 import { Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor } from '@omnixys/context-ts';
@@ -10,10 +11,6 @@ import type { CreatePendingUserDTO, GuestNotificationDTO, Locale } from '@omnixy
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
-import {
-  SEAT_RESERVE_TOPIC,
-  type SeatReserveDTO,
-} from './guest-seat-reservation.js';
 
 const { DEFAULT_TENANT_ID } = env;
 
@@ -180,7 +177,10 @@ export class GuestConfirmationService {
       });
 
       if (!invitation) {
-        this.logger.warn('Reservation skipped, invitation not found: invitationId=%s', invitationId);
+        this.logger.warn(
+          'Reservation skipped, invitation not found: invitationId=%s',
+          invitationId,
+        );
         return false;
       }
 
@@ -310,10 +310,7 @@ export class GuestConfirmationService {
           operation: 'Resend confirm guest notification',
         });
       } else {
-        this.logger.debug(
-          'Resend routed through seat reservation: invitationId=%s',
-          invitationId,
-        );
+        this.logger.debug('Resend routed through seat reservation: invitationId=%s', invitationId);
         await this.requestSeatReservation(invitationId, actorId);
       }
 

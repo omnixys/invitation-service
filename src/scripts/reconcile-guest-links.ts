@@ -37,9 +37,9 @@
 
 import { PrismaClient, InvitationStatus } from '../prisma/generated/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import 'dotenv/config';
 import { Kafka } from 'kafkajs';
 import { randomUUID } from 'node:crypto';
-import 'dotenv/config';
 
 const SEAT_RESERVE_TOPIC = 'seat.reserve';
 const SERVICE = 'invitation';
@@ -96,7 +96,14 @@ async function main(): Promise<void> {
   });
 
   if (!invitations.length) {
-    console.log('RECONCILE_GUEST_LINKS_JSON:' + JSON.stringify({ apply, pending: 0, sent: 0, report: [] }));
+    console.log(
+      `RECONCILE_GUEST_LINKS_JSON:${JSON.stringify({
+        apply,
+        pending: 0,
+        sent: 0,
+        report: [],
+      })}`,
+    );
     return;
   }
 
@@ -109,8 +116,12 @@ async function main(): Promise<void> {
 
   if (!apply) {
     console.log(
-      'RECONCILE_GUEST_LINKS_JSON:' +
-        JSON.stringify({ apply, pending: report.length, sent: 0, report }),
+      `RECONCILE_GUEST_LINKS_JSON:${JSON.stringify({
+        apply,
+        pending: report.length,
+        sent: 0,
+        report,
+      })}`,
     );
     await prisma.$disconnect();
     return;
@@ -148,8 +159,12 @@ async function main(): Promise<void> {
   await prisma.$disconnect();
 
   console.log(
-    'RECONCILE_GUEST_LINKS_JSON:' +
-      JSON.stringify({ apply, pending: report.length, sent, report }),
+    `RECONCILE_GUEST_LINKS_JSON:${JSON.stringify({
+      apply,
+      pending: report.length,
+      sent,
+      report,
+    })}`,
   );
 }
 

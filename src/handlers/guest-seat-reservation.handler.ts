@@ -66,7 +66,9 @@ export class GuestSeatReservationHandler {
   }
 
   @KafkaEvent(SEAT_RESERVATION_FAILED_TOPIC)
-  async handleReservationFailed(payload: SeatReservationFailedDTO): Promise<void> {
+  async handleReservationFailed(
+    payload: SeatReservationFailedDTO,
+  ): Promise<void> {
     return TraceRunner.run('[HANDLER] seatReservationFailed', async () => {
       this.logger.warn(
         'Seat reservation failed, confirmation postponed until a seat is free: invitationId=%s eventId=%s',
