@@ -3,10 +3,11 @@ import { env } from '../../config/env.js';
 import { Invitation, InvitationStatus, Prisma } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { InvitationNotFoundException } from '../errors/invitation-domain.error.js';
+import { RequestGuestConfirmationInput } from '../models/input/request-guest-confirmation.input.js';
 import { SEAT_RESERVE_TOPIC, type SeatReserveDTO } from './guest-seat-reservation.js';
 import { Injectable } from '@nestjs/common';
 import { DelayedJobKeys, DelayedJobService, ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
-import { ContextAccessor } from '@omnixys/context-ts';
+import { ContextAccessor, type ClientContext } from '@omnixys/context-ts';
 import type { CreatePendingUserDTO, GuestNotificationDTO, Locale } from '@omnixys/contracts-ts';
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
@@ -23,6 +24,22 @@ const GUEST_REMINDER_OFFSETS: Record<string, number> = {
 };
 
 const SUPPORTED_LOCALES: ReadonlySet<string> = new Set(['de-DE', 'en-US']);
+
+function normalizeName(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+}
+
+function normalizeEmail(value: string): string | null {
+  const normalized = value.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) ? normalized : null;
+}
+
+function normalizePhone(value: string): string | null {
+  const digits = value.replace(/\D/g, '');
+  return value.trim().startsWith('+') && digits.length >= 8 && digits.length <= 15
+    ? `+${digits}`
+    : null;
+}
 
 export interface ResendConfirmationResult {
   resent: boolean;
@@ -323,6 +340,77 @@ export class GuestConfirmationService {
       );
       return { resent: true };
     });
+  }
+
+  /**
+   * Public recovery path for guests whose initial verification link expired.
+   * Every non-match is intentionally silent so this endpoint cannot enumerate
+   * invitations for an event.
+   */
+  async requestPublicResend(
+    input: RequestGuestConfirmationInput,
+    clientInfo: ClientContext,
+  ): Promise<void> {
+    const email = normalizeEmail(input.identifier);
+    const phone = email ? null : normalizePhone(input.identifier);
+    if (!email && !phone) {
+      return;
+    }
+
+    const firstName = normalizeName(input.firstName);
+    const lastName = normalizeName(input.lastName);
+    if (!firstName || !lastName) {
+      return;
+    }
+
+    const candidates = await this.prismaService.invitation.findMany({
+      where: {
+        eventId: input.eventId,
+        guestProfileId: null,
+        status: { in: [InvitationStatus.APPROVED, InvitationStatus.ACCEPTED] },
+      },
+      include: { phoneNumbers: true },
+    });
+
+    const matches = candidates.filter((invitation) => {
+      if (
+        normalizeName(invitation.firstName) !== firstName ||
+        normalizeName(invitation.lastName) !== lastName
+      ) {
+        return false;
+      }
+      if (email) {
+        return invitation.email?.trim().toLowerCase() === email;
+      }
+      const invitationPhones = [
+        invitation.phoneNumber,
+        ...invitation.phoneNumbers.map((entry) => `${entry.countryCode}${entry.number}`),
+      ];
+      return invitationPhones.some((entry) => entry && normalizePhone(entry) === phone);
+    });
+
+    if (matches.length !== 1) {
+      this.logger.info(
+        'Public confirmation request did not resolve to one invitation: eventId=%s',
+        input.eventId,
+      );
+      return;
+    }
+
+    const invitation = matches[0];
+    if (!invitation) {
+      return;
+    }
+    const outcome = await this.resendConfirmation({
+      invitationId: invitation.id,
+      locale: clientInfo.locale,
+    });
+    this.logger.info(
+      'Public confirmation request processed: eventId=%s invitationId=%s resent=%s',
+      input.eventId,
+      invitation.id,
+      outcome.resent,
+    );
   }
 
   private async resolvePendingContactPayload(

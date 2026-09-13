@@ -1,8 +1,10 @@
 import { CreatePlusOneInput } from '../models/input/plus-one.input.js';
 import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
+import { RequestGuestConfirmationInput } from '../models/input/request-guest-confirmation.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
 import { UpdatePlusOneInput } from '../models/input/update-plus-one.input.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
+import { GuestConfirmationService } from '../service/guest-confirmation.service.js';
 import { GuestMagicLinkService } from '../service/guest-magic-link.service.js';
 import {
   // CreatePlusOneInput,
@@ -26,6 +28,7 @@ export class GuestMutationResolver {
     private readonly loggerService: OmnixysLogger,
     private readonly guestService: GuestWriteService,
     private readonly guestMagicLinkService: GuestMagicLinkService,
+    private readonly guestConfirmationService: GuestConfirmationService,
   ) {
     this.logger = this.loggerService.log(
       'service:invitation',
@@ -53,6 +56,22 @@ export class GuestMutationResolver {
         },
         clientInfo,
       )
+      .catch(() => undefined);
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description:
+      'Requests a fresh guest-registration confirmation link without disclosing whether an invitation matched.',
+  })
+  async requestGuestConfirmation(
+    @Args('input') input: RequestGuestConfirmationInput,
+    @ClientInfo() clientInfo: ClientContext,
+  ): Promise<boolean> {
+    // Deliberately absorb all business outcomes. A public caller must never be
+    // able to discover invitation existence, status, or contact information.
+    void this.guestConfirmationService
+      .requestPublicResend(input, clientInfo)
       .catch(() => undefined);
     return true;
   }

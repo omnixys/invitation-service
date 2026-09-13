@@ -299,6 +299,82 @@ test('resendConfirmation ignores a locale that is not in the supported set', asy
   assert.equal(JSON.parse(cached[0]).locale, 'de-DE');
 });
 
+test('public confirmation requests resend only for one matching invitation in the event', async () => {
+  const sent = [];
+  const scheduled = [];
+  const matching = invitation({
+    status: InvitationStatus.APPROVED,
+    email: 'ada@example.com',
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+  });
+  const service = guestConfirmationService({
+    prisma: {
+      invitation: {
+        async findMany() {
+          return [matching];
+        },
+      },
+    },
+    cache: {},
+    sent,
+    scheduled,
+  });
+  const calls = [];
+  service.resendConfirmation = async (input) => {
+    calls.push(input);
+    return { resent: true };
+  };
+
+  await service.requestPublicResend(
+    {
+      eventId: 'event-1',
+      firstName: ' ada ',
+      lastName: 'LOVELACE',
+      identifier: 'Ada@Example.com',
+    },
+    { locale: 'en-US' },
+  );
+
+  assert.deepEqual(calls, [
+    { invitationId: 'invitation-1', locale: 'en-US' },
+  ]);
+});
+
+test('public confirmation requests do not resend for an unmatched contact', async () => {
+  const sent = [];
+  const scheduled = [];
+  const service = guestConfirmationService({
+    prisma: {
+      invitation: {
+        async findMany() {
+          return [invitation({ status: InvitationStatus.APPROVED, email: 'ada@example.com' })];
+        },
+      },
+    },
+    cache: {},
+    sent,
+    scheduled,
+  });
+  let called = false;
+  service.resendConfirmation = async () => {
+    called = true;
+    return { resent: true };
+  };
+
+  await service.requestPublicResend(
+    {
+      eventId: 'event-1',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      identifier: 'other@example.com',
+    },
+    { locale: 'de-DE' },
+  );
+
+  assert.equal(called, false);
+});
+
 test('approve passes the admin locale to the immediate confirmation', async () => {
   const stored = invitation({
     rsvpChoice: RsvpChoice.YES,
