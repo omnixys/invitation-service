@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.2.2](https://github.com/omnixys/invitation-service/compare/v4.2.1...v4.2.2) (2026-09-13)
+
+### Guest-provisioning
+
+* **Guest-provisioning:** trace invitation completion ([](https://github.com/omnixys/invitation-service/commit/9c86e1a4b994b4f7e87514c3bc9342517ca7e70f))
+
+### Other
+
+* **Other:** Merge branch 'main' of https://github.com/omnixys/invitation-service ([](https://github.com/omnixys/invitation-service/commit/492ab2ae2accc199fa8afa198144d39c2c41b224))
+
 ## [4.2.1](https://github.com/omnixys/invitation-service/compare/v4.2.0...v4.2.1) (2026-09-13)
 
 ### Deps
