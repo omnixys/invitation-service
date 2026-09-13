@@ -3,6 +3,18 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.2.0](https://github.com/omnixys/invitation-service/compare/v4.1.2...v4.2.0) (2026-09-13)
+
+### Invitation
+
+* **Invitation:** add bulk delete mutation ([](https://github.com/omnixys/invitation-service/commit/7e50f00cf3ff85fcbdd3e17cc72f2d58a79e774b))
+* **Invitation:** add guest link reconciliation script ([](https://github.com/omnixys/invitation-service/commit/b06cafb4c8c6ad7657f93fff7a0feb8763800f63))
+* **Invitation:** reserve seat before sending guest confirmation ([](https://github.com/omnixys/invitation-service/commit/158ae6636b4fbd22bbd8bf326fc1e5ce2f459e7e))
+* **Invitation:** send guest confirmation in configured locale on approval ([](https://github.com/omnixys/invitation-service/commit/4516cf0334818077739a086ba7118847ba58a226))
+* **Invitation:** support locale override when resending confirmations ([](https://github.com/omnixys/invitation-service/commit/d5d3a9c397e2ae0ea3cc3dda7119f5e1568c847e))
+* **Invitation:** write guest signup marker to service-agnostic cache key ([](https://github.com/omnixys/invitation-service/commit/f199e876b3b684d32f9b593cac20b925444dfda9))
+* **Invitation:** clean up guest seat reservation flow ([](https://github.com/omnixys/invitation-service/commit/1c758d3a8d560e7635a49b9575941447031ce39e))
+
 ## [4.1.2](https://github.com/omnixys/invitation-service/compare/v4.1.1...v4.1.2) (2026-09-11)
 
 ### Deps
