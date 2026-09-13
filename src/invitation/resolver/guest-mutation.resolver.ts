@@ -3,6 +3,7 @@ import { PublicRsvpInput } from '../models/input/public-rsvp.input.js';
 import { RSVPInput } from '../models/input/rsvp.input.js';
 import { UpdatePlusOneInput } from '../models/input/update-plus-one.input.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
+import { GuestMagicLinkService } from '../service/guest-magic-link.service.js';
 import {
   // CreatePlusOneInput,
   GuestWriteService,
@@ -24,11 +25,25 @@ export class GuestMutationResolver {
   constructor(
     private readonly loggerService: OmnixysLogger,
     private readonly guestService: GuestWriteService,
+    private readonly guestMagicLinkService: GuestMagicLinkService,
   ) {
     this.logger = this.loggerService.log(
       'service:invitation',
       this.constructor.name,
     );
+  }
+
+  @Mutation(() => Boolean)
+  async requestGuestMagicLink(
+    @Args('identifier') identifier: string,
+    @ClientInfo() clientInfo: ClientContext,
+  ): Promise<boolean> {
+    // Deliberately detach all lookup and dispatch work from the public response.
+    // The service records its internal outcome and absorbs processing failures.
+    void this.guestMagicLinkService
+      .request(identifier, clientInfo)
+      .catch(() => undefined);
+    return true;
   }
 
   @UseGuards(CookieAuthGuard)
