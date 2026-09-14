@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.4.0](https://github.com/omnixys/invitation-service/compare/v4.3.0...v4.4.0) (2026-09-14)
+
+### Invitation
+
+* **Invitation:** allow guest confirmation recovery ([](https://github.com/omnixys/invitation-service/commit/3d7ca439940f12f853eaf9b08445aa715128eb84))
+
 ## [4.3.0](https://github.com/omnixys/invitation-service/compare/v4.2.2...v4.3.0) (2026-09-13)
 
 ### Invitation
