@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.4.1](https://github.com/omnixys/invitation-service/compare/v4.4.0...v4.4.1) (2026-09-16)
+
+### Deps
+
+* **Deps:** update omnixys logger-ts package ([](https://github.com/omnixys/invitation-service/commit/095d348bb89e0f8d6c4b640fbf718b9a4b99ff87))
+
 ## [4.4.0](https://github.com/omnixys/invitation-service/compare/v4.3.0...v4.4.0) (2026-09-14)
 
 ### Invitation
