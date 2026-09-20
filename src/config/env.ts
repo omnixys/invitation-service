@@ -66,7 +66,7 @@ const toNumber = (value: string): number => Number(value);
  * - Booleans are converted correctly from "true"/"false" strings.
  */
 export const env = {
-  NODE_ENV: getEnv('NODE_ENV', 'development'),
+  NODE_ENV: getEnv('NODE_ENV', 'development', { required: true }),
   PORT: getEnv('PORT', '4000', { transform: toNumber }),
   SERVICE: getEnv('SERVICE', 'user'),
   TRUSTED_PROXY_ADDRESSES: getEnv('TRUSTED_PROXY_ADDRESSES', ''),
@@ -89,18 +89,20 @@ export const env = {
   }),
 
   OTEL_LOGS_ENABLED: getEnv('OTEL_LOGS_ENABLED', 'true', { transform: toBool }),
-  OTEL_URI: getEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'),
+  OTEL_URI: getEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318', {
+    required: true,
+  }),
   OTEL_TRANSPORT_MODE: getEnv('OTEL_TRANSPORT_MODE', 'http', {
     required: true,
   }),
   OTEL_SAMPLING_RATIO: getEnv('OTEL_SAMPLING_RATIO', '1', {
     transform: toNumber,
   }),
-  TEMPO_URI: getEnv('TEMPO_URI', 'http://localhost:4318'),
+  TEMPO_URI: getEnv('TEMPO_URI', 'http://localhost:4318', { required: true }),
   PROMETHEUS_ENABLE: getEnv('PROMETHEUS_ENABLE', 'true', { transform: toBool }),
   PROMETHEUS_PORT: getEnv('PROMETHEUS_PORT', '9464', { transform: toNumber }),
 
-  KAFKA_BROKER: getEnv('KAFKA_BROKER', 'localhost:9092'),
+  KAFKA_BROKER: getEnv('KAFKA_BROKER', 'localhost:9092', { required: true }),
   KAFKA_RETRY: getEnv('KAFKA_RETRY', '5', { transform: toNumber }),
   KAFKA_IDEMPOTENCY_ENABLE: getEnv('KAFKA_IDEMPOTENCY_ENABLE', 'true', {
     transform: toBool,
@@ -109,7 +111,9 @@ export const env = {
     transform: toNumber,
   }),
 
-  VALKEY_URL: getEnv('VALKEY_URL', 'valkey://localhost:6380'),
+  VALKEY_URL: getEnv('VALKEY_URL', 'valkey://localhost:6380', {
+    required: true,
+  }),
   VALKEY_PASSWORD: getEnv('VALKEY_PASSWORD', '', { required: true }),
 
   RATE_LIMIT_ENABLE: getEnv('RATE_LIMIT_ENABLE', 'true', { transform: toBool }),
@@ -121,9 +125,9 @@ export const env = {
   }),
 
   KC_CLIENT_SECRET: getEnv('KC_CLIENT_SECRET', '', { required: true }),
-  KC_URL: getEnv('KC_URL', 'http://localhost:18080/auth'),
-  KC_REALM: getEnv('KC_REALM', 'camunda-platform'),
-  KC_CLIENT_ID: getEnv('KC_CLIENT_ID', 'camunda-identity'),
+  KC_URL: getEnv('KC_URL', 'http://localhost:18080/auth', { required: true }),
+  KC_REALM: getEnv('KC_REALM', 'camunda-platform', { required: true }),
+  KC_CLIENT_ID: getEnv('KC_CLIENT_ID', 'camunda-identity', { required: true }),
   KC_ADMIN_USERNAME: getEnv('KC_ADMIN_USERNAME', 'admin', { required: true }),
   KC_ADMIN_PASSWORD: getEnv('KC_ADMIN_PASSWORD', '', { required: true }),
 
@@ -140,9 +144,10 @@ export const env = {
   EVENT_INTERNAL_URI: getEnv(
     'EVENT_INTERNAL_URI',
     'http://localhost:7406/graphql',
+    { required: true },
   ),
 
-  DEFAULT_TENANT_ID: getEnv('DEFAULT_TENANT_ID', ''),
+  DEFAULT_TENANT_ID: getEnv('DEFAULT_TENANT_ID', '', { required: true }),
 
   GUEST_REMINDER_AFTER_MS: getEnv('GUEST_REMINDER_AFTER_MS', '86400000', {
     transform: toNumber,
@@ -156,14 +161,16 @@ export const env = {
     { transform: toNumber },
   ),
 
-  KEYCLOAK_HEALTH_URL: getEnv('KEYCLOAK_HEALTH_URL', ''),
-  TEMPO_HEALTH_URL: getEnv('TEMPO_HEALTH_URL', ''),
-  PROMETHEUS_HEALTH_URL: getEnv('PROMETHEUS_HEALTH_URL', ''),
+  KEYCLOAK_HEALTH_URL: getEnv('KEYCLOAK_HEALTH_URL', '', { required: true }),
+  TEMPO_HEALTH_URL: getEnv('TEMPO_HEALTH_URL', '', { required: true }),
+  PROMETHEUS_HEALTH_URL: getEnv('PROMETHEUS_HEALTH_URL', '', {
+    required: true,
+  }),
 
   DATABASE_URL: getEnv('DATABASE_URL', '', { required: true }),
 
   STORAGE_REGION: getEnv('STORAGE_REGION', ''),
-  STORAGE_ENDPOINT: getEnv('STORAGE_ENDPOINT', ''),
+  STORAGE_ENDPOINT: getEnv('STORAGE_ENDPOINT', '', { required: true }),
   STORAGE_ACCESS_KEY_ID: getEnv('STORAGE_ACCESS_KEY_ID', '', {
     required: true,
   }),
@@ -171,7 +178,7 @@ export const env = {
     required: true,
   }),
   STORAGE_BUCKET: getEnv('STORAGE_BUCKET', '', { required: true }),
-  STORAGE_PUBLIC_URL: getEnv('STORAGE_PUBLIC_URL', ''),
+  STORAGE_PUBLIC_URL: getEnv('STORAGE_PUBLIC_URL', '', { required: true }),
   STORAGE_FORCE_PATH_STYLE: getEnv('STORAGE_FORCE_PATH_STYLE', 'false', {
     transform: toBool,
   }),
