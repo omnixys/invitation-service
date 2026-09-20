@@ -30,6 +30,7 @@ import {
   ResendGuestConfirmationsPayload,
 } from '../models/payloads/resend-guest-confirmations.payload.js';
 import { shouldAutoApproveInvitation } from '../utils/approval-mode.js';
+import { EventAccessClient } from './event-access.client.js';
 import { GuestConfirmationService } from './guest-confirmation.service.js';
 import { InvitationBaseService } from './invitation-base.service.js';
 import { Inject, Injectable } from '@nestjs/common';
@@ -61,6 +62,7 @@ export class AdminWriteService extends InvitationBaseService {
     private readonly delayedJob: DelayedJobService,
     private readonly analyticsOutbox: AnalyticsOutboxService,
     private readonly guestConfirmation: GuestConfirmationService,
+    private readonly eventAccessClient: EventAccessClient,
 
     @Inject(FILE_STORAGE)
     private readonly storage: FileStorage,
@@ -201,9 +203,28 @@ export class AdminWriteService extends InvitationBaseService {
       // Fire Kafka event only if newly approved
       if (approve) {
         this.logger.debug('approve Invitation | actorId=%s', actorId);
-        this.logger.debug('Updating invitation approval: invitationId=%s', id);
+
+        // Grant event access through the authoritative event RBAC pipeline
+        // BEFORE persisting the approval: if the grant fails, the invitation
+        // is not marked APPROVED and the operation can be retried safely
+        // (the grant is idempotent).
+        if (invitation.guestProfileId) {
+          await this.eventAccessClient.grantGuestAccess({
+            eventId: invitation.eventId,
+            userId: invitation.guestProfileId,
+            actorId,
+          });
+          this.logger.debug(
+            'Event access granted on approval: invitationId=%s | userId=%s',
+            invitation.id,
+            invitation.guestProfileId,
+          );
+        }
 
         const approvedAt = new Date();
+
+        this.logger.debug('Updating invitation approval: invitationId=%s', id);
+
         const updated = await this.prismaService.invitation.update({
           where: { id },
           data: {
@@ -293,7 +314,10 @@ export class AdminWriteService extends InvitationBaseService {
             this.logger.debug('Confirmation sent: invitationId=%s | actorId=%s', id, actorId);
           }
         } else {
-          this.logger.debug('Guest profile already exists – skip Kafka event: invitationId=%s', id);
+          this.logger.debug(
+            'Guest profile exists – event access already granted on approval: invitationId=%s',
+            id,
+          );
         }
 
         return InvitationMapper.toPayload(updated);

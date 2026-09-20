@@ -137,6 +137,11 @@ export const env = {
     { required: true },
   ),
 
+  EVENT_INTERNAL_URI: getEnv(
+    'EVENT_INTERNAL_URI',
+    'http://localhost:7406/graphql',
+  ),
+
   DEFAULT_TENANT_ID: getEnv('DEFAULT_TENANT_ID', ''),
 
   GUEST_REMINDER_AFTER_MS: getEnv('GUEST_REMINDER_AFTER_MS', '86400000', {

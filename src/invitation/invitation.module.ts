@@ -8,6 +8,7 @@ import { GuestMutationResolver } from './resolver/guest-mutation.resolver.js';
 import { AdminMutationResolver } from './resolver/invitation-admin-mutation.resolver.js';
 import { InvitationFieldResolver } from './resolver/invitation-field.resolver.js';
 import { InvitationQueryResolver } from './resolver/invitation-query.resolver.js';
+import { EventAccessClient } from './service/event-access.client.js';
 import { GuestConfirmationService } from './service/guest-confirmation.service.js';
 import { GuestMagicLinkService } from './service/guest-magic-link.service.js';
 import { GuestWriteService } from './service/guest-write.service.js';
@@ -37,6 +38,7 @@ import { Module } from '@nestjs/common';
     GuestConfirmationService,
     GuestMagicLinkService,
     GuestMagicLinkMetricsService,
+    EventAccessClient,
   ],
   exports: [
     InvitationReadService,

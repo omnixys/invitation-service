@@ -54,6 +54,20 @@ export class InvitationDomainException extends FrameworkException {
   }
 }
 
+export class EventAccessGrantException extends InvitationDomainException {
+  constructor(
+    metadata: Readonly<Record<string, unknown>> = {},
+    cause?: unknown,
+  ) {
+    super(
+      'EVENT_ACCESS_GRANT_FAILED',
+      'Failed to grant event access for the approved guest',
+      metadata,
+      cause,
+    );
+  }
+}
+
 export class InvitationValidationException extends InvitationDomainException {
   constructor(
     message: string,
