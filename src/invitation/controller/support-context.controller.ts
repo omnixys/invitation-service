@@ -1,4 +1,5 @@
 import { env } from '../../config/env.js';
+import { InvitationStatus } from '../../prisma/generated/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import {
   Controller,
@@ -10,11 +11,23 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Public } from '@omnixys/security-ts';
+import { isUUID } from 'class-validator';
 import { timingSafeEqual } from 'node:crypto';
 
 const { INTERNAL_GATEWAY_TOKEN } = env;
 
-const INVALID_SUPPORT_STATUSES = new Set(['DECLINED', 'CANCELED', 'REJECTED']);
+const INVALID_SUPPORT_STATUSES = new Set<InvitationStatus>(['DECLINED', 'CANCELED', 'REJECTED']);
+
+const SUPPORT_INVITATION_SELECT = {
+  id: true,
+  eventId: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  phoneNumber: true,
+  status: true,
+  eventEndsAt: true,
+} as const;
 
 export interface SupportContextPayload {
   invitationId: string;
@@ -49,16 +62,7 @@ export class SupportContextController {
 
     const invitation = await this.prisma.invitation.findUnique({
       where: { id: invitationId },
-      select: {
-        id: true,
-        eventId: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phoneNumber: true,
-        status: true,
-        eventEndsAt: true,
-      },
+      select: SUPPORT_INVITATION_SELECT,
     });
 
     if (!invitation) {
@@ -75,6 +79,55 @@ export class SupportContextController {
       throw new UnprocessableEntityException({
         code: 'SUPPORT_CONTEXT_INVITATION_INVALID',
         message: 'Invitation is not valid for support',
+      });
+    }
+
+    const guestName = `${invitation.firstName ?? ''} ${invitation.lastName ?? ''}`.trim();
+    const guestContact = invitation.phoneNumber ?? invitation.email ?? null;
+
+    return {
+      invitationId: invitation.id,
+      eventId: invitation.eventId,
+      guestName,
+      guestContact,
+    };
+  }
+
+  @Get('access')
+  async userAccess(
+    @Headers('x-internal-token') token: string | undefined,
+    @Query('eventId') eventId: string | undefined,
+    @Query('userId') userId: string | undefined,
+  ): Promise<SupportContextPayload> {
+    if (!matchesInternalToken(token)) {
+      throw new ForbiddenException({
+        code: 'INTERNAL_TOKEN_INVALID',
+        message: 'A valid internal gateway token is required',
+      });
+    }
+
+    if (!eventId || !userId || !isUUID(eventId) || !isUUID(userId)) {
+      throw new UnprocessableEntityException({
+        code: 'SUPPORT_CONTEXT_INVALID',
+        message: 'eventId and userId are required',
+      });
+    }
+
+    const invitation = await this.prisma.invitation.findFirst({
+      where: {
+        eventId,
+        guestProfileId: userId,
+        status: { notIn: [...INVALID_SUPPORT_STATUSES] },
+        OR: [{ eventEndsAt: null }, { eventEndsAt: { gt: new Date() } }],
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: SUPPORT_INVITATION_SELECT,
+    });
+
+    if (!invitation) {
+      throw new NotFoundException({
+        code: 'SUPPORT_CONTEXT_INVITATION_NOT_FOUND',
+        message: 'No valid invitation grants support access for this user',
       });
     }
 
