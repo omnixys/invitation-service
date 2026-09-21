@@ -3,6 +3,25 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.5.0](https://github.com/omnixys/invitation-service/compare/v4.4.1...v4.5.0) (2026-09-21)
+
+### Config
+
+* **Config:** require critical env vars in development and staging ([](https://github.com/omnixys/invitation-service/commit/5e9c05931d00910c5b3701e5258439472710840b))
+* **Config:** require critical env vars in production ([](https://github.com/omnixys/invitation-service/commit/67044d23756a3d6a9920c3a7d4cdc44d45c1fd31))
+
+### Deps
+
+* **Deps:** update omnixys packages ([](https://github.com/omnixys/invitation-service/commit/5f3c29512d48a7ebbdd355a9181519dfc288f1fd))
+
+### Invitation
+
+* **Invitation:** grant event access when approving an invitation with a guest profile ([](https://github.com/omnixys/invitation-service/commit/ecf6611f9dfe40d19c100c35db52b321a06a2066))
+
+### Support
+
+* **Support:** resolve guest support access by user id ([](https://github.com/omnixys/invitation-service/commit/84295b6105e389c38cba2c8d86b54c3aa52b967d))
+
 ## [4.4.1](https://github.com/omnixys/invitation-service/compare/v4.4.0...v4.4.1) (2026-09-16)
 
 ### Deps
