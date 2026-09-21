@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.5.1](https://github.com/omnixys/invitation-service/compare/v4.5.0...v4.5.1) (2026-09-21)
+
+### Invitation
+
+* **Invitation:** resolve lint findings ([](https://github.com/omnixys/invitation-service/commit/d702c2a5b2743326dc13e601891ea6bfec2fc5cb))
+
 ## [4.5.0](https://github.com/omnixys/invitation-service/compare/v4.4.1...v4.5.0) (2026-09-21)
 
 ### Config
