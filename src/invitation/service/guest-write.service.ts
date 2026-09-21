@@ -54,8 +54,13 @@ const { DEFAULT_TENANT_ID } = env;
  */
 function tempActorId(namespace: string, key: string): string {
   const bytes = createHash('sha1').update(`${namespace}:${key}`).digest().subarray(0, 16);
-  bytes[6] = (bytes[6]! & 0x0f) | 0x70; // Version 7
-  bytes[8] = (bytes[8]! & 0x3f) | 0x80; // RFC-4122 Variant
+  const versionByte = bytes.at(6);
+  const variantByte = bytes.at(8);
+  if (versionByte === undefined || variantByte === undefined) {
+    throw new Error('SHA-1 digest is unexpectedly too short.');
+  }
+  bytes[6] = (versionByte & 0x0f) | 0x70; // Version 7
+  bytes[8] = (variantByte & 0x3f) | 0x80; // RFC-4122 Variant
   const hex = bytes.toString('hex');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }

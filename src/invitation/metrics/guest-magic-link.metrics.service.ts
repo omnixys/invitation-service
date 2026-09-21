@@ -22,7 +22,12 @@ export class GuestMagicLinkMetricsService {
     }
   }
 
-  snapshot() {
+  snapshot(): {
+    total: number;
+    dispatched: number;
+    byResult: Record<string, number>;
+    byChannel: Record<GuestMagicLinkChannel, number>;
+  } {
     return {
       total: this.total,
       dispatched: this.dispatched,

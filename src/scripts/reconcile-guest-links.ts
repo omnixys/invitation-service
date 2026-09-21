@@ -45,7 +45,7 @@ const SEAT_RESERVE_TOPIC = 'seat.reserve';
 const SERVICE = 'invitation';
 const APPLICATION_FLAG = '--apply';
 
-const kafkaHeaders = (actorId: string) => ({
+const kafkaHeaders = (actorId: string): Record<string, Buffer> => ({
   'x-meta-service': stringToBuffer(SERVICE),
   'x-meta-version': stringToBuffer('1'),
   'x-meta-operation': stringToBuffer('reconcile guest links'),
@@ -76,7 +76,11 @@ function buildEnvelope(payload: unknown): Buffer {
 
 async function main(): Promise<void> {
   const apply = process.argv.includes(APPLICATION_FLAG);
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is required.');
+  }
+  const adapter = new PrismaPg({ connectionString: databaseUrl });
   const prisma = new PrismaClient({ adapter });
 
   const invitations = await prisma.invitation.findMany({
@@ -96,7 +100,7 @@ async function main(): Promise<void> {
   });
 
   if (!invitations.length) {
-    console.log(
+    console.debug(
       `RECONCILE_GUEST_LINKS_JSON:${JSON.stringify({
         apply,
         pending: 0,
@@ -115,7 +119,7 @@ async function main(): Promise<void> {
   }));
 
   if (!apply) {
-    console.log(
+    console.debug(
       `RECONCILE_GUEST_LINKS_JSON:${JSON.stringify({
         apply,
         pending: report.length,
@@ -150,7 +154,7 @@ async function main(): Promise<void> {
       ],
     });
     sent += 1;
-    console.log(
+    console.debug(
       `REQUEUED seat.reserve invitationId=${invitation.id} eventId=${invitation.eventId}`,
     );
   }
@@ -158,7 +162,7 @@ async function main(): Promise<void> {
   await producer.disconnect();
   await prisma.$disconnect();
 
-  console.log(
+  console.debug(
     `RECONCILE_GUEST_LINKS_JSON:${JSON.stringify({
       apply,
       pending: report.length,
