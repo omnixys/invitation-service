@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.5.2](https://github.com/omnixys/invitation-service/compare/v4.5.1...v4.5.2) (2026-09-22)
+
+### Deps
+
+* **Deps:** update omnixys package.json script add migrate deploy ([](https://github.com/omnixys/invitation-service/commit/d65e6eb9f7cb50eb7038dca939406537cafba7f7))
+
 ## [4.5.1](https://github.com/omnixys/invitation-service/compare/v4.5.0...v4.5.1) (2026-09-21)
 
 ### Invitation
