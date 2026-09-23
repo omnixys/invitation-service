@@ -32,6 +32,7 @@ import { Injectable } from '@nestjs/common';
 import { ValkeyKey, ValkeyService } from '@omnixys/cache-ts';
 import { ContextAccessor, type ClientContext } from '@omnixys/context-ts';
 import {
+  EventPermissionKey,
   getPrimaryPhoneNumber,
   n2u,
   PhoneNumberType as SharedPhoneNumberType,
@@ -43,6 +44,7 @@ import {
 import { KafkaProducerService, KafkaTopics } from '@omnixys/kafka-ts';
 import { OmnixysLogger } from '@omnixys/logger-ts';
 import { TraceRunner } from '@omnixys/observability-ts';
+import { EventPermissionResolver } from '@omnixys/security-ts';
 import { createHash } from 'node:crypto';
 
 const { DEFAULT_TENANT_ID } = env;
@@ -109,6 +111,7 @@ export class GuestWriteService extends InvitationBaseService {
     private readonly producer: KafkaProducerService,
     private readonly adminWrite: AdminWriteService,
     private readonly analyticsOutbox: AnalyticsOutboxService,
+    private readonly eventPermissionResolver: EventPermissionResolver,
   ) {
     super(logger, prisma);
   }
@@ -1203,6 +1206,8 @@ export class GuestWriteService extends InvitationBaseService {
    * Rule:
    * - the parent invitation must belong to the current guestProfileId
    * - alternatively, the parent invitation may have been created by the same user
+   * - alternatively, the user must hold the `plus_ones.manage` event permission
+   *   (e.g. the event admin) on the parent invitation's event
    */
   private async ensureUserCanManageParentInvitation(
     tx: Prisma.TransactionClient,
@@ -1219,6 +1224,7 @@ export class GuestWriteService extends InvitationBaseService {
       },
       select: {
         id: true,
+        eventId: true,
         guestProfileId: true,
         invitedByUserId: true,
       },
@@ -1231,7 +1237,16 @@ export class GuestWriteService extends InvitationBaseService {
     const isOwner = parent.guestProfileId === userId;
     const isCreator = parent.invitedByUserId === userId;
 
-    if (!isOwner && !isCreator) {
+    if (isOwner || isCreator) {
+      return;
+    }
+
+    const permissions = await this.eventPermissionResolver.getPermissionsForUser(
+      userId,
+      parent.eventId,
+    );
+
+    if (!permissions.includes(EventPermissionKey.ManagePlusOnes)) {
       throw new InvitationAccessDeniedException(
         parentInvitationId,
         'plus-one-management-forbidden',

@@ -262,6 +262,7 @@ test('accepted RSVP applies configured automatic approval', async () => {
       },
     },
     { enqueue: async () => undefined },
+    { getPermissionsForUser: async () => [] },
   );
 
   const result = await service.reply(
@@ -330,6 +331,7 @@ test('accepted RSVP keeps a staged invitation staged and suppresses automatic ap
     { send: async () => undefined },
     { approve: async (input) => approvalCalls.push(input) },
     { enqueue: async () => undefined },
+    { getPermissionsForUser: async () => [] },
   );
 
   const result = await service.reply(
@@ -537,6 +539,8 @@ test('plus-one creation rejects cross-user access', async () => {
     { set: async () => 'pending-1' },
     { send: async () => {} },
     { async approve() { return parentInvitation; } },
+    { enqueue: async () => undefined },
+    { getPermissionsForUser: async () => [] },
   );
 
   await assert.rejects(
@@ -622,6 +626,8 @@ test('plus-one deletion rejects cross-user access', async () => {
       send: async () => {},
     },
     { async approve() { return childInvitation; } },
+    { enqueue: async () => undefined },
+    { getPermissionsForUser: async () => [] },
   );
 
   await assert.rejects(
@@ -660,6 +666,8 @@ test('plus-one bulk deletion rejects cross-user access', async () => {
     { set: async () => {} },
     { send: async () => {} },
     { async approve() { return { id: 'parent-1' }; } },
+    { enqueue: async () => undefined },
+    { getPermissionsForUser: async () => [] },
   );
 
   await assert.rejects(
@@ -738,6 +746,7 @@ test('public RSVP persists trimmed guestNote on plus-one invitations', async () 
       },
     },
     { enqueue: async () => undefined },
+    { getPermissionsForUser: async () => [] },
   );
 
   const result = await ContextAccessor.run(
