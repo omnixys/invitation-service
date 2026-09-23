@@ -3,6 +3,13 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.6.0](https://github.com/omnixys/invitation-service/compare/v4.5.2...v4.6.0) (2026-09-23)
+
+### Invitation
+
+* **Invitation:** allow staff with plus_ones.manage to manage guest plus-ones ([](https://github.com/omnixys/invitation-service/commit/814f58f64377c6813cc7ee92ae2ba549ddef7c07))
+* **Invitation:** staff-added plus-ones are accepted immediately ([](https://github.com/omnixys/invitation-service/commit/478a4495712aeaa2ad95f0fb62141c9e0748bfeb))
+
 ## [4.5.2](https://github.com/omnixys/invitation-service/compare/v4.5.1...v4.5.2) (2026-09-22)
 
 ### Deps
