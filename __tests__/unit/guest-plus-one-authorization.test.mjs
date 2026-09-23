@@ -86,6 +86,18 @@ function makeService({ parent, child, permissions }) {
         calls.push(`update:${where.id}`);
         return { ...child, maxInvitees: 1, ...(data ?? {}) };
       },
+      async updateMany() {
+        return { count: 1 };
+      },
+      async create({ data }) {
+        calls.push(`create:${data.status}:${data.rsvpChoice ?? ''}`);
+        return childInvitation(data);
+      },
+    },
+    eventSettingsProjection: {
+      async findUnique() {
+        return { requireApprovalForPlusOnes: true };
+      },
     },
   };
   const service = new GuestWriteService(
@@ -96,7 +108,12 @@ function makeService({ parent, child, permissions }) {
     logger,
     { set: async () => 'pending-1' },
     { send: async () => {} },
-    { async approve() { return child; } },
+    {
+      async approve(input) {
+        calls.push(`approve:${input.id}`);
+        return child;
+      },
+    },
     { enqueue: async () => undefined },
     {
       getPermissionsForUser: async (userId, eventId) => {
@@ -166,4 +183,73 @@ test('the invitation creator may manage plus-ones without an event permission', 
 
   assert.equal(result.id, CHILD_ID);
   assert.deepEqual(calls, ['delete:child-1', 'update:parent-1']);
+});
+
+const plusOneInput = {
+  eventId: EVENT_ID,
+  invitedByInvitationId: PARENT_ID,
+  firstName: 'Plus',
+  lastName: 'One',
+  email: 'plus@example.com',
+  phoneNumbers: [{ number: '49 152 1234567', countryCode: '+49', type: 'WHATSAPP' }],
+  plusOneAgeCategory: 'ADULT',
+};
+
+test('staff with plus_ones.manage creating a plus-one auto-accepts it like a public RSVP', async () => {
+  const { service, calls } = makeService({
+    parent: parentInvitation({ status: InvitationStatus.PENDING }),
+    child: childInvitation(),
+    permissions: ['plus_ones.manage'],
+  });
+
+  const result = await service.createPlusOne({
+    input: plusOneInput,
+    actorId: STAFF_USER,
+    clientInfo: { locale: 'de' },
+  });
+
+  assert.equal(result.id, CHILD_ID);
+  assert.deepEqual(calls, [
+    'permissions:staff-user:event-1',
+    'create:ACCEPTED:YES',
+    'update:child-1',
+    'approve:child-1',
+  ]);
+});
+
+test('staff-managed plus-one without any contact method is rejected', async () => {
+  const { service } = makeService({
+    parent: parentInvitation({ status: InvitationStatus.PENDING }),
+    child: childInvitation(),
+    permissions: ['plus_ones.manage'],
+  });
+
+  await assert.rejects(
+    service.createPlusOne({
+      input: { ...plusOneInput, email: undefined, phoneNumbers: [] },
+      actorId: STAFF_USER,
+      clientInfo: { locale: 'de' },
+    }),
+    (error) => {
+      assert.equal(error.code, 'MISSING_CONTACT_METHOD');
+      return true;
+    },
+  );
+});
+
+test('a guest owner creating a contact-less plus-one is not forced to auto-accept', async () => {
+  const { service, calls } = makeService({
+    parent: parentInvitation({ status: InvitationStatus.PENDING }),
+    child: childInvitation(),
+    permissions: [],
+  });
+
+  const result = await service.createPlusOne({
+    input: { ...plusOneInput, email: undefined, phoneNumbers: [] },
+    actorId: GUEST_OWNER,
+    clientInfo: { locale: 'de' },
+  });
+
+  assert.equal(result.id, CHILD_ID);
+  assert.deepEqual(calls, ['create:PENDING:', 'update:child-1']);
 });

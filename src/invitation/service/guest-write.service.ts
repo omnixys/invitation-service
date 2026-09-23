@@ -484,7 +484,15 @@ export class GuestWriteService extends InvitationBaseService {
           });
         }
 
-        await this.ensureUserCanManageParentInvitation(tx, invitedByInvitationId, actorId);
+        const staffManaged = await this.ensureUserCanManageParentInvitation(
+          tx,
+          invitedByInvitationId,
+          actorId,
+        );
+
+        if (staffManaged && !email && !hasValidPhoneNumber(phoneNumbers)) {
+          throw new MissingContactMethodException();
+        }
 
         const updated = await tx.invitation.updateMany({
           where: {
@@ -507,8 +515,9 @@ export class GuestWriteService extends InvitationBaseService {
         });
         const now = new Date();
         const autoApprove =
-          parent.status === InvitationStatus.APPROVED &&
-          shouldAutoApprovePlusOnes(settings?.requireApprovalForPlusOnes);
+          staffManaged ||
+          (parent.status === InvitationStatus.APPROVED &&
+            shouldAutoApprovePlusOnes(settings?.requireApprovalForPlusOnes));
 
         const child = await tx.invitation.create({
           data: {
@@ -1208,12 +1217,15 @@ export class GuestWriteService extends InvitationBaseService {
    * - alternatively, the parent invitation may have been created by the same user
    * - alternatively, the user must hold the `plus_ones.manage` event permission
    *   (e.g. the event admin) on the parent invitation's event
+   *
+   * Returns `true` when the caller manages the parent via the `plus_ones.manage`
+   * event permission (staff), `false` when they manage as guest-owner or creator.
    */
   private async ensureUserCanManageParentInvitation(
     tx: Prisma.TransactionClient,
     parentInvitationId: string,
     userId?: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (!userId) {
       throw new InvitationAccessDeniedException(parentInvitationId, 'authentication-required');
     }
@@ -1238,7 +1250,7 @@ export class GuestWriteService extends InvitationBaseService {
     const isCreator = parent.invitedByUserId === userId;
 
     if (isOwner || isCreator) {
-      return;
+      return false;
     }
 
     const permissions = await this.eventPermissionResolver.getPermissionsForUser(
@@ -1252,5 +1264,7 @@ export class GuestWriteService extends InvitationBaseService {
         'plus-one-management-forbidden',
       );
     }
+
+    return true;
   }
 }
