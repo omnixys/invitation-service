@@ -7,6 +7,7 @@ import {
   ImportInvitationsInput,
   ImportInvitationsResult,
 } from '../models/input/import-invitation.input.js';
+import { UpdateInvitationPlusOneLimitInput } from '../models/input/update-invitation-plus-one-limit.input.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
 import { ResendGuestConfirmationsPayload } from '../models/payloads/resend-guest-confirmations.payload.js';
 import { SuccessPayload } from '../models/payloads/success.payload.js';
@@ -55,6 +56,17 @@ export class AdminMutationResolver {
     @CurrentUser() user: CurrentUserData,
   ): Promise<InvitationPayload> {
     return this.adminService.create(input, user.id);
+  }
+
+  @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)
+  @Roles(RealmRoleType.USER)
+  @EventPermissions(EventPermissionKey.ManagePlusOnes)
+  @Mutation(() => InvitationPayload)
+  async updateInvitationPlusOneLimit(
+    @Args('input') input: UpdateInvitationPlusOneLimitInput,
+    @CurrentEventId() activeEventId: string | undefined,
+  ): Promise<InvitationPayload> {
+    return this.adminService.updatePlusOneLimit(input, activeEventId);
   }
 
   @UseGuards(CookieAuthGuard, RoleGuard, EventPermissionGuard)

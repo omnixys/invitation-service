@@ -1,5 +1,6 @@
 import { InvitationAccessDeniedException } from '../../dist/invitation/errors/invitation-domain.error.js';
 import { GuestWriteService } from '../../dist/invitation/service/guest-write.service.js';
+import { AdminWriteService } from '../../dist/invitation/service/invitation-admin.write.service.js';
 import {
   InvitationStatus,
   InvitationType,
@@ -252,4 +253,77 @@ test('a guest owner creating a contact-less plus-one is not forced to auto-accep
 
   assert.equal(result.id, CHILD_ID);
   assert.deepEqual(calls, ['create:PENDING:', 'update:child-1']);
+});
+
+test('staff can raise a parent invitation total limit and the remaining capacity is stored', async () => {
+  let stored = {
+    ...parentInvitation(),
+    invitedByInvitationId: null,
+    maxInvitees: 0,
+  };
+  const service = new AdminWriteService(
+    {
+      $transaction: async (work) =>
+        work({
+          invitation: {
+            async findUnique() {
+              return stored;
+            },
+            async count() {
+              return 1;
+            },
+            async update({ data }) {
+              stored = { ...stored, ...data };
+              return stored;
+            },
+          },
+        }),
+    },
+    logger,
+    {},
+    {},
+    {},
+    { enqueue: async () => undefined },
+    {},
+  );
+
+  const result = await service.updatePlusOneLimit(
+    { id: PARENT_ID, maxPlusOnes: 3 },
+    EVENT_ID,
+  );
+
+  assert.equal(result.maxInvitees, 2);
+  assert.equal(stored.maxInvitees, 2);
+});
+
+test('staff cannot set a parent limit below its assigned plus-ones', async () => {
+  const service = new AdminWriteService(
+    {
+      $transaction: async (work) =>
+        work({
+          invitation: {
+            async findUnique() {
+              return { ...parentInvitation(), invitedByInvitationId: null, maxInvitees: 0 };
+            },
+            async count() {
+              return 2;
+            },
+            async update() {
+              throw new Error('must not update');
+            },
+          },
+        }),
+    },
+    logger,
+    {},
+    {},
+    {},
+    { enqueue: async () => undefined },
+    {},
+  );
+
+  await assert.rejects(
+    service.updatePlusOneLimit({ id: PARENT_ID, maxPlusOnes: 1 }, EVENT_ID),
+    /assigned plus-ones/,
+  );
 });

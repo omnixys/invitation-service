@@ -22,6 +22,7 @@ import {
 import { ApproveInvitationDTO } from '../models/dto/approve.dto.js';
 import { InvitationCreateInput } from '../models/input/create-invitation.input.js';
 import { ImportInvitationsResult } from '../models/input/import-invitation.input.js';
+import { UpdateInvitationPlusOneLimitInput } from '../models/input/update-invitation-plus-one-limit.input.js';
 import { InvitationUpdateInput } from '../models/input/update-invitation.input.js';
 import { InvitationMapper } from '../models/mappers/invitation.mapper.js';
 import { InvitationPayload } from '../models/payloads/invitation.payload.js';
@@ -451,6 +452,51 @@ export class AdminWriteService extends InvitationBaseService {
     this.logger.debug('Invitation updated: invitationId=%s', id);
 
     return InvitationMapper.toPayload(updated);
+  }
+
+  /**
+   * Sets an invitation's total plus-one allowance. The persisted value tracks
+   * only the remaining capacity, so existing children are subtracted atomically.
+   */
+  async updatePlusOneLimit(
+    input: UpdateInvitationPlusOneLimitInput,
+    activeEventId?: string,
+  ): Promise<InvitationPayload> {
+    if (!Number.isInteger(input.maxPlusOnes) || input.maxPlusOnes < 0) {
+      throw new InvitationValidationException('maxPlusOnes must be a non-negative integer');
+    }
+
+    return this.prismaService.$transaction(async (tx) => {
+      const invitation = await tx.invitation.findUnique({ where: { id: input.id } });
+      if (!invitation) {
+        throw new InvitationNotFoundException(input.id);
+      }
+      this.assertInvitationMatchesActiveEvent(invitation.eventId, activeEventId, input.id);
+      if (invitation.invitedByInvitationId) {
+        throw new InvitationValidationException(
+          'Plus-one limits can only be changed on parent invitations',
+        );
+      }
+
+      const assignedCount = await tx.invitation.count({
+        where: { invitedByInvitationId: invitation.id },
+      });
+      if (input.maxPlusOnes < assignedCount) {
+        throw new InvitationValidationException(
+          'maxPlusOnes cannot be less than assigned plus-ones',
+          {
+            assignedCount,
+            maxPlusOnes: input.maxPlusOnes,
+          },
+        );
+      }
+
+      const updated = await tx.invitation.update({
+        where: { id: invitation.id },
+        data: { maxInvitees: input.maxPlusOnes - assignedCount },
+      });
+      return InvitationMapper.toPayload(updated);
+    });
   }
 
   /**
