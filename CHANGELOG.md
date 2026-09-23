@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [4.7.0](https://github.com/omnixys/invitation-service/compare/v4.6.0...v4.7.0) (2026-09-23)
+
+### Invitations
+
+* **Invitations:** let staff adjust plus-one limits ([](https://github.com/omnixys/invitation-service/commit/bc8e3f71a8bfe561d0979ffa74c93ebd2186289a))
+
 ## [4.6.0](https://github.com/omnixys/invitation-service/compare/v4.5.2...v4.6.0) (2026-09-23)
 
 ### Invitation
